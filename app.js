@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshData();
 });
 
-// Function to fetch data from CoinGecko API
+// Function to fetch data from CoinGecko API with CORS proxy
 async function fetchCryptoData() {
-    const url = 'https://api.coingecko.com/api/v3/coins/markets';
+    const url = 'https://cors-anywhere.herokuapp.com/https://api.coingecko.com/api/v3/coins/markets';
     const params = new URLSearchParams({
         vs_currency: 'usd',
         order: 'market_cap_desc',
