@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+ document.addEventListener('DOMContentLoaded', function () {
     // Add event listener to the Refresh button
     document.getElementById('refreshBtn').addEventListener('click', refreshData);
 
@@ -37,6 +37,17 @@ async function fetchCryptoData() {
     }
 }
 
+// Function to calculate a basic placeholder indicator (e.g., Buy/Sell/Neutral)
+function calculateIndicator(priceChangePercentage) {
+    if (priceChangePercentage > 5) {
+        return "Buy";
+    } else if (priceChangePercentage < -5) {
+        return "Sell";
+    } else {
+        return "Neutral";
+    }
+}
+
 // Function to render the fetched data into the table
 function renderTable(coins) {
     const tableBody = document.querySelector('#cryptoTable tbody');
@@ -60,6 +71,7 @@ function renderTable(coins) {
             <td>${coin.market_cap.toLocaleString()}</td>
             <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
             <td>${coin.total_volume.toLocaleString()}</td>
+            <td>${calculateIndicator(coin.price_change_percentage_24h)}</td> <!-- Add the indicator -->
         `;
         tableBody.appendChild(row);
     });
