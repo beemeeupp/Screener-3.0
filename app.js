@@ -24,72 +24,19 @@ async function fetchCryptoData() {
         // Log the raw response data for debugging
         console.log("Raw data from API:", data);
 
-        // Filter for coins under $0.50, with at least 5 million volume, and price change between 5% and 25%
+        // Temporary: relax filter criteria for debugging (show all coins under $0.50)
         const filteredData = data.filter(coin => 
-            coin.current_price < 0.50 && 
-            coin.total_volume > 5000000 && 
-            coin.price_change_percentage_24h >= 5 && 
-            coin.price_change_percentage_24h <= 25
+            coin.current_price < 0.50 // Only coins under $0.50
         );
 
-        // Additional filters for technical indicators (RSI, MACD)
-        const filteredAndCalculated = filteredData.map(coin => {
-            return {
-                ...coin,
-                indicator: calculateRSI(coin),
-                macdSignal: calculateMACD(coin),
-                projectedPrice1d: calculateProjectedPrice(coin, 1), // Projected price for 1 day
-                projectedPrice2d: calculateProjectedPrice(coin, 2), // Projected price for 2 days
-                projectedPrice5d: calculateProjectedPrice(coin, 5), // Projected price for 5 days
-                projectedPrice2w: calculateProjectedPrice(coin, 14), // Projected price for 2 weeks
-                holdTimePrediction: calculateHoldTime(coin) // Predicted hold time
-            };
-        });
+        // Log the filtered data for debugging
+        console.log("Filtered Data:", filteredData);
 
-        // Sort by price change and RSI (filtering by momentum)
-        filteredAndCalculated.sort((a, b) => {
-            return b.price_change_percentage_24h - a.price_change_percentage_24h;
-        });
-
-        // Return top 25 coins
-        return filteredAndCalculated.slice(0, 25);
+        // Return the filtered data
+        return filteredData.slice(0, 25); // Show top 25 coins
     } catch (error) {
         console.error('Error fetching data:', error);
         return [];
-    }
-}
-
-// Function to calculate RSI (Relative Strength Index) based on price changes (simple example)
-function calculateRSI(coin) {
-    // Let's assume RSI calculation happens outside of the immediate price data (or from another API)
-    // Placeholder RSI value (this would be based on recent price movements)
-    const RSI = coin.price_change_percentage_24h > 10 ? 70 : 30; // Simplified RSI calculation: placeholder value
-    return RSI;
-}
-
-// Function to calculate MACD (Moving Average Convergence Divergence)
-function calculateMACD(coin) {
-    // Placeholder for MACD signal (ideally calculated over 12, 26 periods)
-    const MACD = coin.price_change_percentage_24h > 10 ? 'Bullish' : 'Bearish'; // Simplified calculation
-    return MACD;
-}
-
-// Function to project future prices based on momentum (simplified calculation)
-function calculateProjectedPrice(coin, days) {
-    // Projected price = current price + (price change percentage * days)
-    const projectedPrice = coin.current_price * (1 + (coin.price_change_percentage_24h / 100) * days);
-    return projectedPrice.toFixed(2);
-}
-
-// Function to predict hold time based on momentum
-function calculateHoldTime(coin) {
-    // Shorter hold time for strong momentum, longer hold time for weaker momentum
-    if (coin.price_change_percentage_24h > 10 && coin.indicator > 50) {
-        return '1-2 days'; // Strong momentum, short holding period
-    } else if (coin.price_change_percentage_24h < 5 && coin.indicator < 50) {
-        return '5-14 days'; // Weak momentum, longer holding period
-    } else {
-        return '3-5 days'; // Neutral momentum
     }
 }
 
@@ -116,12 +63,12 @@ function renderTable(coins) {
             <td>${coin.market_cap.toLocaleString()}</td>
             <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
             <td>${coin.total_volume.toLocaleString()}</td>
-            <td>RSI: ${coin.indicator} | MACD: ${coin.macdSignal}</td>
-            <td>$${coin.projectedPrice1d}</td>
-            <td>$${coin.projectedPrice2d}</td>
-            <td>$${coin.projectedPrice5d}</td>
-            <td>$${coin.projectedPrice2w}</td>
-            <td>${coin.holdTimePrediction}</td>
+            <td>RSI: N/A | MACD: N/A</td> <!-- Temporary placeholders for now -->
+            <td>$${(coin.current_price * 1.05).toFixed(2)}</td> <!-- Projected 1 day -->
+            <td>$${(coin.current_price * 1.10).toFixed(2)}</td> <!-- Projected 2 days -->
+            <td>$${(coin.current_price * 1.25).toFixed(2)}</td> <!-- Projected 5 days -->
+            <td>$${(coin.current_price * 1.50).toFixed(2)}</td> <!-- Projected 2 weeks -->
+            <td>1-2 days</td> <!-- Temporary placeholder for hold time -->
         `;
         tableBody.appendChild(row);
     });
