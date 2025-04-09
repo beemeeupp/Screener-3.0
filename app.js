@@ -1,4 +1,3 @@
-// Wait for the DOM to load
 document.addEventListener('DOMContentLoaded', function () {
     // Add event listener to the Refresh button
     document.getElementById('refreshBtn').addEventListener('click', refreshData);
@@ -22,10 +21,15 @@ async function fetchCryptoData() {
         console.log("Fetching data...");
         const response = await fetch(`${url}?${params.toString()}`);
         const data = await response.json();
-        console.log("Data fetched:", data);
+        console.log("Raw data fetched:", data);  // Log the raw response data
 
-        // Filter low cap coins under $0.50
-        return data.filter(coin => coin.current_price < 0.50 && coin.market_cap < 10000000);
+        // Loosen the filter: Include coins under $1 with market cap under $50M
+        const filteredCoins = data.filter(coin => coin.current_price < 1 && coin.market_cap < 50000000);
+        
+        // Log the filtered coins to see if we are getting valid data
+        console.log("Filtered coins:", filteredCoins);
+        
+        return filteredCoins;
     } catch (error) {
         console.error('Error fetching data:', error);
         return [];
