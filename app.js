@@ -100,7 +100,7 @@ function renderTable(coins) {
 
     if (coins.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="12">No data available</td>`; // Adjusted column span for new columns
+        row.innerHTML = `<td colspan="11">No data available</td>`; // Adjusted column span for new columns
         tableBody.appendChild(row);
         return;
     }
