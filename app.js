@@ -20,12 +20,12 @@ async function fetchCryptoData() {
     try {
         const response = await fetch(`${url}?${params.toString()}`);
         const data = await response.json();
-        
+
         // Log the raw response data for debugging
         console.log("Raw data from API:", data);
 
         // Check if the response is valid and not empty
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
             return data;
         } else {
             console.log('No data or empty response received.');
@@ -67,6 +67,7 @@ function renderTable(coins) {
 
 // Function to refresh the data when the button is clicked
 async function refreshData() {
+    console.log("Refreshing data...");
     const coins = await fetchCryptoData();
     renderTable(coins);
 }
