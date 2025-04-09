@@ -11,8 +11,8 @@ async function fetchCryptoData() {
     const url = 'https://api.coingecko.com/api/v3/coins/markets';
     const params = new URLSearchParams({
         vs_currency: 'usd',
-        order: 'market_cap_desc',
-        per_page: 25,  // Limit to 25 results
+        order: 'volume_desc', // Sorting by highest volume
+        per_page: 250,  // Increased number of results
         page: 1,
         sparkline: false
     });
@@ -24,13 +24,14 @@ async function fetchCryptoData() {
         // Log the raw response data for debugging
         console.log("Raw data from API:", data);
 
-        // Check if the response is valid and not empty
-        if (data && Array.isArray(data) && data.length > 0) {
-            return data;
-        } else {
-            console.log('No data or empty response received.');
-            return [];
-        }
+        // Filter for coins with a price under $0.50 and with sufficient volume
+        const filteredData = data.filter(coin => coin.current_price < 0.50 && coin.total_volume > 1000000);
+        
+        // Sort by price change in the last 24 hours (for momentum)
+        filteredData.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+
+        // Return top 25 coins
+        return filteredData.slice(0, 25);
     } catch (error) {
         console.error('Error fetching data:', error);
         return [];
