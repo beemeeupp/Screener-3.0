@@ -23,13 +23,8 @@ async function fetchCryptoData() {
         const data = await response.json();
         console.log("Raw data fetched:", data);  // Log the raw response data
 
-        // Loosen the filter: Include coins under $2 with market cap under $100M
-        const filteredCoins = data.filter(coin => coin.current_price < 2 && coin.market_cap < 100000000);
-
-        // Log the filtered coins to see if we are getting valid data
-        console.log("Filtered coins:", filteredCoins);
-        
-        return filteredCoins;
+        // Directly return the data without any filtering
+        return data;
     } catch (error) {
         console.error('Error fetching data:', error);
         return [];
