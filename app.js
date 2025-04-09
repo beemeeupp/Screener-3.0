@@ -23,9 +23,9 @@ async function fetchCryptoData() {
         const data = await response.json();
         console.log("Raw data fetched:", data);  // Log the raw response data
 
-        // Loosen the filter: Include coins under $1 with market cap under $50M
-        const filteredCoins = data.filter(coin => coin.current_price < 1 && coin.market_cap < 50000000);
-        
+        // Loosen the filter: Include coins under $2 with market cap under $100M
+        const filteredCoins = data.filter(coin => coin.current_price < 2 && coin.market_cap < 100000000);
+
         // Log the filtered coins to see if we are getting valid data
         console.log("Filtered coins:", filteredCoins);
         
