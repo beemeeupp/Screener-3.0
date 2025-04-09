@@ -3,62 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Screener - Top Coins</title>
+    <title>Crypto Screener</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        #cryptoTable {
+        table {
             width: 100%;
-            margin-top: 20px;
             border-collapse: collapse;
         }
-
-        #cryptoTable th, #cryptoTable td {
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
             padding: 10px;
             text-align: center;
-            border: 1px solid #ddd;
-        }
-
-        #cryptoTable th {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        #refreshBtn {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        #refreshBtn:hover {
-            background-color: #45a049;
-        }
-
-        #timer {
-            text-align: center;
-            font-size: 20px;
-            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-
-    <h1>Crypto Screener - Top Coins</h1>
-    <div id="timer">Next refresh in: 15 seconds</div>
-    
+    <h1>Crypto Screener - Top 25 Low Cap Coins</h1>
+    <button onclick="refreshData()">Refresh Data</button>
     <table id="cryptoTable">
         <thead>
             <tr>
@@ -67,91 +29,58 @@
                 <th>Market Cap</th>
                 <th>Change (24h)</th>
                 <th>Volume (24h)</th>
-                <th>Indicators</th>
+                <th>RSI</th>
+                <th>MACD</th>
+                <th>Predicted Price</th>
             </tr>
         </thead>
-        <tbody>
-            <!-- Data will be inserted here -->
-        </tbody>
+        <tbody></tbody>
     </table>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            refreshData(); // Initial load
-            setInterval(refreshData, 15000); // Refresh every 15 seconds
-            setInterval(updateCountdown, 1000); // Update the countdown timer every second
-        });
-
-        let countdown = 15; // 15 seconds countdown
-
-        // Function to fetch data from CoinGecko API
-        async function fetchCryptoData() {
-            const url = 'https://api.coingecko.com/api/v3/coins/markets';
-            const params = new URLSearchParams({
-                vs_currency: 'usd',
-                order: 'market_cap_desc',
-                per_page: 10,  // Load top 10 coins for testing (adjust later)
-                page: 1,
-                sparkline: false
+        // Fetch prediction from the FastAPI endpoint
+        async function getPrediction(rsi, macd, volume) {
+            const response = await fetch('http://localhost:8000/predict/', {  // Replace with deployed URL if necessary
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ rsi, macd, volume })
             });
-
-            try {
-                const response = await fetch(`${url}?${params.toString()}`);
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                return [];
-            }
+            const data = await response.json();
+            return data.predicted_price;
         }
 
-        // Function to render the fetched data into the table
-        function renderTable(coins) {
-            const tableBody = document.querySelector('#cryptoTable tbody');
-            tableBody.innerHTML = ''; // Clear the table before rendering new data
-
-            if (coins.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="6">No data available</td>`; // Adjusted column span
-                tableBody.appendChild(row);
-                return;
-            }
-
-            // Loop through the coins and create a row for each
-            coins.forEach(coin => {
-                const row = document.createElement('tr');
-                
-                // Insert the data into each table cell
-                row.innerHTML = `
-                    <td>${coin.name}</td>
-                    <td>$${coin.current_price.toFixed(2)}</td>
-                    <td>${coin.market_cap.toLocaleString()}</td>
-                    <td>${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) : 'N/A'}%</td>
-                    <td>${coin.total_volume.toLocaleString()}</td>
-                    <td>RSI: N/A, MACD: N/A</td> <!-- Placeholder for indicators -->
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        // Function to refresh the data automatically every 15 seconds
         async function refreshData() {
-            const coins = await fetchCryptoData();
-            renderTable(coins);
-            countdown = 15; // Reset the countdown
-        }
+            // Simulating fetching the top 25 low-cap crypto coins (you can use a live API)
+            const coins = [
+                { name: 'Bitcoin', current_price: 57325, market_cap: 1000000000, volume: 12345678, rsi: 60, macd: 1.5 },
+                { name: 'Ethereum', current_price: 4200, market_cap: 500000000, volume: 9876543, rsi: 65, macd: 2.3 },
+                // Add more coin data here
+            ];
 
-        // Function to update the countdown timer
-        function updateCountdown() {
-            const timerElement = document.getElementById('timer');
-            if (countdown > 0) {
-                countdown--;
-                timerElement.innerText = `Next refresh in: ${countdown} seconds`;
-            } else {
-                countdown = 15;
+            const tableBody = document.getElementById('cryptoTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = "";  // Clear previous data
+
+            for (let coin of coins) {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = coin.name;
+                row.insertCell(1).textContent = `$${coin.current_price.toFixed(2)}`;
+                row.insertCell(2).textContent = `$${coin.market_cap.toLocaleString()}`;
+                row.insertCell(3).textContent = `${coin.change_percentage_24h.toFixed(2)}%`;
+                row.insertCell(4).textContent = `$${coin.volume.toLocaleString()}`;
+                row.insertCell(5).textContent = coin.rsi.toFixed(2);
+                row.insertCell(6).textContent = coin.macd.toFixed(2);
+
+                // Get the predicted price from the model
+                const predictedPrice = await getPrediction(coin.rsi, coin.macd, coin.volume);
+                row.insertCell(7).textContent = `$${predictedPrice.toFixed(2)}`;
             }
         }
-    </script>
 
+        // Automatically refresh every 15 seconds
+        setInterval(refreshData, 15000);
+        refreshData();  // Initial load
+    </script>
 </body>
 </html>
