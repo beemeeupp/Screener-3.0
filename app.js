@@ -12,7 +12,7 @@ async function fetchCryptoData() {
     const params = new URLSearchParams({
         vs_currency: 'usd',
         order: 'market_cap_desc',
-        per_page: 25,
+        per_page: 50, // Increase number of coins fetched to ensure better results
         page: 1,
         sparkline: false
     });
@@ -23,8 +23,16 @@ async function fetchCryptoData() {
         const data = await response.json();
         console.log("Raw data fetched:", data);  // Log the raw response data
 
-        // Directly return the data without any filtering
-        return data;
+        // Filter the data for low-cap coins with volume spikes, and good indicators
+        const filteredCoins = data.filter(coin => 
+            coin.current_price < 0.50 &&                             // Price under $0.50
+            coin.market_cap < 100000000 &&                           // Market cap under $100M
+            coin.total_volume > 5000000 &&                           // Volume above $5M to ensure liquidity
+            (coin.price_change_percentage_24h > 10 || coin.price_change_percentage_24h < -10) // Price change in 24h greater than +/- 10%
+        );
+
+        // Return the filtered coins for further processing
+        return filteredCoins;
     } catch (error) {
         console.error('Error fetching data:', error);
         return [];
@@ -47,6 +55,10 @@ function renderTable(coins) {
     coins.forEach(coin => {
         const row = document.createElement('tr');
 
+        // Generate a simple RSI and MACD check (Note: these are placeholders, as real analysis would require actual calculations)
+        const rsi = Math.random() * 100; // Placeholder for RSI (should implement a real calculation based on price history)
+        const macd = (Math.random() > 0.5) ? 'Bullish' : 'Bearish'; // Placeholder for MACD signal (real calculation needed)
+
         // Insert the data into each table cell
         row.innerHTML = `
             <td>${coin.name}</td>
@@ -54,7 +66,7 @@ function renderTable(coins) {
             <td>${coin.market_cap.toLocaleString()}</td>
             <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
             <td>${coin.total_volume.toLocaleString()}</td>
-            <td>RSI: ${Math.random() * 100}, MACD: ${Math.random() > 0.5 ? 'Bullish' : 'Bearish'}</td>
+            <td>RSI: ${rsi.toFixed(2)}, MACD: ${macd}</td>
         `;
         tableBody.appendChild(row);
     });
