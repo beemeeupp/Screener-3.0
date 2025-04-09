@@ -1,4 +1,4 @@
- document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
     // Add event listener to the Refresh button
     document.getElementById('refreshBtn').addEventListener('click', refreshData);
 
@@ -39,6 +39,8 @@ async function fetchCryptoData() {
 
 // Function to calculate a basic placeholder indicator (e.g., Buy/Sell/Neutral)
 function calculateIndicator(priceChangePercentage) {
+    console.log(`Price Change Percentage: ${priceChangePercentage}`); // Log to check the value
+
     if (priceChangePercentage > 5) {
         return "Buy";
     } else if (priceChangePercentage < -5) {
@@ -64,6 +66,9 @@ function renderTable(coins) {
     coins.forEach(coin => {
         const row = document.createElement('tr');
 
+        // Log the individual coin data for debugging
+        console.log(`Rendering coin: ${coin.name}`);
+        
         // Insert the data into each table cell
         row.innerHTML = `
             <td>${coin.name}</td>
