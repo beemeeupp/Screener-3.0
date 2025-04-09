@@ -46,12 +46,18 @@
         #refreshBtn:hover {
             background-color: #45a049;
         }
+
+        #timer {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
     <h1>Crypto Screener - Top Coins</h1>
-    <button id="refreshBtn">Refresh Data</button>
+    <div id="timer">Next refresh in: 15 seconds</div>
     
     <table id="cryptoTable">
         <thead>
@@ -74,10 +80,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Add event listener to the Refresh button
-            document.getElementById('refreshBtn').addEventListener('click', refreshData);
-            refreshData();
+            refreshData(); // Initial load
+            setInterval(refreshData, 15000); // Refresh every 15 seconds
+            setInterval(updateCountdown, 1000); // Update the countdown timer every second
         });
+
+        let countdown = 15; // 15 seconds countdown
 
         // Function to fetch data from CoinGecko API (no proxy for testing)
         async function fetchCryptoData() {
@@ -85,7 +93,7 @@
             const params = new URLSearchParams({
                 vs_currency: 'usd',
                 order: 'market_cap_desc',
-                per_page: 25,  // Load top 25 coins
+                per_page: 50,  // Load top 50 coins (we'll filter to top 25 later)
                 page: 1,
                 sparkline: false
             });
@@ -94,9 +102,7 @@
                 const response = await fetch(`${url}?${params.toString()}`);
                 const data = await response.json();
 
-                // Log the raw response data for debugging
                 console.log("Raw data from API:", data);
-                
                 return data;
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -104,11 +110,16 @@
             }
         }
 
-        // Function to apply filters to the coins list (Low Cap, High Volatility)
+        // Function to filter coins with more precise conditions
         function filterCoins(coins) {
             return coins.filter(coin => {
-                // Filter for coins with low market cap and high volatility
-                return coin.market_cap < 5000000000 && coin.price_change_percentage_24h > 5;
+                // Filter for coins with:
+                // - Market cap under $1B
+                // - Price change over 10% in the last 24 hours
+                // - Volume over $10M
+                return coin.market_cap < 1000000000 &&
+                    coin.price_change_percentage_24h > 10 &&
+                    coin.total_volume > 10000000;
             });
         }
 
@@ -151,12 +162,24 @@
             return (coin.current_price * multiplier).toFixed(2);
         }
 
-        // Function to refresh the data when the button is clicked
+        // Function to refresh the data automatically every 15 seconds
         async function refreshData() {
             console.log("Refreshing data...");
             const coins = await fetchCryptoData();
             const filteredCoins = filterCoins(coins); // Apply filters
             renderTable(filteredCoins);
+            countdown = 15; // Reset the countdown
+        }
+
+        // Function to update the countdown timer
+        function updateCountdown() {
+            const timerElement = document.getElementById('timer');
+            if (countdown > 0) {
+                countdown--;
+                timerElement.innerText = `Next refresh in: ${countdown} seconds`;
+            } else {
+                countdown = 15;
+            }
         }
     </script>
 
