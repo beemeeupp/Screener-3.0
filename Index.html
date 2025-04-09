@@ -4,13 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Screener</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
     <h1>Crypto Screener - Top 25 Low Cap Coins</h1>
-
     <button id="refreshBtn">Refresh Data</button>
-
     <table id="cryptoTable">
         <thead>
             <tr>
@@ -20,13 +31,18 @@
                 <th>Change (24h)</th>
                 <th>Volume (24h)</th>
                 <th>Indicators</th>
+                <th>Projected Price (1 Day)</th>
+                <th>Projected Price (2 Days)</th>
+                <th>Projected Price (5 Days)</th>
+                <th>Projected Price (2 Weeks)</th>
+                <th>Hold Time Prediction</th>
             </tr>
         </thead>
         <tbody>
-            <!-- Table rows will be injected here -->
+            <!-- Data will be inserted here -->
         </tbody>
     </table>
 
-    <script src="app.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
