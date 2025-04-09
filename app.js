@@ -84,9 +84,9 @@ function calculateProjectedPrice(coin, days) {
 // Function to predict hold time based on momentum
 function calculateHoldTime(coin) {
     // Shorter hold time for strong momentum, longer hold time for weaker momentum
-    if (coin.price_change_percentage_24h > 10 && coin.indicator < 70) {
+    if (coin.price_change_percentage_24h > 10 && coin.indicator > 50) {
         return '1-2 days'; // Strong momentum, short holding period
-    } else if (coin.price_change_percentage_24h < 5 && coin.indicator > 70) {
+    } else if (coin.price_change_percentage_24h < 5 && coin.indicator < 50) {
         return '5-14 days'; // Weak momentum, longer holding period
     } else {
         return '3-5 days'; // Neutral momentum
@@ -100,7 +100,7 @@ function renderTable(coins) {
 
     if (coins.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="11">No data available</td>`; // Adjusted column span for new columns
+        row.innerHTML = `<td colspan="12">No data available</td>`; // Adjusted column span for new columns
         tableBody.appendChild(row);
         return;
     }
