@@ -37,7 +37,12 @@ async function fetchCryptoData() {
             return {
                 ...coin,
                 indicator: calculateRSI(coin),
-                macdSignal: calculateMACD(coin)
+                macdSignal: calculateMACD(coin),
+                projectedPrice1d: calculateProjectedPrice(coin, 1), // Projected price for 1 day
+                projectedPrice2d: calculateProjectedPrice(coin, 2), // Projected price for 2 days
+                projectedPrice5d: calculateProjectedPrice(coin, 5), // Projected price for 5 days
+                projectedPrice2w: calculateProjectedPrice(coin, 14), // Projected price for 2 weeks
+                holdTimePrediction: calculateHoldTime(coin) // Predicted hold time
             };
         });
 
@@ -69,6 +74,25 @@ function calculateMACD(coin) {
     return MACD;
 }
 
+// Function to project future prices based on momentum (simplified calculation)
+function calculateProjectedPrice(coin, days) {
+    // Projected price = current price + (price change percentage * days)
+    const projectedPrice = coin.current_price * (1 + (coin.price_change_percentage_24h / 100) * days);
+    return projectedPrice.toFixed(2);
+}
+
+// Function to predict hold time based on momentum
+function calculateHoldTime(coin) {
+    // Shorter hold time for strong momentum, longer hold time for weaker momentum
+    if (coin.price_change_percentage_24h > 10 && coin.indicator < 70) {
+        return '1-2 days'; // Strong momentum, short holding period
+    } else if (coin.price_change_percentage_24h < 5 && coin.indicator > 70) {
+        return '5-14 days'; // Weak momentum, longer holding period
+    } else {
+        return '3-5 days'; // Neutral momentum
+    }
+}
+
 // Function to render the fetched data into the table
 function renderTable(coins) {
     const tableBody = document.querySelector('#cryptoTable tbody');
@@ -76,7 +100,7 @@ function renderTable(coins) {
 
     if (coins.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="6">No data available</td>`;
+        row.innerHTML = `<td colspan="9">No data available</td>`;
         tableBody.appendChild(row);
         return;
     }
@@ -92,7 +116,12 @@ function renderTable(coins) {
             <td>${coin.market_cap.toLocaleString()}</td>
             <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
             <td>${coin.total_volume.toLocaleString()}</td>
-            <td>RSI: ${coin.indicator} | MACD: ${coin.macdSignal}</td> <!-- Add the indicators -->
+            <td>RSI: ${coin.indicator} | MACD: ${coin.macdSignal}</td>
+            <td>$${coin.projectedPrice1d}</td>
+            <td>$${coin.projectedPrice2d}</td>
+            <td>$${coin.projectedPrice5d}</td>
+            <td>$${coin.projectedPrice2w}</td>
+            <td>${coin.holdTimePrediction}</td>
         `;
         tableBody.appendChild(row);
     });
