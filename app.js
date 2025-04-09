@@ -12,26 +12,22 @@ async function fetchCryptoData() {
     const params = new URLSearchParams({
         vs_currency: 'usd',
         order: 'market_cap_desc',
-        per_page: 10,  // Limit to 10 results to keep things simple for testing
+        per_page: 10,  // Limit to 10 results for simplicity
         page: 1,
         sparkline: false
     });
 
     try {
-        console.log("Fetching data...");
         const response = await fetch(`${url}?${params.toString()}`);
         const data = await response.json();
-        console.log("Raw data fetched:", data);  // Log the raw response data
 
-        // Check if the data was fetched correctly and if it's empty or not
-        if (data.length === 0) {
-            console.log('No data returned from the API.');
+        // Check if the response is valid and not empty
+        if (data && data.length > 0) {
+            return data;
         } else {
-            console.log('Data fetched successfully!');
+            console.log('No data or empty response received.');
+            return [];
         }
-
-        // Return the fetched data without applying any filtering
-        return data;
     } catch (error) {
         console.error('Error fetching data:', error);
         return [];
@@ -68,7 +64,6 @@ function renderTable(coins) {
 
 // Function to refresh the data when the button is clicked
 async function refreshData() {
-    console.log("Refreshing data...");
     const coins = await fetchCryptoData();
     renderTable(coins);
 }
