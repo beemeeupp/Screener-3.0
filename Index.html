@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Screener</title>
+    <title>Crypto Screener - Top 25 Low Cap Coins</title>
     <style>
         table {
             width: 100%;
@@ -16,11 +16,22 @@
             padding: 10px;
             text-align: center;
         }
+        #refreshButton {
+            padding: 10px 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        #countdown {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <h1>Crypto Screener - Top 25 Low Cap Coins</h1>
-    <button onclick="refreshData()">Refresh Data</button>
+    <div>
+        <button id="refreshButton" onclick="refreshData()">Refresh Data</button>
+        <span id="countdown">Next refresh in: 15s</span>
+    </div>
     <table id="cryptoTable">
         <thead>
             <tr>
@@ -32,15 +43,19 @@
                 <th>RSI</th>
                 <th>MACD</th>
                 <th>Predicted Price</th>
+                <th>Recommended Hold Time</th>
+                <th>Price Prediction (1D)</th>
+                <th>Price Prediction (2D)</th>
+                <th>Price Prediction (5D)</th>
+                <th>Price Prediction (2W)</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
 
     <script>
-        // Fetch prediction from the FastAPI endpoint
         async function getPrediction(rsi, macd, volume) {
-            const response = await fetch('http://localhost:8000/predict/', {  // Replace with deployed URL if necessary
+            const response = await fetch('http://localhost:8000/predict/', { // Replace with your FastAPI URL
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -52,20 +67,8 @@
         }
 
         async function refreshData() {
-            // Fetching the top 25 low cap coins using CoinGecko API or any other relevant source
-            const response = await fetch('https://api.coingecko.com/api/v3/coins/markets', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                params: {
-                    vs_currency: 'usd',
-                    order: 'market_cap_asc',
-                    per_page: 25
-                }
-            });
+            const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=25');
             const coins = await response.json();
-
             const tableBody = document.getElementById('cryptoTable').getElementsByTagName('tbody')[0];
             tableBody.innerHTML = "";  // Clear previous data
 
@@ -76,23 +79,50 @@
                 row.insertCell(2).textContent = `$${coin.market_cap.toLocaleString()}`;
                 row.insertCell(3).textContent = `${coin.price_change_percentage_24h.toFixed(2)}%`;
                 row.insertCell(4).textContent = `$${coin.total_volume.toLocaleString()}`;
-                
-                // Use a default RSI and MACD values (as placeholders) - You should replace with actual calculation or API for RSI/MACD
-                const rsi = 60; // Placeholder RSI value
-                const macd = 1.5; // Placeholder MACD value
-                
+
+                // Placeholder values for RSI, MACD
+                const rsi = 60; // Replace with actual RSI calculation
+                const macd = 1.5; // Replace with actual MACD calculation
+
                 row.insertCell(5).textContent = rsi.toFixed(2);
                 row.insertCell(6).textContent = macd.toFixed(2);
 
-                // Get the predicted price from the model
+                // Get the predicted price from the model (using placeholders)
                 const predictedPrice = await getPrediction(rsi, macd, coin.total_volume);
                 row.insertCell(7).textContent = `$${predictedPrice.toFixed(2)}`;
+
+                // Recommended hold time based on predicted price
+                const recommendedHoldTime = "3-5 days";  // Placeholder value, adjust based on prediction logic
+                row.insertCell(8).textContent = recommendedHoldTime;
+
+                // Price prediction for next day, 2 days, 5 days, 2 weeks
+                row.insertCell(9).textContent = `$${predictedPrice * 1.05}`;  // Example 5% increase for 1D
+                row.insertCell(10).textContent = `$${predictedPrice * 1.1}`;  // Example 10% increase for 2D
+                row.insertCell(11).textContent = `$${predictedPrice * 1.2}`;  // Example 20% increase for 5D
+                row.insertCell(12).textContent = `$${predictedPrice * 1.3}`;  // Example 30% increase for 2W
             }
+
+            startCountdown();
         }
 
-        // Automatically refresh every 15 seconds
-        setInterval(refreshData, 15000);
-        refreshData();  // Initial load
+        // Countdown timer for refresh
+        let countdownTime = 15; // Refresh every 15 seconds
+
+        function startCountdown() {
+            const countdownDisplay = document.getElementById('countdown');
+            countdownDisplay.innerText = `Next refresh in: ${countdownTime}s`;
+            countdownTime--;
+
+            if (countdownTime < 0) {
+                countdownTime = 15;  // Reset countdown to 15 seconds
+                refreshData();  // Automatically refresh data every 15 seconds
+            }
+
+            setTimeout(startCountdown, 1000);
+        }
+
+        // Initial load
+        refreshData();  // Load data when the page loads
     </script>
 </body>
 </html>
