@@ -12,7 +12,7 @@ async function fetchCryptoData() {
     const params = new URLSearchParams({
         vs_currency: 'usd',
         order: 'market_cap_desc',
-        per_page: 50, // Increase number of coins fetched to ensure better results
+        per_page: 50, // Increase the number of coins fetched to ensure better results
         page: 1,
         sparkline: false
     });
@@ -23,15 +23,20 @@ async function fetchCryptoData() {
         const data = await response.json();
         console.log("Raw data fetched:", data);  // Log the raw response data
 
-        // Filter the data for low-cap coins with volume spikes, and good indicators
+        // Check if the data is fetched correctly
+        if (data.length === 0) {
+            console.log('No data returned from the API.');
+        } else {
+            console.log('Data fetched successfully!');
+        }
+
+        // Filter the data for coins with price under $0.50 and market cap under $100M
         const filteredCoins = data.filter(coin => 
             coin.current_price < 0.50 &&                             // Price under $0.50
-            coin.market_cap < 100000000 &&                           // Market cap under $100M
-            coin.total_volume > 5000000 &&                           // Volume above $5M to ensure liquidity
-            (coin.price_change_percentage_24h > 10 || coin.price_change_percentage_24h < -10) // Price change in 24h greater than +/- 10%
+            coin.market_cap < 100000000                              // Market cap under $100M
         );
 
-        // Return the filtered coins for further processing
+        console.log("Filtered data:", filteredCoins);  // Log filtered data
         return filteredCoins;
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -55,9 +60,9 @@ function renderTable(coins) {
     coins.forEach(coin => {
         const row = document.createElement('tr');
 
-        // Generate a simple RSI and MACD check (Note: these are placeholders, as real analysis would require actual calculations)
-        const rsi = Math.random() * 100; // Placeholder for RSI (should implement a real calculation based on price history)
-        const macd = (Math.random() > 0.5) ? 'Bullish' : 'Bearish'; // Placeholder for MACD signal (real calculation needed)
+        // Placeholder for RSI and MACD (real calculations need historical data)
+        const rsi = Math.random() * 100;  // Placeholder for RSI
+        const macd = (Math.random() > 0.5) ? 'Bullish' : 'Bearish'; // Placeholder for MACD
 
         // Insert the data into each table cell
         row.innerHTML = `
