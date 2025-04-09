@@ -52,12 +52,19 @@
         }
 
         async function refreshData() {
-            // Simulating fetching the top 25 low-cap crypto coins (you can use a live API)
-            const coins = [
-                { name: 'Bitcoin', current_price: 57325, market_cap: 1000000000, volume: 12345678, rsi: 60, macd: 1.5 },
-                { name: 'Ethereum', current_price: 4200, market_cap: 500000000, volume: 9876543, rsi: 65, macd: 2.3 },
-                // Add more coin data here
-            ];
+            // Fetching the top 25 low cap coins using CoinGecko API or any other relevant source
+            const response = await fetch('https://api.coingecko.com/api/v3/coins/markets', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                params: {
+                    vs_currency: 'usd',
+                    order: 'market_cap_asc',
+                    per_page: 25
+                }
+            });
+            const coins = await response.json();
 
             const tableBody = document.getElementById('cryptoTable').getElementsByTagName('tbody')[0];
             tableBody.innerHTML = "";  // Clear previous data
@@ -67,13 +74,18 @@
                 row.insertCell(0).textContent = coin.name;
                 row.insertCell(1).textContent = `$${coin.current_price.toFixed(2)}`;
                 row.insertCell(2).textContent = `$${coin.market_cap.toLocaleString()}`;
-                row.insertCell(3).textContent = `${coin.change_percentage_24h.toFixed(2)}%`;
-                row.insertCell(4).textContent = `$${coin.volume.toLocaleString()}`;
-                row.insertCell(5).textContent = coin.rsi.toFixed(2);
-                row.insertCell(6).textContent = coin.macd.toFixed(2);
+                row.insertCell(3).textContent = `${coin.price_change_percentage_24h.toFixed(2)}%`;
+                row.insertCell(4).textContent = `$${coin.total_volume.toLocaleString()}`;
+                
+                // Use a default RSI and MACD values (as placeholders) - You should replace with actual calculation or API for RSI/MACD
+                const rsi = 60; // Placeholder RSI value
+                const macd = 1.5; // Placeholder MACD value
+                
+                row.insertCell(5).textContent = rsi.toFixed(2);
+                row.insertCell(6).textContent = macd.toFixed(2);
 
                 // Get the predicted price from the model
-                const predictedPrice = await getPrediction(coin.rsi, coin.macd, coin.volume);
+                const predictedPrice = await getPrediction(rsi, macd, coin.total_volume);
                 row.insertCell(7).textContent = `$${predictedPrice.toFixed(2)}`;
             }
         }
