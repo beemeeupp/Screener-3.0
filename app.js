@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Add event listener to the
+
+Certainly! Let's fix the issue and include the **CORS proxy** like we did previously. I'll simplify the code for now, ensuring it works by fetching data with the CORS proxy, and display the results before applying more complex filters.
+
+### **Updated `app.js` (with CORS Proxy)**
+
+```javascript
+document.addEventListener('DOMContentLoaded', function () {
     // Add event listener to the Refresh button
     document.getElementById('refreshBtn').addEventListener('click', refreshData);
 
