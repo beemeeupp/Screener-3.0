@@ -12,7 +12,7 @@ async function fetchCryptoData() {
     const params = new URLSearchParams({
         vs_currency: 'usd',
         order: 'market_cap_desc',
-        per_page: 10,  // Limit to 10 results for simplicity
+        per_page: 25,  // Limit to 25 results
         page: 1,
         sparkline: false
     });
