@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Screener - Top 25 Low Cap Coins</title>
+    <title>Crypto Screener - Top Coins</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,23 +11,28 @@
             padding: 20px;
             background-color: #f4f4f4;
         }
+
         h1 {
             text-align: center;
         }
+
         #cryptoTable {
             width: 100%;
             margin-top: 20px;
             border-collapse: collapse;
         }
+
         #cryptoTable th, #cryptoTable td {
             padding: 10px;
             text-align: center;
             border: 1px solid #ddd;
         }
+
         #cryptoTable th {
             background-color: #4CAF50;
             color: white;
         }
+
         #refreshBtn {
             display: block;
             margin: 20px auto;
@@ -37,6 +42,7 @@
             border: none;
             cursor: pointer;
         }
+
         #refreshBtn:hover {
             background-color: #45a049;
         }
@@ -44,7 +50,7 @@
 </head>
 <body>
 
-    <h1>Crypto Screener - Top 25 Low Cap Coins</h1>
+    <h1>Crypto Screener - Top Coins</h1>
     <button id="refreshBtn">Refresh Data</button>
     
     <table id="cryptoTable">
@@ -56,11 +62,9 @@
                 <th>Change (24h)</th>
                 <th>Volume (24h)</th>
                 <th>Indicators</th>
-                <th>Projected 1 Day</th>
-                <th>Projected 2 Days</th>
-                <th>Projected 5 Days</th>
-                <th>Projected 2 Weeks</th>
-                <th>Hold Time</th>
+                <th>Predicted Next Day</th>
+                <th>Predicted 3-5 Days</th>
+                <th>Predicted 7 Days</th>
             </tr>
         </thead>
         <tbody>
@@ -72,8 +76,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             // Add event listener to the Refresh button
             document.getElementById('refreshBtn').addEventListener('click', refreshData);
-
-            // Fetch data and render the table initially
             refreshData();
         });
 
@@ -82,8 +84,8 @@
             const url = 'https://api.coingecko.com/api/v3/coins/markets';
             const params = new URLSearchParams({
                 vs_currency: 'usd',
-                order: 'market_cap_desc', // Sorting by market cap descending
-                per_page: 250,  // Get a good number of results
+                order: 'market_cap_desc',
+                per_page: 25,  // Load top 25 coins
                 page: 1,
                 sparkline: false
             });
@@ -94,18 +96,20 @@
 
                 // Log the raw response data for debugging
                 console.log("Raw data from API:", data);
-
-                // Simplified filtering: Just coins under $0.50 for now
-                const filteredData = data.filter(coin => coin.current_price < 0.50);
                 
-                console.log("Filtered data:", filteredData); // Log the filtered data
-                
-                // Return top 25 coins
-                return filteredData.slice(0, 25); 
+                return data;
             } catch (error) {
                 console.error('Error fetching data:', error);
                 return [];
             }
+        }
+
+        // Function to apply filters to the coins list (Low Cap, High Volatility)
+        function filterCoins(coins) {
+            return coins.filter(coin => {
+                // Filter for coins with low market cap and high volatility
+                return coin.market_cap < 5000000000 && coin.price_change_percentage_24h > 5;
+            });
         }
 
         // Function to render the fetched data into the table
@@ -115,12 +119,12 @@
 
             if (coins.length === 0) {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="11">No data available</td>`; // Adjusted column span for new columns
+                row.innerHTML = `<td colspan="9">No data available</td>`; // Adjusted column span
                 tableBody.appendChild(row);
                 return;
             }
 
-            // Loop through coins and create a row for each
+            // Loop through filtered coins and create a row for each
             coins.forEach(coin => {
                 const row = document.createElement('tr');
                 
@@ -131,22 +135,28 @@
                     <td>${coin.market_cap.toLocaleString()}</td>
                     <td>${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) : 'N/A'}%</td>
                     <td>${coin.total_volume.toLocaleString()}</td>
-                    <td>RSI: N/A | MACD: N/A</td> <!-- Temporary placeholders for now -->
-                    <td>$${(coin.current_price * 1.05).toFixed(2)}</td> <!-- Projected 1 day -->
-                    <td>$${(coin.current_price * 1.10).toFixed(2)}</td> <!-- Projected 2 days -->
-                    <td>$${(coin.current_price * 1.25).toFixed(2)}</td> <!-- Projected 5 days -->
-                    <td>$${(coin.current_price * 1.50).toFixed(2)}</td> <!-- Projected 2 weeks -->
-                    <td>1-2 days</td> <!-- Temporary placeholder for hold time -->
+                    <td>RSI: ${coin.rsi || 'N/A'}, MACD: ${coin.macd || 'N/A'}</td>
+                    <td>${calculatePredictedPrice(coin, 1)} USD</td>
+                    <td>${calculatePredictedPrice(coin, 3)} USD</td>
+                    <td>${calculatePredictedPrice(coin, 7)} USD</td>
                 `;
                 tableBody.appendChild(row);
             });
+        }
+
+        // Function to calculate predicted price based on current price and growth percentage
+        function calculatePredictedPrice(coin, days) {
+            const growthPercentage = coin.price_change_percentage_24h / 100; // Daily growth rate
+            const multiplier = Math.pow(1 + growthPercentage, days); // Predicted price multiplier based on days
+            return (coin.current_price * multiplier).toFixed(2);
         }
 
         // Function to refresh the data when the button is clicked
         async function refreshData() {
             console.log("Refreshing data...");
             const coins = await fetchCryptoData();
-            renderTable(coins);
+            const filteredCoins = filterCoins(coins); // Apply filters
+            renderTable(filteredCoins);
         }
     </script>
 
