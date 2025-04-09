@@ -101,8 +101,6 @@
             try {
                 const response = await fetch(`${url}?${params.toString()}`);
                 const data = await response.json();
-
-                console.log("Raw data from API:", data);
                 return data;
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -164,7 +162,6 @@
 
         // Function to refresh the data automatically every 15 seconds
         async function refreshData() {
-            console.log("Refreshing data...");
             const coins = await fetchCryptoData();
             const filteredCoins = filterCoins(coins); // Apply filters
             renderTable(filteredCoins);
