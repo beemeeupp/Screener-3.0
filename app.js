@@ -29,7 +29,7 @@ async function fetchCryptoData() {
             coin.current_price < 0.50 && 
             coin.total_volume > 5000000 && 
             coin.price_change_percentage_24h >= 5 && 
-            coin.price_change_percentage_24h <= 25 // Remove coins with very small or extremely high price changes
+            coin.price_change_percentage_24h <= 25 // Adjust filter criteria if needed
         );
 
         // Additional filters for technical indicators (RSI, MACD)
@@ -100,7 +100,7 @@ function renderTable(coins) {
 
     if (coins.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="9">No data available</td>`;
+        row.innerHTML = `<td colspan="11">No data available</td>`; // Adjusted column span for new columns
         tableBody.appendChild(row);
         return;
     }
