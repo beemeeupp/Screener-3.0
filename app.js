@@ -24,12 +24,12 @@ async function fetchCryptoData() {
         // Log the raw response data for debugging
         console.log("Raw data from API:", data);
 
-        // Filter for coins under $0.50 and significant 24h volume
+        // Filter for coins under $0.50, with at least 5 million volume, and price change between 5% and 25%
         const filteredData = data.filter(coin => 
             coin.current_price < 0.50 && 
             coin.total_volume > 5000000 && 
             coin.price_change_percentage_24h >= 5 && 
-            coin.price_change_percentage_24h <= 25 // Adjust filter criteria if needed
+            coin.price_change_percentage_24h <= 25
         );
 
         // Additional filters for technical indicators (RSI, MACD)
