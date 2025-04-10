@@ -70,27 +70,31 @@
 
     // Fetch CoinGecko data
     async function fetchRealData(page) {
-      const response = await fetch(coinGeckoAPI + coinGeckoParams + page);
-      if (!response.ok) {
-        console.error("Failed to fetch CoinGecko data");
+      try {
+        const response = await fetch(coinGeckoAPI + coinGeckoParams + page);
+        if (!response.ok) throw new Error("Failed to fetch CoinGecko data");
+        const data = await response.json();
+        console.log("Fetched CoinGecko data:", data);  // Log the fetched data
+        return data;
+      } catch (error) {
+        console.error("Error fetching CoinGecko data:", error);
         return [];
       }
-      const data = await response.json();
-      console.log("Fetched CoinGecko data:", data);  // Log the fetched data
-      return data;
     }
 
     // Fetch historical data for calculating RSI and MACD (using CryptoCompare)
     async function fetchCryptoCompareData(coinSymbol) {
       const url = `${cryptoCompareAPI}?fsym=${coinSymbol}&tsym=USD&limit=2000&toTs=${Math.floor(Date.now() / 1000)}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        console.error("Failed to fetch CryptoCompare data");
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch CryptoCompare data for ${coinSymbol}`);
+        const data = await response.json();
+        console.log(`Fetched CryptoCompare data for ${coinSymbol}:`, data);  // Log the fetched data
+        return data.Data.Data; // Return historical data for technical analysis
+      } catch (error) {
+        console.error("Error fetching CryptoCompare data:", error);
         return [];
       }
-      const data = await response.json();
-      console.log(`Fetched CryptoCompare data for ${coinSymbol}:`, data);  // Log the fetched data
-      return data.Data.Data; // Return historical data for technical analysis
     }
 
     // Calculate RSI (using a simple function, ideally use TA-Lib or other precise libraries)
@@ -146,28 +150,34 @@
     // Render filtered data into the table
     function renderTable(data) {
       const tbody = document.getElementById("results-body");
-      tbody.innerHTML = "";
+      tbody.innerHTML = ""; // Clear existing rows
 
-      data.forEach(coin => {
+      if (data.length === 0) {
         const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${coin.name}</td>
-          <td>$${coin.current_price.toFixed(6)}</td>
-          <td>$${coin.market_cap.toLocaleString()}</td>
-          <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-          <td>$${coin.total_volume.toLocaleString()}</td>
-          <td>${coin.rsi}</td>
-          <td>${coin.macd}</td>
-          <td>${getSignal(coin.rsi, coin.macd)}</td>
-          <td>$${(Math.random() * 0.001).toFixed(8)}</td>
-          <td>${["1D", "2D", "3D", "1W"][Math.floor(Math.random() * 4)]}</td>
-          <td>$${(Math.random() * 0.001).toFixed(8)}</td>
-          <td>$${(Math.random() * 0.001).toFixed(8)}</td>
-          <td>$${(Math.random() * 0.001).toFixed(8)}</td>
-          <td>$${(Math.random() * 0.001).toFixed(8)}</td>
-        `;
+        row.innerHTML = "<td colspan='13' style='text-align: center;'>No Data Available</td>";
         tbody.appendChild(row);
-      });
+      } else {
+        data.forEach(coin => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${coin.name}</td>
+            <td>$${coin.current_price.toFixed(6)}</td>
+            <td>$${coin.market_cap.toLocaleString()}</td>
+            <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
+            <td>$${coin.total_volume.toLocaleString()}</td>
+            <td>${coin.rsi}</td>
+            <td>${coin.macd}</td>
+            <td>${getSignal(coin.rsi, coin.macd)}</td>
+            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
+            <td>${["1D", "2D", "3D", "1W"][Math.floor(Math.random() * 4)]}</td>
+            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
+            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
+            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
+            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
     }
 
     // Start countdown timer for auto-refresh
