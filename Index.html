@@ -115,20 +115,18 @@
 
   <script>
     const coinGeckoAPI = "https://api.coingecko.com/api/v3/coins/markets";
-    const coinGeckoParams = "?vs_currency=usd&order=market_cap_asc&per_page=50&page=";
-    const cryptoCompareAPI = "https://min-api.cryptocompare.com/data/v2/histoday";
-
+    const cryptoCompareAPI = "https://min-api.cryptocompare.com/data/technical/indicators";
+    
     // Fetch CoinGecko data
-    async function fetchRealData(page) {
-      try {
-        const response = await fetch(coinGeckoAPI + coinGeckoParams + page);
-        const data = await response.json();
-        console.log("Fetched CoinGecko data:", data);  // Log the data to the console
-        return data;
-      } catch (error) {
-        console.error("Error fetching CoinGecko data:", error);
-        return [];
-      }
+    async function fetchCoinGeckoData(page) {
+      const response = await fetch(`${coinGeckoAPI}?vs_currency=usd&order=market_cap_asc&per_page=50&page=${page}`);
+      return await response.json();
+    }
+
+    // Fetch CryptoCompare RSI and MACD data
+    async function fetchTechnicalIndicators(coinId) {
+      const response = await fetch(`${cryptoCompareAPI}?fsym=${coinId}&tsym=USD&toTs=${Math.floor(Date.now() / 1000)}&limit=200`);
+      return await response.json();
     }
 
     // Render the table with fetched data
@@ -141,7 +139,12 @@
         row.innerHTML = "<td colspan='10' style='text-align: center;'>No Data Available</td>";
         tbody.appendChild(row);
       } else {
-        coins.forEach(coin => {
+        coins.forEach(async coin => {
+          const technicalData = await fetchTechnicalIndicators(coin.id);
+          const RSI = technicalData?.RSI?.[technicalData.RSI.length - 1] || 50; // Default RSI if no data
+          const MACD = technicalData?.MACD?.[technicalData.MACD.length - 1] || 'Neutral'; // Default MACD if no data
+          const buySell = RSI > 70 ? "Sell" : (RSI < 30 ? "Buy" : "Hold");
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${coin.name}</td>
@@ -149,10 +152,10 @@
             <td>$${coin.market_cap.toLocaleString()}</td>
             <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
             <td>$${coin.total_volume.toLocaleString()}</td>
-            <td>${coin.rsi || "N/A"}</td>
-            <td>${coin.macd || "N/A"}</td>
-            <td>${coin.signal || "N/A"}</td>
-            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
+            <td>${RSI}</td>
+            <td>${MACD}</td>
+            <td>${buySell}</td>
+            <td>$${(coin.current_price * 1.1).toFixed(6)}</td>
             <td>${["1D", "2D", "3D", "1W"][Math.floor(Math.random() * 4)]}</td>
           `;
           tbody.appendChild(row);
@@ -183,29 +186,22 @@
       let page = 1;
 
       while (allCoins.length < 50) {
-        const data = await fetchRealData(page);
+        const data = await fetchCoinGeckoData(page);
         if (data.length === 0) break;
         allCoins = [...allCoins, ...data];
         page++;
       }
 
-      console.log("Coins fetched for table:", allCoins);  // Log the coins data
-
       // Filter for Moon Shot Coins
       const moonShotCoins = allCoins.filter(coin => coin.current_price < 0.001 && coin.market_cap < 10000000);
-      console.log("Moon Shot Coins:", moonShotCoins);  // Log the moon shot coins
+      renderTable(moonShotCoins.slice(0, 10), "moon-shot-coins");
 
       // Filter for Mini Moons
       const miniMoons = allCoins.filter(coin => coin.current_price < 0.01 && coin.market_cap < 50000000);
-      console.log("Mini Moons:", miniMoons);  // Log the mini moons
+      renderTable(miniMoons.slice(0, 10), "mini-moons");
 
       // Filter for Easy 10% Daily Gains
       const easyGains = allCoins.filter(coin => coin.price_change_percentage_24h >= 10 && coin.market_cap < 100000000);
-      console.log("Easy 10% Daily Gains:", easyGains);  // Log the easy gains
-
-      // Render each table
-      renderTable(moonShotCoins.slice(0, 10), "moon-shot-coins");
-      renderTable(miniMoons.slice(0, 10), "mini-moons");
       renderTable(easyGains.slice(0, 10), "easy-gains");
     }
 
