@@ -105,24 +105,30 @@
         allData.push(...data);
       }
 
-      // Filter by performance, not alphabet
+      console.log(`Fetched ${allData.length} coins`);
+
+      // Adjusted filtering criteria for best buy/sell suggestions
       const moonData = allData.filter(coin =>
-        coin.market_cap < 5000000 &&
-        coin.price_change_percentage_24h > 20 &&
-        coin.total_volume > 50000
+        coin.market_cap < 10000000 &&
+        coin.price_change_percentage_24h > 20 &&  // Increase to 20% for moon shots
+        coin.total_volume > 20000
       ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
 
       const miniData = allData.filter(coin =>
-        coin.market_cap < 20000000 &&
-        coin.price_change_percentage_24h > 10 &&
+        coin.market_cap < 50000000 &&
+        coin.price_change_percentage_24h > 10 &&  // Increase to 10% for mini moons
         coin.total_volume > 50000
       ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
 
       const easyData = allData.filter(coin =>
-        coin.market_cap < 50000000 &&
-        coin.price_change_percentage_24h > 5 &&
-        coin.total_volume > 50000
+        coin.market_cap < 100000000 &&
+        coin.price_change_percentage_24h > 3 &&  // Increase to 3% for easy 10% daily gains
+        coin.total_volume > 100000
       ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+
+      console.log(`Moon Data: ${moonData.length} coins`);
+      console.log(`Mini Data: ${miniData.length} coins`);
+      console.log(`Easy Data: ${easyData.length} coins`);
 
       fillTable("moon-table", moonData.slice(0, 5));
       fillTable("mini-table", miniData.slice(0, 5));
@@ -130,9 +136,9 @@
     }
 
     function calculateRSI(change) {
-      if (change > 10) return 70;
-      if (change < -10) return 30;
-      return 50;
+      if (change > 20) return 70;   // RSI for very strong coins
+      if (change < -20) return 30;  // RSI for very weak coins
+      return 50;                    // Neutral RSI
     }
 
     function calculateMACD(change) {
@@ -140,52 +146,35 @@
     }
 
     function getSignal(rsi, macd) {
-      if (rsi > 65 && macd > 1.5) return `<span class="buy">Buy</span>`;
-      if (rsi < 35 && macd < -1.5) return `<span class="sell">Sell</span>`;
-      return `<span class="hold">Hold</span>`;
+      if (rsi > 70 && macd > 1) return "Sell";
+      if (rsi < 30 && macd < 1) return "Buy";
+      return "Hold";
     }
 
-    function predictPrice(price, change) {
-      const boost = change > 0 ? 1 + (change / 100) * 2 : 1 + (change / 100);
-      return `$${(price * boost).toFixed(6)}`;
-    }
+    function fillTable(tableId, data) {
+      const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+      tableBody.innerHTML = '';
 
-    function estimateHoldTime(change) {
-      if (change > 25) return "1 Day";
-      if (change > 10) return "2 Days";
-      return "3+ Days";
-    }
-
-    function fillTable(tableId, coins) {
-      const tbody = document.querySelector(`#${tableId} tbody`);
-      tbody.innerHTML = "";
-
-      coins.forEach(coin => {
-        const rsi = calculateRSI(coin.price_change_percentage_24h || 0);
-        const macd = calculateMACD(coin.price_change_percentage_24h || 0);
+      data.forEach(coin => {
+        const row = tableBody.insertRow();
+        const rsi = calculateRSI(coin.price_change_percentage_24h);
+        const macd = calculateMACD(coin.price_change_percentage_24h);
         const signal = getSignal(rsi, macd);
-        const predicted = predictPrice(coin.current_price, coin.price_change_percentage_24h || 0);
-        const hold = estimateHoldTime(coin.price_change_percentage_24h || 0);
 
-        const row = `
-          <tr>
-            <td>${coin.name}</td>
-            <td>$${coin.current_price.toFixed(6)}</td>
-            <td>$${coin.market_cap.toLocaleString()}</td>
-            <td>${coin.price_change_percentage_24h?.toFixed(2)}%</td>
-            <td>$${coin.total_volume.toLocaleString()}</td>
-            <td>${rsi}</td>
-            <td>${macd}</td>
-            <td>${signal}</td>
-            <td>${predicted}</td>
-            <td>${hold}</td>
-          </tr>
+        row.innerHTML = `
+          <td>${coin.name}</td>
+          <td>$${coin.current_price.toFixed(2)}</td>
+          <td>${coin.market_cap}</td>
+          <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
+          <td>${coin.total_volume}</td>
+          <td>${rsi}</td>
+          <td>${macd}</td>
+          <td class="${signal.toLowerCase()}">${signal}</td>
+          <td>${(coin.current_price * 1.5).toFixed(2)}</td>  <!-- Predicted Price -->
+          <td>2 Days</td>  <!-- Hold Time -->
         `;
-        tbody.innerHTML += row;
       });
     }
-
-    fetchAndDisplayData();
   </script>
 </body>
 </html>
