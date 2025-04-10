@@ -20,6 +20,25 @@
       color: #0f0;
       margin-bottom: 20px;
     }
+    .table-container {
+      overflow-y: auto;
+      max-height: 500px;
+    }
+    .coin-row {
+      padding: 10px;
+      border-bottom: 1px solid #444;
+    }
+    .coin-row:hover {
+      background-color: #333;
+      cursor: pointer;
+    }
+    .coin-details {
+      display: none;
+      padding-left: 20px;
+    }
+    .coin-details.active {
+      display: block;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -41,27 +60,25 @@
 <body>
   <h1>Crypto Screener - Ultra Low Cap Coins</h1>
   <div id="countdown">Next refresh in: 15s</div>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Price (USD)</th>
-        <th>Market Cap</th>
-        <th>Change (24h)</th>
-        <th>Volume (24h)</th>
-        <th>RSI</th>
-        <th>MACD</th>
-        <th>Buy/Sell</th>
-        <th>Predicted Price</th>
-        <th>Hold Time</th>
-        <th>1D</th>
-        <th>2D</th>
-        <th>5D</th>
-        <th>2W</th>
-      </tr>
-    </thead>
-    <tbody id="results-body"></tbody>
-  </table>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price (USD)</th>
+          <th>Market Cap</th>
+          <th>Change (24h)</th>
+          <th>Volume (24h)</th>
+          <th>RSI</th>
+          <th>MACD</th>
+          <th>Buy/Sell</th>
+          <th>Predicted Price</th>
+          <th>Hold Time</th>
+        </tr>
+      </thead>
+      <tbody id="results-body"></tbody>
+    </table>
+  </div>
 
   <script>
     const coinGeckoAPI = "https://api.coingecko.com/api/v3/coins/markets";
@@ -110,11 +127,12 @@
 
       if (coins.length === 0) {
         const row = document.createElement("tr");
-        row.innerHTML = "<td colspan='13' style='text-align: center;'>No Data Available</td>";
+        row.innerHTML = "<td colspan='10' style='text-align: center;'>No Data Available</td>";
         tbody.appendChild(row);
       } else {
         coins.forEach(coin => {
           const row = document.createElement("tr");
+          row.classList.add("coin-row");
           row.innerHTML = `
             <td>${coin.name}</td>
             <td>$${coin.current_price.toFixed(6)}</td>
@@ -126,11 +144,25 @@
             <td>${coin.signal || "N/A"}</td>
             <td>$${(Math.random() * 0.001).toFixed(8)}</td>
             <td>${["1D", "2D", "3D", "1W"][Math.floor(Math.random() * 4)]}</td>
-            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
-            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
-            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
           `;
           tbody.appendChild(row);
+
+          // Add details dropdown
+          const detailsRow = document.createElement("tr");
+          detailsRow.classList.add("coin-details");
+          detailsRow.innerHTML = `
+            <td colspan="10" style="text-align: left;">
+              <p><strong>More Info:</strong></p>
+              <p>RSI: ${coin.rsi || "N/A"}</p>
+              <p>MACD: ${coin.macd || "N/A"}</p>
+              <p>Buy/Sell Signal: ${coin.signal || "N/A"}</p>
+            </td>
+          `;
+          tbody.appendChild(detailsRow);
+
+          row.addEventListener("click", () => {
+            detailsRow.classList.toggle("active");
+          });
         });
       }
     }
