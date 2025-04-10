@@ -2,255 +2,159 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Crypto Screener - Low Cap Coins</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Screener</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
     body {
-      background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+      background-color: #0e0e10;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #fff;
-      font-family: 'Roboto', sans-serif;
+      margin: 0;
       padding: 20px;
-      overflow-x: hidden;
     }
-    h1 {
+    h2 {
       text-align: center;
-      font-size: 2.5em;
-      margin-bottom: 20px;
-      font-weight: bold;
-      text-transform: uppercase;
-      color: #00ff99;
-    }
-    #countdown {
-      text-align: center;
-      color: #00ff99;
-      font-size: 1.2em;
-      margin-bottom: 30px;
-    }
-    .table-container {
-      overflow-x: auto;
-      margin-bottom: 30px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 15px;
-      box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
+      margin-top: 40px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
-      text-align: center;
+      margin: 20px auto;
+      background-color: #1a1a1d;
+      border: 1px solid #444;
     }
     th, td {
       padding: 12px;
-      border: 1px solid #444;
+      text-align: center;
+      border: 1px solid #333;
     }
     th {
-      background: #222;
-      font-size: 16px;
-      text-transform: uppercase;
-    }
-    tr:nth-child(even) {
-      background-color: #1a1a1a;
-    }
-    tr:nth-child(odd) {
-      background-color: #121212;
-    }
-    tr:hover {
-      background-color: #333;
-      cursor: pointer;
+      background-color: #222;
+      color: #00fff2;
     }
     td {
-      font-size: 13px;
+      color: #e0e0e0;
     }
-    td:nth-child(1) {
-      text-align: left;
-      color: #00ff99;
-      font-weight: bold;
-    }
-    td:nth-child(8) {
-      font-weight: bold;
-    }
-    td:nth-child(10) {
-      color: #f4f4f4;
-      font-weight: 600;
-    }
-    h2 {
-      margin-bottom: 20px;
-      font-size: 1.8em;
+    .buy { color: #0f0; font-weight: bold; }
+    .sell { color: #f00; font-weight: bold; }
+    .hold { color: #ff0; font-weight: bold; }
+    .refresh-timer {
       text-align: center;
-      color: #00ff99;
-    }
-    .refresh-button {
-      background: #00ff99;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1.2em;
-      cursor: pointer;
-      margin: 20px auto;
-      display: block;
-      border-radius: 5px;
-      box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
-      transition: 0.3s;
-    }
-    .refresh-button:hover {
-      background: #00cc80;
-    }
-    .refresh-button:active {
-      background: #00994d;
-    }
-    @media screen and (max-width: 768px) {
-      table {
-        font-size: 12px;
-      }
-      th, td {
-        padding: 8px;
-      }
+      margin-bottom: 20px;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <h1>Crypto Screener - Low Cap Coins</h1>
-  <div id="countdown">Next refresh in: 15s</div>
-  
-  <!-- Table 1: Moon Shot Coins -->
-  <div class="table-container">
-    <h2>Moon Shot Coins (100%+ Potential Gains)</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Price (USD)</th>
-          <th>Market Cap</th>
-          <th>Change (24h)</th>
-          <th>Volume (24h)</th>
-          <th>RSI</th>
-          <th>MACD</th>
-          <th>Buy/Sell</th>
-          <th>Predicted Price</th>
-          <th>Hold Time</th>
-        </tr>
-      </thead>
-      <tbody id="moon-shot-coins"></tbody>
-    </table>
-  </div>
+  <h1 style="text-align:center;">Crypto Screener</h1>
+  <div class="refresh-timer" id="timer">Next refresh in: 15s</div>
 
-  <!-- Table 2: Mini Moons -->
-  <div class="table-container">
-    <h2>Mini Moons (50% Potential Gains)</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Price (USD)</th>
-          <th>Market Cap</th>
-          <th>Change (24h)</th>
-          <th>Volume (24h)</th>
-          <th>RSI</th>
-          <th>MACD</th>
-          <th>Buy/Sell</th>
-          <th>Predicted Price</th>
-          <th>Hold Time</th>
-        </tr>
-      </thead>
-      <tbody id="mini-moons"></tbody>
-    </table>
-  </div>
+  <h2>Moon Shot Coins (1000% Potential)</h2>
+  <table id="moon-table">
+    <thead>
+      <tr>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h %</th>
+        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <!-- Table 3: Easy 10% Daily Gains -->
-  <div class="table-container">
-    <h2>Easy 10% Daily Gains</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Price (USD)</th>
-          <th>Market Cap</th>
-          <th>Change (24h)</th>
-          <th>Volume (24h)</th>
-          <th>RSI</th>
-          <th>MACD</th>
-          <th>Buy/Sell</th>
-          <th>Predicted Price</th>
-          <th>Hold Time</th>
-        </tr>
-      </thead>
-      <tbody id="easy-10-gains"></tbody>
-    </table>
-  </div>
+  <h2>Mini Moons (50% Potential)</h2>
+  <table id="mini-table">
+    <thead>
+      <tr>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h %</th>
+        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <button class="refresh-button" onclick="refreshData()">Refresh Data</button>
+  <h2>Easy 10% Daily Gains</h2>
+  <table id="easy-table">
+    <thead>
+      <tr>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h %</th>
+        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
-    let coins = []; // Placeholder for real coin data
-    let countdown = 15;
+    const refreshTime = 15;
+    let countdown = refreshTime;
 
-    const refreshData = async () => {
-      // Simulate an API call for coin data (you would replace this with real API calls)
-      coins = [
-        { name: "Bitcoin", price: 50000, market_cap: "1T", change: "2", volume: "10B", rsi: "60", macd: "1.5", buy_sell: "Buy", predicted_price: 51000, hold_time: "1 Day" },
-        { name: "Ethereum", price: 3000, market_cap: "500B", change: "5", volume: "7B", rsi: "55", macd: "1.0", buy_sell: "Hold", predicted_price: 3150, hold_time: "1 Day" },
-        { name: "Cardano", price: 1.5, market_cap: "50B", change: "10", volume: "2B", rsi: "65", macd: "2.0", buy_sell: "Buy", predicted_price: 2.0, hold_time: "2 Days" },
-        { name: "XRP", price: 1.2, market_cap: "40B", change: "3", volume: "1.5B", rsi: "50", macd: "0.8", buy_sell: "Sell", predicted_price: 1.1, hold_time: "3 Days" },
-        { name: "Polkadot", price: 35, market_cap: "30B", change: "8", volume: "3B", rsi: "70", macd: "2.5", buy_sell: "Buy", predicted_price: 38, hold_time: "4 Days" },
-        { name: "Litecoin", price: 180, market_cap: "12B", change: "12", volume: "1B", rsi: "55", macd: "1.1", buy_sell: "Hold", predicted_price: 190, hold_time: "5 Days" },
-        { name: "Chainlink", price: 25, market_cap: "10B", change: "15", volume: "800M", rsi: "60", macd: "2.1", buy_sell: "Buy", predicted_price: 27, hold_time: "2 Days" },
-        { name: "Polygon", price: 1.3, market_cap: "15B", change: "6", volume: "3B", rsi: "63", macd: "1.8", buy_sell: "Hold", predicted_price: 1.4, hold_time: "1 Day" },
-        { name: "Solana", price: 120, market_cap: "40B", change: "11", volume: "2B", rsi: "57", macd: "1.9", buy_sell: "Buy", predicted_price: 130, hold_time: "3 Days" },
-        { name: "Uniswap", price: 35, market_cap: "20B", change: "9", volume: "1B", rsi: "64", macd: "2.2", buy_sell: "Hold", predicted_price: 37, hold_time: "4 Days" },
-      ];
+    function updateTimer() {
+      document.getElementById("timer").innerText = `Next refresh in: ${countdown}s`;
+      countdown--;
+      if (countdown < 0) {
+        countdown = refreshTime;
+        fetchAndDisplayData();
+      }
+    }
+    setInterval(updateTimer, 1000);
 
-      // Filter and update tables
-      updateTable('moon-shot-coins', 100);
-      updateTable('mini-moons', 50);
-      updateTable('easy-10-gains', 15);
-      
-      // Update countdown
-      countdown = 15;
-      const interval = setInterval(() => {
-        document.getElementById('countdown').textContent = `Next refresh in: ${countdown}s`;
-        countdown--;
-        if (countdown <= 0) {
-          clearInterval(interval);
-          refreshData();
-        }
-      }, 1000);
-    };
+    async function fetchAndDisplayData() {
+      const res = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=100&page=1&sparkline=false");
+      const data = await res.json();
 
-    const updateTable = (tableId, gainPercentage) => {
-      const tableBody = document.getElementById(tableId);
-      tableBody.innerHTML = ""; // Clear existing table content
+      const moonData = [];
+      const miniData = [];
+      const easyData = [];
 
-      // Filter coins based on gain percentage
-      let filteredCoins = coins.filter(coin => {
-        return parseFloat(coin.change) >= gainPercentage;
+      data.forEach(coin => {
+        if (coin.market_cap < 5000000 && coin.price_change_percentage_24h > 20) moonData.push(coin);
+        else if (coin.market_cap < 20000000 && coin.price_change_percentage_24h > 10) miniData.push(coin);
+        else if (coin.market_cap < 50000000 && coin.price_change_percentage_24h > 5) easyData.push(coin);
       });
 
-      // Display top 5 coins
-      filteredCoins.slice(0, 5).forEach(coin => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${coin.name}</td>
-          <td>${coin.price}</td>
-          <td>${coin.market_cap}</td>
-          <td>${coin.change}</td>
-          <td>${coin.volume}</td>
-          <td>${coin.rsi}</td>
-          <td>${coin.macd}</td>
-          <td>${coin.buy_sell}</td>
-          <td>${coin.predicted_price}</td>
-          <td>${coin.hold_time}</td>
+      fillTable("moon-table", moonData.slice(0, 5));
+      fillTable("mini-table", miniData.slice(0, 5));
+      fillTable("easy-table", easyData.slice(0, 5));
+    }
+
+    function calculateRSI(priceChange) {
+      if (priceChange > 10) return 70;
+      if (priceChange < -10) return 30;
+      return 50;
+    }
+
+    function calculateMACD(priceChange) {
+      return (priceChange / 10).toFixed(2);
+    }
+
+    function getSignal(rsi, macd) {
+      if (rsi > 65 && macd > 1.5) return `<span class="buy">Buy</span>`;
+      if (rsi < 35 && macd < -1.5) return `<span class="sell">Sell</span>`;
+      return `<span class="hold">Hold</span>`;
+    }
+
+    function fillTable(id, coins) {
+      const tbody = document.getElementById(id).getElementsByTagName('tbody')[0];
+      tbody.innerHTML = '';
+      coins.forEach(coin => {
+        const rsi = calculateRSI(coin.price_change_percentage_24h);
+        const macd = calculateMACD(coin.price_change_percentage_24h);
+        const signal = getSignal(rsi, macd);
+        const row = `
+          <tr>
+            <td>${coin.name}</td>
+            <td>$${coin.current_price.toFixed(6)}</td>
+            <td>$${coin.market_cap.toLocaleString()}</td>
+            <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
+            <td>$${coin.total_volume.toLocaleString()}</td>
+            <td>${rsi}</td>
+            <td>${macd}</td>
+            <td>${signal}</td>
+          </tr>
         `;
-        tableBody.appendChild(row);
+        tbody.innerHTML += row;
       });
-    };
+    }
 
-    // Initialize page with data
-    refreshData();
+    fetchAndDisplayData();
   </script>
 </body>
 </html>
