@@ -111,29 +111,32 @@
       const moonData = allData.filter(coin =>
         coin.market_cap < 10000000 &&
         coin.price_change_percentage_24h > 20 &&  // Increase to 20% for moon shots
-        coin.total_volume > 20000
+        coin.total_volume > 20000 && 
+        coin.rsi && coin.macd
       );
 
       const miniData = allData.filter(coin =>
         coin.market_cap < 50000000 &&
         coin.price_change_percentage_24h > 10 &&  // Increase to 10% for mini moons
-        coin.total_volume > 50000
+        coin.total_volume > 50000 && 
+        coin.rsi && coin.macd
       );
 
       const easyData = allData.filter(coin =>
         coin.market_cap < 100000000 &&
         coin.price_change_percentage_24h > 3 &&  // Increase to 3% for easy 10% daily gains
-        coin.total_volume > 100000
+        coin.total_volume > 100000 && 
+        coin.rsi && coin.macd
       );
 
       console.log(`Moon Data: ${moonData.length} coins`);
       console.log(`Mini Data: ${miniData.length} coins`);
       console.log(`Easy Data: ${easyData.length} coins`);
 
-      // Sort by performance (price_change_percentage_24h) for the best candidates
-      const sortedMoonData = moonData.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
-      const sortedMiniData = miniData.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
-      const sortedEasyData = easyData.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
+      // Sort by performance (RSI and MACD)
+      const sortedMoonData = moonData.sort((a, b) => b.rsi - a.rsi || b.macd - a.macd).slice(0, 5);
+      const sortedMiniData = miniData.sort((a, b) => b.rsi - a.rsi || b.macd - a.macd).slice(0, 5);
+      const sortedEasyData = easyData.sort((a, b) => b.rsi - a.rsi || b.macd - a.macd).slice(0, 5);
 
       fillTable("moon-table", sortedMoonData);
       fillTable("mini-table", sortedMiniData);
