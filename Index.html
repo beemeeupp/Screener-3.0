@@ -200,106 +200,50 @@
 
     setInterval(updateCountdown, 1000); // Update countdown every second
 
-    function loadData() {
-      // Placeholder function for fetching real data from an API
-      const data = [
-        {
-          name: 'Coin 1',
-          price: '$0.01',
-          marketCap: '$10M',
-          change: '5%',
-          volume: '$500k',
-          rsi: 60,
-          macd: 'Bullish',
-          buySell: 'Buy',
-          predictedPrice: '$0.02',
-          holdTime: '2D'
-        },
-        {
-          name: 'Coin 2',
-          price: '$0.02',
-          marketCap: '$20M',
-          change: '10%',
-          volume: '$1M',
-          rsi: 70,
-          macd: 'Neutral',
-          buySell: 'Hold',
-          predictedPrice: '$0.03',
-          holdTime: '3D'
-        },
-        {
-          name: 'Coin 3',
-          price: '$0.05',
-          marketCap: '$50M',
-          change: '20%',
-          volume: '$5M',
-          rsi: 80,
-          macd: 'Bullish',
-          buySell: 'Buy',
-          predictedPrice: '$0.07',
-          holdTime: '5D'
-        }
-      ];
+    // Function to fetch data from CoinGecko API
+    async function loadData() {
+      const url = 'https://api.coingecko.com/api/v3/coins/markets';
+      const params = {
+        vs_currency: 'usd',
+        order: 'market_cap_desc',
+        per_page: 30, // You can adjust the number of coins you want to fetch
+        page: 1,
+      };
+      const queryParams = new URLSearchParams(params).toString();
+      const response = await fetch(`${url}?${queryParams}`);
+      const coins = await response.json();
 
-      // Populate Table 1: Moon Shot Coins
-      let moonShotHTML = '';
-      data.forEach(coin => {
-        moonShotHTML += `
+      // Filter coins based on your custom logic here
+      const moonShotCoins = coins.filter(coin => coin.price_change_percentage_24h > 100); // Example: 100%+ gain
+      const miniMoons = coins.filter(coin => coin.price_change_percentage_24h > 50 && coin.price_change_percentage_24h <= 100); // 50%+ gain
+      const easyGains = coins.filter(coin => coin.price_change_percentage_24h > 15 && coin.price_change_percentage_24h <= 50); // 15%+ gain
+
+      // Update tables
+      updateTable('moon-shot-coins', moonShotCoins);
+      updateTable('mini-moons', miniMoons);
+      updateTable('easy-gains', easyGains);
+    }
+
+    // Function to update table with coin data
+    function updateTable(tableId, coins) {
+      let tableHTML = '';
+      coins.forEach(coin => {
+        tableHTML += `
           <tr>
             <td>${coin.name}</td>
-            <td>${coin.price}</td>
-            <td>${coin.marketCap}</td>
-            <td>${coin.change}</td>
-            <td>${coin.volume}</td>
-            <td>${coin.rsi}</td>
-            <td>${coin.macd}</td>
-            <td>${coin.buySell}</td>
-            <td>${coin.predictedPrice}</td>
-            <td>${coin.holdTime}</td>
+            <td>$${coin.current_price}</td>
+            <td>$${coin.market_cap.toLocaleString()}</td>
+            <td>${coin.price_change_percentage_24h}%</td>
+            <td>$${coin.total_volume.toLocaleString()}</td>
+            <td>${Math.floor(Math.random() * 100) + 1}</td> <!-- Fake RSI for now -->
+            <td>${Math.random() > 0.5 ? 'Bullish' : 'Bearish'}</td> <!-- Fake MACD -->
+            <td>${coin.price_change_percentage_24h > 50 ? 'Buy' : 'Hold'}</td>
+            <td>$${(coin.current_price * 1.5).toFixed(2)}</td> <!-- Predicted Price -->
+            <td>${coin.price_change_percentage_24h > 50 ? '2D' : '5D'}</td>
           </tr>
         `;
       });
-      document.getElementById('moon-shot-coins').innerHTML = moonShotHTML;
-
-      // Populate Table 2: Mini Moons
-      let miniMoonsHTML = '';
-      data.forEach(coin => {
-        miniMoonsHTML += `
-          <tr>
-            <td>${coin.name}</td>
-            <td>${coin.price}</td>
-            <td>${coin.marketCap}</td>
-            <td>${coin.change}</td>
-            <td>${coin.volume}</td>
-            <td>${coin.rsi}</td>
-            <td>${coin.macd}</td>
-            <td>${coin.buySell}</td>
-            <td>${coin.predictedPrice}</td>
-            <td>${coin.holdTime}</td>
-          </tr>
-        `;
-      });
-      document.getElementById('mini-moons').innerHTML = miniMoonsHTML;
-
-      // Populate Table 3: Easy 10% Daily Gains
-      let easyGainsHTML = '';
-      data.forEach(coin => {
-        easyGainsHTML += `
-          <tr>
-            <td>${coin.name}</td>
-            <td>${coin.price}</td>
-            <td>${coin.marketCap}</td>
-            <td>${coin.change}</td>
-            <td>${coin.volume}</td>
-            <td>${coin.rsi}</td>
-            <td>${coin.macd}</td>
-            <td>${coin.buySell}</td>
-            <td>${coin.predictedPrice}</td>
-            <td>${coin.holdTime}</td>
-          </tr>
-        `;
-      });
-      document.getElementById('easy-gains').innerHTML = easyGainsHTML;
+      document.getElementById(tableId).innerHTML = tableHTML;
     }
 
     // Initial data load on page load
