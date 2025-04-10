@@ -51,12 +51,13 @@
         <th>Volume (24h)</th>
         <th>RSI</th>
         <th>MACD</th>
+        <th>Buy/Sell</th>
         <th>Predicted Price</th>
-        <th>Recommended Hold Time</th>
-        <th>Price Prediction (1D)</th>
-        <th>Price Prediction (2D)</th>
-        <th>Price Prediction (5D)</th>
-        <th>Price Prediction (2W)</th>
+        <th>Hold Time</th>
+        <th>1D</th>
+        <th>2D</th>
+        <th>5D</th>
+        <th>2W</th>
       </tr>
     </thead>
     <tbody id="results-body"></tbody>
@@ -64,30 +65,33 @@
 
   <script>
     function getMockData() {
-      // Example mock data for 3 coins, copy & expand to simulate 25 if needed
-      return [
-        {
-          name: "1RUS DAO", price: 0.000001, marketCap: 0,
-          change: "19.31%", volume: 10831.06,
-          rsi: 60.00, macd: 1.50,
-          predictedPrice: 0.000005, holdTime: "3D",
-          pred1D: "$0.000002", pred2D: "$0.000003", pred5D: "$0.000006", pred2W: "$0.00001"
-        },
-        {
-          name: "MoonCat", price: 0.00003, marketCap: 500000,
-          change: "-8.12%", volume: 9800,
-          rsi: 42.15, macd: -0.55,
-          predictedPrice: 0.00007, holdTime: "5D",
-          pred1D: "$0.000032", pred2D: "$0.000045", pred5D: "$0.000067", pred2W: "$0.00009"
-        },
-        {
-          name: "Pepe Inu", price: 0.0000004, marketCap: 2500000,
-          change: "5.31%", volume: 20000,
-          rsi: 70.12, macd: 2.00,
-          predictedPrice: 0.000003, holdTime: "2D",
-          pred1D: "$0.0000008", pred2D: "$0.0000015", pred5D: "$0.0000024", pred2W: "$0.0000038"
-        }
-      ];
+      const coins = [];
+      for (let i = 1; i <= 25; i++) {
+        const rsi = Math.floor(Math.random() * 100);
+        const macd = (Math.random() * 4 - 2).toFixed(2); // -2 to 2
+        coins.push({
+          name: "Coin #" + i,
+          price: Math.random() * 0.0001,
+          marketCap: Math.floor(Math.random() * 10000000),
+          change: (Math.random() * 40 - 20).toFixed(2) + "%",
+          volume: Math.floor(Math.random() * 50000),
+          rsi: rsi,
+          macd: parseFloat(macd),
+          predictedPrice: (Math.random() * 0.001).toFixed(8),
+          holdTime: ["1D", "2D", "3D", "1W"][Math.floor(Math.random() * 4)],
+          pred1D: "$" + (Math.random() * 0.001).toFixed(8),
+          pred2D: "$" + (Math.random() * 0.001).toFixed(8),
+          pred5D: "$" + (Math.random() * 0.001).toFixed(8),
+          pred2W: "$" + (Math.random() * 0.001).toFixed(8),
+        });
+      }
+      return coins;
+    }
+
+    function getSignal(rsi, macd) {
+      if (rsi < 30 && macd > 0) return "Buy";
+      if (rsi > 70 && macd < 0) return "Sell";
+      return "Hold";
     }
 
     function renderTable(data) {
@@ -98,12 +102,13 @@
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${coin.name}</td>
-          <td>$${coin.price.toFixed(6)}</td>
+          <td>$${coin.price.toFixed(8)}</td>
           <td>$${coin.marketCap.toLocaleString()}</td>
           <td>${coin.change}</td>
           <td>$${coin.volume.toLocaleString()}</td>
           <td>${coin.rsi}</td>
-          <td>${coin.macd}</td>
+          <td>${coin.macd.toFixed(2)}</td>
+          <td>${getSignal(coin.rsi, coin.macd)}</td>
           <td>$${coin.predictedPrice}</td>
           <td>${coin.holdTime}</td>
           <td>${coin.pred1D}</td>
@@ -116,8 +121,24 @@
     }
 
     function refreshData() {
-      const data = getMockData();
-      renderTable(data);
+      const allData = getMockData();
+
+      const filtered = allData.filter(coin =>
+        coin.price < 0.001 &&
+        coin.marketCap < 10000000 &&
+        coin.rsi >= 30 &&
+        coin.rsi <= 70
+      );
+
+      // Ensure at least 10 coins always
+      const selected = filtered.slice(0, 10);
+      while (selected.length < 10) {
+        const extra = allData.find(c => !selected.includes(c));
+        if (extra) selected.push(extra);
+        else break;
+      }
+
+      renderTable(selected);
     }
 
     function startCountdown(seconds) {
