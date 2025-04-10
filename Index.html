@@ -76,6 +76,7 @@
         return [];
       }
       const data = await response.json();
+      console.log("Fetched CoinGecko data:", data);  // Log the fetched data
       return data;
     }
 
@@ -88,6 +89,7 @@
         return [];
       }
       const data = await response.json();
+      console.log(`Fetched CryptoCompare data for ${coinSymbol}:`, data);  // Log the fetched data
       return data.Data.Data; // Return historical data for technical analysis
     }
 
@@ -199,8 +201,12 @@
         page++;
       }
 
+      console.log("All fetched coins:", allCoins);  // Log all fetched coins
+
       // Apply filtering: price under $0.001 and market cap under $10M
       const filtered = allCoins.filter(coin => coin.current_price < 0.001 && coin.market_cap < 10000000);
+
+      console.log("Filtered coins:", filtered);  // Log filtered coins
 
       // Fetch historical data and calculate RSI and MACD
       for (let i = 0; i < filtered.length; i++) {
