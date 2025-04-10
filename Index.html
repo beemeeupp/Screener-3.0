@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Crypto Screener - Ultra Low Cap Coins</title>
+  <title>Crypto Screener - Low Cap Coins</title>
   <style>
     body {
       background: #111;
@@ -23,6 +23,7 @@
     .table-container {
       overflow-y: auto;
       max-height: 500px;
+      margin-bottom: 30px;
     }
     table {
       width: 100%;
@@ -43,9 +44,12 @@
   </style>
 </head>
 <body>
-  <h1>Crypto Screener - Ultra Low Cap Coins</h1>
+  <h1>Crypto Screener - Low Cap Coins</h1>
   <div id="countdown">Next refresh in: 15s</div>
+
+  <!-- Table 1: Moon Shot Coins -->
   <div class="table-container">
+    <h2>Moon Shot Coins (Ultra-low Cap, High Volatility)</h2>
     <table>
       <thead>
         <tr>
@@ -61,13 +65,57 @@
           <th>Hold Time</th>
         </tr>
       </thead>
-      <tbody id="results-body"></tbody>
+      <tbody id="moon-shot-coins"></tbody>
+    </table>
+  </div>
+
+  <!-- Table 2: Mini Moons -->
+  <div class="table-container">
+    <h2>Mini Moons (Looser Parameters)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price (USD)</th>
+          <th>Market Cap</th>
+          <th>Change (24h)</th>
+          <th>Volume (24h)</th>
+          <th>RSI</th>
+          <th>MACD</th>
+          <th>Buy/Sell</th>
+          <th>Predicted Price</th>
+          <th>Hold Time</th>
+        </tr>
+      </thead>
+      <tbody id="mini-moons"></tbody>
+    </table>
+  </div>
+
+  <!-- Table 3: Easy 10% Daily Gains -->
+  <div class="table-container">
+    <h2>Easy 10% Daily Gains (Moderate Parameters)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price (USD)</th>
+          <th>Market Cap</th>
+          <th>Change (24h)</th>
+          <th>Volume (24h)</th>
+          <th>RSI</th>
+          <th>MACD</th>
+          <th>Buy/Sell</th>
+          <th>Predicted Price</th>
+          <th>Hold Time</th>
+        </tr>
+      </thead>
+      <tbody id="easy-gains"></tbody>
     </table>
   </div>
 
   <script>
     const coinGeckoAPI = "https://api.coingecko.com/api/v3/coins/markets";
-    const coinGeckoParams = "?vs_currency=usd&order=market_cap_asc&per_page=10&page=";
+    const coinGeckoParams = "?vs_currency=usd&order=market_cap_asc&per_page=50&page=";
     const cryptoCompareAPI = "https://min-api.cryptocompare.com/data/v2/histoday";
 
     // Fetch CoinGecko data
@@ -84,8 +132,8 @@
     }
 
     // Render the table with fetched data
-    function renderTable(coins) {
-      const tbody = document.getElementById("results-body");
+    function renderTable(coins, tableId) {
+      const tbody = document.getElementById(tableId);
       tbody.innerHTML = "";  // Clear any previous data
 
       if (coins.length === 0) {
@@ -134,7 +182,7 @@
       let allCoins = [];
       let page = 1;
 
-      while (allCoins.length < 10) {
+      while (allCoins.length < 50) {
         const data = await fetchRealData(page);
         if (data.length === 0) break;
         allCoins = [...allCoins, ...data];
@@ -143,11 +191,22 @@
 
       console.log("Coins fetched for table:", allCoins);  // Log the coins data
 
-      // Filter coins: price < $0.001 and market cap < $10M
-      const filteredCoins = allCoins.filter(coin => coin.current_price < 0.001 && coin.market_cap < 10000000);
-      console.log("Filtered coins:", filteredCoins);  // Log the filtered coins
+      // Filter for Moon Shot Coins
+      const moonShotCoins = allCoins.filter(coin => coin.current_price < 0.001 && coin.market_cap < 10000000);
+      console.log("Moon Shot Coins:", moonShotCoins);  // Log the moon shot coins
 
-      renderTable(filteredCoins);
+      // Filter for Mini Moons
+      const miniMoons = allCoins.filter(coin => coin.current_price < 0.01 && coin.market_cap < 50000000);
+      console.log("Mini Moons:", miniMoons);  // Log the mini moons
+
+      // Filter for Easy 10% Daily Gains
+      const easyGains = allCoins.filter(coin => coin.price_change_percentage_24h >= 10 && coin.market_cap < 100000000);
+      console.log("Easy 10% Daily Gains:", easyGains);  // Log the easy gains
+
+      // Render each table
+      renderTable(moonShotCoins.slice(0, 10), "moon-shot-coins");
+      renderTable(miniMoons.slice(0, 10), "mini-moons");
+      renderTable(easyGains.slice(0, 10), "easy-gains");
     }
 
     refreshData();
