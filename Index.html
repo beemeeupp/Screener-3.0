@@ -141,72 +141,42 @@
       } else {
         coins.forEach(async coin => {
           const technicalData = await fetchTechnicalIndicators(coin.id);
-          const RSI = technicalData?.RSI?.[technicalData.RSI.length - 1] || 50; // Default RSI if no data
-          const MACD = technicalData?.MACD?.[technicalData.MACD.length - 1] || 'Neutral'; // Default MACD if no data
-          const buySell = RSI > 70 ? "Sell" : (RSI < 30 ? "Buy" : "Hold");
+          const RSI = technicalData?.data?.RSI?.[technicalData.data.RSI.length - 1] || 50; // Default RSI if no data
+          const MACD = technicalData?.data?.MACD?.[technicalData.data.MACD.length - 1] || 0; // Default MACD if no data
+          const buySell = RSI < 30 && MACD > 0 ? "Buy" : RSI > 70 && MACD < 0 ? "Sell" : "Hold"; // Simplified Buy/Sell logic
 
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${coin.name}</td>
-            <td>$${coin.current_price.toFixed(6)}</td>
-            <td>$${coin.market_cap.toLocaleString()}</td>
+            <td>$${coin.current_price}</td>
+            <td>${coin.market_cap}</td>
             <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-            <td>$${coin.total_volume.toLocaleString()}</td>
-            <td>${RSI}</td>
-            <td>${MACD}</td>
+            <td>${coin.total_volume}</td>
+            <td>${RSI.toFixed(2)}</td>
+            <td>${MACD.toFixed(2)}</td>
             <td>${buySell}</td>
-            <td>$${(coin.current_price * 1.1).toFixed(6)}</td>
-            <td>${["1D", "2D", "3D", "1W"][Math.floor(Math.random() * 4)]}</td>
+            <td>${(coin.current_price * 1.1).toFixed(2)}</td>
+            <td>1 Day</td>
           `;
           tbody.appendChild(row);
         });
       }
     }
 
-    // Start countdown for refresh
-    function startCountdown(seconds) {
-      let timeLeft = seconds;
-      const countdown = document.getElementById("countdown");
-      countdown.textContent = `Next refresh in: ${timeLeft}s`;
+    // Load coins for all three tables
+    async function loadData() {
+      const moonShotCoins = await fetchCoinGeckoData(1); // First page
+      renderTable(moonShotCoins, 'moon-shot-coins');
 
-      const interval = setInterval(() => {
-        timeLeft--;
-        countdown.textContent = `Next refresh in: ${timeLeft}s`;
-        if (timeLeft <= 0) {
-          clearInterval(interval);
-          refreshData();
-          startCountdown(15);
-        }
-      }, 1000);
+      const miniMoons = await fetchCoinGeckoData(2); // Second page
+      renderTable(miniMoons, 'mini-moons');
+
+      const easyGains = await fetchCoinGeckoData(3); // Third page
+      renderTable(easyGains, 'easy-gains');
     }
 
-    // Fetch and refresh the data
-    async function refreshData() {
-      let allCoins = [];
-      let page = 1;
-
-      while (allCoins.length < 50) {
-        const data = await fetchCoinGeckoData(page);
-        if (data.length === 0) break;
-        allCoins = [...allCoins, ...data];
-        page++;
-      }
-
-      // Filter for Moon Shot Coins
-      const moonShotCoins = allCoins.filter(coin => coin.current_price < 0.001 && coin.market_cap < 10000000);
-      renderTable(moonShotCoins.slice(0, 10), "moon-shot-coins");
-
-      // Filter for Mini Moons
-      const miniMoons = allCoins.filter(coin => coin.current_price < 0.01 && coin.market_cap < 50000000);
-      renderTable(miniMoons.slice(0, 10), "mini-moons");
-
-      // Filter for Easy 10% Daily Gains
-      const easyGains = allCoins.filter(coin => coin.price_change_percentage_24h >= 10 && coin.market_cap < 100000000);
-      renderTable(easyGains.slice(0, 10), "easy-gains");
-    }
-
-    refreshData();
-    startCountdown(15);
+    // Initialize page
+    loadData();
   </script>
 </body>
 </html>
