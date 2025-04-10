@@ -105,18 +105,24 @@
         allData.push(...data);
       }
 
-      const moonData = [];
-      const miniData = [];
-      const easyData = [];
+      // Filter by performance, not alphabet
+      const moonData = allData.filter(coin =>
+        coin.market_cap < 5000000 &&
+        coin.price_change_percentage_24h > 20 &&
+        coin.total_volume > 50000
+      ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
 
-      allData.forEach(coin => {
-        const change = coin.price_change_percentage_24h || 0;
-        const marketCap = coin.market_cap || 0;
+      const miniData = allData.filter(coin =>
+        coin.market_cap < 20000000 &&
+        coin.price_change_percentage_24h > 10 &&
+        coin.total_volume > 50000
+      ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
 
-        if (marketCap < 5000000 && change > 20) moonData.push(coin);
-        else if (marketCap < 20000000 && change > 10) miniData.push(coin);
-        else if (marketCap < 50000000 && change > 5) easyData.push(coin);
-      });
+      const easyData = allData.filter(coin =>
+        coin.market_cap < 50000000 &&
+        coin.price_change_percentage_24h > 5 &&
+        coin.total_volume > 50000
+      ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
 
       fillTable("moon-table", moonData.slice(0, 5));
       fillTable("mini-table", miniData.slice(0, 5));
