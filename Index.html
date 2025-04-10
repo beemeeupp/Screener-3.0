@@ -71,6 +71,10 @@
     // Fetch CoinGecko data
     async function fetchRealData(page) {
       const response = await fetch(coinGeckoAPI + coinGeckoParams + page);
+      if (!response.ok) {
+        console.error("Failed to fetch CoinGecko data");
+        return [];
+      }
       const data = await response.json();
       return data;
     }
@@ -79,6 +83,10 @@
     async function fetchCryptoCompareData(coinSymbol) {
       const url = `${cryptoCompareAPI}?fsym=${coinSymbol}&tsym=USD&limit=2000&toTs=${Math.floor(Date.now() / 1000)}`;
       const response = await fetch(url);
+      if (!response.ok) {
+        console.error("Failed to fetch CryptoCompare data");
+        return [];
+      }
       const data = await response.json();
       return data.Data.Data; // Return historical data for technical analysis
     }
@@ -186,6 +194,7 @@
       // Fetch coins until we have enough data
       while (allCoins.length < 10) {
         data = await fetchRealData(page);
+        if (data.length === 0) break;  // Prevent infinite loop if no data is found
         allCoins = [...allCoins, ...data];
         page++;
       }
@@ -197,10 +206,12 @@
       for (let i = 0; i < filtered.length; i++) {
         const coinSymbol = filtered[i].id; // Symbol from CoinGecko
         const historicalData = await fetchCryptoCompareData(coinSymbol);
-        const rsi = calculateRSI(historicalData);
-        const macd = calculateMACD(historicalData);
-        filtered[i].rsi = rsi.toFixed(2);
-        filtered[i].macd = macd.macdHist[macd.macdHist.length - 1].toFixed(2);
+        if (historicalData.length > 0) {
+          const rsi = calculateRSI(historicalData);
+          const macd = calculateMACD(historicalData);
+          filtered[i].rsi = rsi.toFixed(2);
+          filtered[i].macd = macd.macdHist[macd.macdHist.length - 1].toFixed(2);
+        }
       }
 
       // Select top 10 coins that match the filter
