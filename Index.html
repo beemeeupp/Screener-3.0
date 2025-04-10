@@ -113,9 +113,9 @@
       const coins = await fetchDataFromApi();
 
       // Filter the data based on performance (e.g., change, volume, RSI)
-      const moonData = coins.filter(coin => coin.price_change_percentage_24h > 100 && coin.rsi < 30); // Moon shot
-      const miniData = coins.filter(coin => coin.price_change_percentage_24h > 50 && coin.rsi < 50); // Mini moons
-      const easyData = coins.filter(coin => coin.price_change_percentage_24h > 10 && coin.rsi < 70); // Easy gains
+      const moonData = coins.filter(coin => coin.price_change_percentage_24h > 100); // Moon shot
+      const miniData = coins.filter(coin => coin.price_change_percentage_24h > 50); // Mini moons
+      const easyData = coins.filter(coin => coin.price_change_percentage_24h > 10); // Easy gains
 
       // Fill the tables with the filtered data
       fillTable("moon-table", moonData);
@@ -128,15 +128,15 @@
       const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
       tableBody.innerHTML = ''; // Clear previous table data
 
-      data.forEach(coin => {
-        const signal = coin.rsi > 70 ? "Sell" : coin.rsi < 30 ? "Buy" : "Hold";
+      data.slice(0, 5).forEach(coin => { // Limit to top 5 coins per table
+        const signal = coin.price_change_percentage_24h > 0 ? "Buy" : "Sell"; // Basic signal
         tableBody.insertRow().innerHTML = `
           <td>${coin.name}</td>
           <td>$${coin.current_price.toFixed(2)}</td>
           <td>${coin.market_cap}</td>
           <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
           <td>${coin.total_volume}</td>
-          <td>${coin.rsi}</td>
+          <td>${coin.rsi || 'N/A'}</td>
           <td>${coin.macd || 'N/A'}</td>
           <td class="${signal.toLowerCase()}">${signal}</td>
           <td>${(coin.current_price * 1.5).toFixed(2)}</td>
