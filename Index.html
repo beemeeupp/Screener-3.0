@@ -112,27 +112,32 @@
         coin.market_cap < 10000000 &&
         coin.price_change_percentage_24h > 20 &&  // Increase to 20% for moon shots
         coin.total_volume > 20000
-      ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+      );
 
       const miniData = allData.filter(coin =>
         coin.market_cap < 50000000 &&
         coin.price_change_percentage_24h > 10 &&  // Increase to 10% for mini moons
         coin.total_volume > 50000
-      ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+      );
 
       const easyData = allData.filter(coin =>
         coin.market_cap < 100000000 &&
         coin.price_change_percentage_24h > 3 &&  // Increase to 3% for easy 10% daily gains
         coin.total_volume > 100000
-      ).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+      );
 
       console.log(`Moon Data: ${moonData.length} coins`);
       console.log(`Mini Data: ${miniData.length} coins`);
       console.log(`Easy Data: ${easyData.length} coins`);
 
-      fillTable("moon-table", moonData.slice(0, 5));
-      fillTable("mini-table", miniData.slice(0, 5));
-      fillTable("easy-table", easyData.slice(0, 5));
+      // Sort by performance (price_change_percentage_24h) for the best candidates
+      const sortedMoonData = moonData.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
+      const sortedMiniData = miniData.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
+      const sortedEasyData = easyData.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
+
+      fillTable("moon-table", sortedMoonData);
+      fillTable("mini-table", sortedMiniData);
+      fillTable("easy-table", sortedEasyData);
     }
 
     function calculateRSI(change) {
@@ -156,12 +161,11 @@
       tableBody.innerHTML = '';
 
       data.forEach(coin => {
-        const row = tableBody.insertRow();
         const rsi = calculateRSI(coin.price_change_percentage_24h);
         const macd = calculateMACD(coin.price_change_percentage_24h);
         const signal = getSignal(rsi, macd);
 
-        row.innerHTML = `
+        tableBody.insertRow().innerHTML = `
           <td>${coin.name}</td>
           <td>$${coin.current_price.toFixed(2)}</td>
           <td>${coin.market_cap}</td>
