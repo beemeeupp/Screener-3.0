@@ -96,36 +96,23 @@
     }
     setInterval(updateTimer, 1000);
 
-    // Fetch data from APIs
-    async function fetchDataFromApis() {
-      const apiUrls = [
-        'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=30&page=1&sparkline=false',
-        'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=30&convert=USD&CMC_PRO_API_KEY=your_api_key',
-        'https://min-api.cryptocompare.com/data/top/totalvolfull?limit=30&tsym=USD',
-        'https://api.coinpaprika.com/v1/coins',
-        'https://api.nomics.com/v1/currencies/ticker?key=your_api_key&convert=USD&per-page=30&page=1'
-      ];
-
-      let allData = [];
-
-      for (let url of apiUrls) {
-        try {
-          const response = await fetch(url);
-          const data = await response.json();
-          allData = allData.concat(data);
-        } catch (error) {
-          console.error('Error fetching data from API:', error);
-        }
+    // Fetch data from CoinGecko API
+    async function fetchDataFromApi() {
+      const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=30&page=1&sparkline=false';
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching data from CoinGecko:', error);
       }
-
-      return allData;
     }
 
     // Function to filter and update data on the tables
     async function fetchAndDisplayData() {
-      const coins = await fetchDataFromApis();
+      const coins = await fetchDataFromApi();
 
-      // Filter the data based on performance (e.g., change, volume, RSI, MACD)
+      // Filter the data based on performance (e.g., change, volume, RSI)
       const moonData = coins.filter(coin => coin.price_change_percentage_24h > 100 && coin.rsi < 30); // Moon shot
       const miniData = coins.filter(coin => coin.price_change_percentage_24h > 50 && coin.rsi < 50); // Mini moons
       const easyData = coins.filter(coin => coin.price_change_percentage_24h > 10 && coin.rsi < 70); // Easy gains
