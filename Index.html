@@ -163,7 +163,7 @@
 
   <!-- Table 3: Easy 10% Daily Gains -->
   <div class="table-container">
-    <h2>Easy 10% Daily Gains (15% Potential Gains)</h2>
+    <h2>Easy 10% Daily Gains (15%+ Potential Gains)</h2>
     <table>
       <thead>
         <tr>
@@ -206,7 +206,7 @@
       const params = {
         vs_currency: 'usd',
         order: 'market_cap_desc',
-        per_page: 30, // You can adjust the number of coins you want to fetch
+        per_page: 30, // Fetch 30 coins
         page: 1,
       };
       const queryParams = new URLSearchParams(params).toString();
@@ -218,10 +218,10 @@
       const miniMoons = coins.filter(coin => coin.price_change_percentage_24h > 50 && coin.price_change_percentage_24h <= 100); // 50%+ gain
       const easyGains = coins.filter(coin => coin.price_change_percentage_24h > 15 && coin.price_change_percentage_24h <= 50); // 15%+ gain
 
-      // Update tables
-      updateTable('moon-shot-coins', moonShotCoins);
-      updateTable('mini-moons', miniMoons);
-      updateTable('easy-gains', easyGains);
+      // Update tables with only top 5 coins
+      updateTable('moon-shot-coins', moonShotCoins.slice(0, 5));
+      updateTable('mini-moons', miniMoons.slice(0, 5));
+      updateTable('easy-gains', easyGains.slice(0, 5));
     }
 
     // Function to update table with coin data
