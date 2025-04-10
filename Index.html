@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crypto Screener</title>
+  <title>Crypto Screener - Low Cap Coins</title>
   <style>
     body {
       background-color: #0e0e10;
@@ -12,9 +12,9 @@
       margin: 0;
       padding: 20px;
     }
-    h2 {
+    h1, h2 {
       text-align: center;
-      margin-top: 40px;
+      margin-top: 30px;
     }
     table {
       width: 100%;
@@ -24,7 +24,7 @@
       border: 1px solid #444;
     }
     th, td {
-      padding: 12px;
+      padding: 10px;
       text-align: center;
       border: 1px solid #333;
     }
@@ -46,26 +46,26 @@
   </style>
 </head>
 <body>
-  <h1 style="text-align:center;">Crypto Screener</h1>
+  <h1>CRYPTO SCREENER - LOW CAP COINS</h1>
   <div class="refresh-timer" id="timer">Next refresh in: 15s</div>
 
-  <h2>Moon Shot Coins (1000% Potential)</h2>
+  <h2>Moon Shot Coins (100%+ Potential Gains)</h2>
   <table id="moon-table">
     <thead>
       <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h %</th>
-        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
+        <th>Name</th><th>Price (USD)</th><th>Market Cap</th><th>Change (24h)</th>
+        <th>Volume (24h)</th><th>RSI</th><th>MACD</th><th>Buy/Sell</th><th>Predicted Price</th><th>Hold Time</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-  <h2>Mini Moons (50% Potential)</h2>
+  <h2>Mini Moons (50% Potential Gains)</h2>
   <table id="mini-table">
     <thead>
       <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h %</th>
-        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
+        <th>Name</th><th>Price (USD)</th><th>Market Cap</th><th>Change (24h)</th>
+        <th>Volume (24h)</th><th>RSI</th><th>MACD</th><th>Buy/Sell</th><th>Predicted Price</th><th>Hold Time</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -75,8 +75,8 @@
   <table id="easy-table">
     <thead>
       <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h %</th>
-        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
+        <th>Name</th><th>Price (USD)</th><th>Market Cap</th><th>Change (24h)</th>
+        <th>Volume (24h)</th><th>RSI</th><th>MACD</th><th>Buy/Sell</th><th>Predicted Price</th><th>Hold Time</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -97,17 +97,25 @@
     setInterval(updateTimer, 1000);
 
     async function fetchAndDisplayData() {
-      const res = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=100&page=1&sparkline=false");
-      const data = await res.json();
+      const allData = [];
+
+      for (let i = 1; i <= 2; i++) {
+        const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=250&page=${i}&sparkline=false`);
+        const data = await res.json();
+        allData.push(...data);
+      }
 
       const moonData = [];
       const miniData = [];
       const easyData = [];
 
-      data.forEach(coin => {
-        if (coin.market_cap < 5000000 && coin.price_change_percentage_24h > 20) moonData.push(coin);
-        else if (coin.market_cap < 20000000 && coin.price_change_percentage_24h > 10) miniData.push(coin);
-        else if (coin.market_cap < 50000000 && coin.price_change_percentage_24h > 5) easyData.push(coin);
+      allData.forEach(coin => {
+        const change = coin.price_change_percentage_24h || 0;
+        const marketCap = coin.market_cap || 0;
+
+        if (marketCap < 5000000 && change > 20) moonData.push(coin);
+        else if (marketCap < 20000000 && change > 10) miniData.push(coin);
+        else if (marketCap < 50000000 && change > 5) easyData.push(coin);
       });
 
       fillTable("moon-table", moonData.slice(0, 5));
@@ -115,14 +123,14 @@
       fillTable("easy-table", easyData.slice(0, 5));
     }
 
-    function calculateRSI(priceChange) {
-      if (priceChange > 10) return 70;
-      if (priceChange < -10) return 30;
+    function calculateRSI(change) {
+      if (change > 10) return 70;
+      if (change < -10) return 30;
       return 50;
     }
 
-    function calculateMACD(priceChange) {
-      return (priceChange / 10).toFixed(2);
+    function calculateMACD(change) {
+      return (change / 10).toFixed(2);
     }
 
     function getSignal(rsi, macd) {
@@ -131,23 +139,40 @@
       return `<span class="hold">Hold</span>`;
     }
 
-    function fillTable(id, coins) {
-      const tbody = document.getElementById(id).getElementsByTagName('tbody')[0];
-      tbody.innerHTML = '';
+    function predictPrice(price, change) {
+      const boost = change > 0 ? 1 + (change / 100) * 2 : 1 + (change / 100);
+      return `$${(price * boost).toFixed(6)}`;
+    }
+
+    function estimateHoldTime(change) {
+      if (change > 25) return "1 Day";
+      if (change > 10) return "2 Days";
+      return "3+ Days";
+    }
+
+    function fillTable(tableId, coins) {
+      const tbody = document.querySelector(`#${tableId} tbody`);
+      tbody.innerHTML = "";
+
       coins.forEach(coin => {
-        const rsi = calculateRSI(coin.price_change_percentage_24h);
-        const macd = calculateMACD(coin.price_change_percentage_24h);
+        const rsi = calculateRSI(coin.price_change_percentage_24h || 0);
+        const macd = calculateMACD(coin.price_change_percentage_24h || 0);
         const signal = getSignal(rsi, macd);
+        const predicted = predictPrice(coin.current_price, coin.price_change_percentage_24h || 0);
+        const hold = estimateHoldTime(coin.price_change_percentage_24h || 0);
+
         const row = `
           <tr>
             <td>${coin.name}</td>
             <td>$${coin.current_price.toFixed(6)}</td>
             <td>$${coin.market_cap.toLocaleString()}</td>
-            <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
+            <td>${coin.price_change_percentage_24h?.toFixed(2)}%</td>
             <td>$${coin.total_volume.toLocaleString()}</td>
             <td>${rsi}</td>
             <td>${macd}</td>
             <td>${signal}</td>
+            <td>${predicted}</td>
+            <td>${hold}</td>
           </tr>
         `;
         tbody.innerHTML += row;
