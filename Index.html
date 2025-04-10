@@ -49,7 +49,7 @@
 
   <!-- Table 1: Moon Shot Coins -->
   <div class="table-container">
-    <h2>Moon Shot Coins (Ultra-low Cap, High Volatility)</h2>
+    <h2>Moon Shot Coins (100%+ Potential Gains)</h2>
     <table>
       <thead>
         <tr>
@@ -71,7 +71,7 @@
 
   <!-- Table 2: Mini Moons -->
   <div class="table-container">
-    <h2>Mini Moons (Looser Parameters)</h2>
+    <h2>Mini Moons (50% Potential Gains)</h2>
     <table>
       <thead>
         <tr>
@@ -93,7 +93,7 @@
 
   <!-- Table 3: Easy 10% Daily Gains -->
   <div class="table-container">
-    <h2>Easy 10% Daily Gains (Moderate Parameters)</h2>
+    <h2>Easy 10% Daily Gains (15% Potential Gains)</h2>
     <table>
       <thead>
         <tr>
@@ -130,7 +130,7 @@
     }
 
     // Render the table with fetched data
-    function renderTable(coins, tableId) {
+    function renderTable(coins, tableId, gainThreshold) {
       const tbody = document.getElementById(tableId);
       tbody.innerHTML = "";  // Clear any previous data
 
@@ -145,34 +145,40 @@
           const MACD = technicalData?.data?.MACD?.[technicalData.data.MACD.length - 1] || 0; // Default MACD if no data
           const buySell = RSI < 30 && MACD > 0 ? "Buy" : RSI > 70 && MACD < 0 ? "Sell" : "Hold"; // Simplified Buy/Sell logic
 
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${coin.name}</td>
-            <td>$${coin.current_price}</td>
-            <td>${coin.market_cap}</td>
-            <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-            <td>${coin.total_volume}</td>
-            <td>${RSI.toFixed(2)}</td>
-            <td>${MACD.toFixed(2)}</td>
-            <td>${buySell}</td>
-            <td>${(coin.current_price * 1.1).toFixed(2)}</td>
-            <td>1 Day</td>
-          `;
-          tbody.appendChild(row);
+          // Filter coins based on price change
+          const priceChange = coin.price_change_percentage_24h;
+
+          // Apply gain threshold
+          if (priceChange >= gainThreshold) {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${coin.name}</td>
+              <td>$${coin.current_price}</td>
+              <td>${coin.market_cap}</td>
+              <td>${priceChange.toFixed(2)}%</td>
+              <td>${coin.total_volume}</td>
+              <td>${RSI.toFixed(2)}</td>
+              <td>${MACD.toFixed(2)}</td>
+              <td>${buySell}</td>
+              <td>${(coin.current_price * (1 + gainThreshold / 100)).toFixed(2)}</td>
+              <td>1 Day</td>
+            `;
+            tbody.appendChild(row);
+          }
         });
       }
     }
 
     // Load coins for all three tables
     async function loadData() {
-      const moonShotCoins = await fetchCoinGeckoData(1); // First page
-      renderTable(moonShotCoins, 'moon-shot-coins');
+      const moonShotCoins = await fetchCoinGeckoData(1); // First page for 100%+ gains
+      renderTable(moonShotCoins, 'moon-shot-coins', 100); // Set 100% threshold
 
-      const miniMoons = await fetchCoinGeckoData(2); // Second page
-      renderTable(miniMoons, 'mini-moons');
+      const miniMoons = await fetchCoinGeckoData(2); // Second page for 50% gains
+      renderTable(miniMoons, 'mini-moons', 50); // Set 50% threshold
 
-      const easyGains = await fetchCoinGeckoData(3); // Third page
-      renderTable(easyGains, 'easy-gains');
+      const easyGains = await fetchCoinGeckoData(3); // Third page for 15% gains
+      renderTable(easyGains, 'easy-gains', 15); // Set 15% threshold
     }
 
     // Initialize page
