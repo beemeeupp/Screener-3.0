@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crypto Screener - Low Cap Coins</title>
   <style>
     body {
@@ -91,111 +91,75 @@
       countdown--;
       if (countdown < 0) {
         countdown = refreshTime;
-        fetchAndDisplayData();
+        fetchAndDisplayData(); // Refresh data when the countdown reaches 0
       }
     }
     setInterval(updateTimer, 1000);
 
-    async function fetchAndDisplayData() {
-      const allData = [];
+    // Fetch data from APIs
+    async function fetchDataFromApis() {
+      const apiUrls = [
+        'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=30&page=1&sparkline=false',
+        'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=30&convert=USD&CMC_PRO_API_KEY=your_api_key',
+        'https://min-api.cryptocompare.com/data/top/totalvolfull?limit=30&tsym=USD',
+        'https://api.coinpaprika.com/v1/coins',
+        'https://api.nomics.com/v1/currencies/ticker?key=your_api_key&convert=USD&per-page=30&page=1'
+      ];
 
-      try {
-        for (let i = 1; i <= 2; i++) {
-          const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=250&page=${i}&sparkline=false`);
-          const data = await res.json();
-          allData.push(...data);
+      let allData = [];
+
+      for (let url of apiUrls) {
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          allData = allData.concat(data);
+        } catch (error) {
+          console.error('Error fetching data from API:', error);
         }
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-        return;
       }
 
-      console.log(`Fetched ${allData.length} coins`);
-
-      if (!allData || allData.length === 0) {
-        console.error("No data fetched");
-        return;
-      }
-
-      // Adjusted filtering criteria for best buy/sell suggestions
-      const moonData = allData.filter(coin =>
-        coin.market_cap < 10000000 &&
-        coin.price_change_percentage_24h > 20 &&  // Increase to 20% for moon shots
-        coin.total_volume > 20000 && 
-        coin.rsi && coin.macd
-      );
-
-      const miniData = allData.filter(coin =>
-        coin.market_cap < 50000000 &&
-        coin.price_change_percentage_24h > 10 &&  // Increase to 10% for mini moons
-        coin.total_volume > 50000 && 
-        coin.rsi && coin.macd
-      );
-
-      const easyData = allData.filter(coin =>
-        coin.market_cap < 100000000 &&
-        coin.price_change_percentage_24h > 3 &&  // Increase to 3% for easy 10% daily gains
-        coin.total_volume > 100000 && 
-        coin.rsi && coin.macd
-      );
-
-      console.log(`Moon Data: ${moonData.length} coins`);
-      console.log(`Mini Data: ${miniData.length} coins`);
-      console.log(`Easy Data: ${easyData.length} coins`);
-
-      // Sort by performance (RSI and MACD)
-      const sortedMoonData = moonData.sort((a, b) => b.rsi - a.rsi || b.macd - a.macd).slice(0, 5);
-      const sortedMiniData = miniData.sort((a, b) => b.rsi - a.rsi || b.macd - a.macd).slice(0, 5);
-      const sortedEasyData = easyData.sort((a, b) => b.rsi - a.rsi || b.macd - a.macd).slice(0, 5);
-
-      fillTable("moon-table", sortedMoonData);
-      fillTable("mini-table", sortedMiniData);
-      fillTable("easy-table", sortedEasyData);
+      return allData;
     }
 
-    function calculateRSI(change) {
-      if (change > 20) return 70;   // RSI for very strong coins
-      if (change < -20) return 30;  // RSI for very weak coins
-      return 50;                    // Neutral RSI
+    // Function to filter and update data on the tables
+    async function fetchAndDisplayData() {
+      const coins = await fetchDataFromApis();
+
+      // Filter the data based on performance (e.g., change, volume, RSI, MACD)
+      const moonData = coins.filter(coin => coin.price_change_percentage_24h > 100 && coin.rsi < 30); // Moon shot
+      const miniData = coins.filter(coin => coin.price_change_percentage_24h > 50 && coin.rsi < 50); // Mini moons
+      const easyData = coins.filter(coin => coin.price_change_percentage_24h > 10 && coin.rsi < 70); // Easy gains
+
+      // Fill the tables with the filtered data
+      fillTable("moon-table", moonData);
+      fillTable("mini-table", miniData);
+      fillTable("easy-table", easyData);
     }
 
-    function calculateMACD(change) {
-      return (change / 10).toFixed(2);
-    }
-
-    function getSignal(rsi, macd) {
-      if (rsi > 70 && macd > 1) return "Sell";
-      if (rsi < 30 && macd < 1) return "Buy";
-      return "Hold";
-    }
-
+    // Function to populate the tables
     function fillTable(tableId, data) {
       const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
-      tableBody.innerHTML = '';
-
-      if (data.length === 0) {
-        console.log(`No data to populate for table: ${tableId}`);
-      }
+      tableBody.innerHTML = ''; // Clear previous table data
 
       data.forEach(coin => {
-        const rsi = calculateRSI(coin.price_change_percentage_24h);
-        const macd = calculateMACD(coin.price_change_percentage_24h);
-        const signal = getSignal(rsi, macd);
-
+        const signal = coin.rsi > 70 ? "Sell" : coin.rsi < 30 ? "Buy" : "Hold";
         tableBody.insertRow().innerHTML = `
           <td>${coin.name}</td>
           <td>$${coin.current_price.toFixed(2)}</td>
           <td>${coin.market_cap}</td>
           <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
           <td>${coin.total_volume}</td>
-          <td>${rsi}</td>
-          <td>${macd}</td>
+          <td>${coin.rsi}</td>
+          <td>${coin.macd || 'N/A'}</td>
           <td class="${signal.toLowerCase()}">${signal}</td>
-          <td>${(coin.current_price * 1.5).toFixed(2)}</td>  <!-- Predicted Price -->
-          <td>2 Days</td>  <!-- Hold Time -->
+          <td>${(coin.current_price * 1.5).toFixed(2)}</td>
+          <td>2 Days</td>
         `;
       });
     }
+
+    // Initial call to load data when the page loads
+    fetchAndDisplayData();
   </script>
 </body>
 </html>
