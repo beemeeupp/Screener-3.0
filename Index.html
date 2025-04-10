@@ -186,8 +186,124 @@
   <button class="refresh-button" onclick="loadData()">Refresh Data</button>
 
   <script>
-    // Your JavaScript logic for fetching and displaying the data remains the same
-    // Be sure to use the previously provided code for the data fetching and rendering logic
+    let countdown = 15;
+
+    function updateCountdown() {
+      if (countdown > 0) {
+        countdown--;
+        document.getElementById('countdown').innerText = `Next refresh in: ${countdown}s`;
+      } else {
+        loadData(); // Automatically refresh data when countdown reaches 0
+        countdown = 15; // Reset countdown
+      }
+    }
+
+    setInterval(updateCountdown, 1000); // Update countdown every second
+
+    function loadData() {
+      // Placeholder function for fetching real data from an API
+      const data = [
+        {
+          name: 'Coin 1',
+          price: '$0.01',
+          marketCap: '$10M',
+          change: '5%',
+          volume: '$500k',
+          rsi: 60,
+          macd: 'Bullish',
+          buySell: 'Buy',
+          predictedPrice: '$0.02',
+          holdTime: '2D'
+        },
+        {
+          name: 'Coin 2',
+          price: '$0.02',
+          marketCap: '$20M',
+          change: '10%',
+          volume: '$1M',
+          rsi: 70,
+          macd: 'Neutral',
+          buySell: 'Hold',
+          predictedPrice: '$0.03',
+          holdTime: '3D'
+        },
+        {
+          name: 'Coin 3',
+          price: '$0.05',
+          marketCap: '$50M',
+          change: '20%',
+          volume: '$5M',
+          rsi: 80,
+          macd: 'Bullish',
+          buySell: 'Buy',
+          predictedPrice: '$0.07',
+          holdTime: '5D'
+        }
+      ];
+
+      // Populate Table 1: Moon Shot Coins
+      let moonShotHTML = '';
+      data.forEach(coin => {
+        moonShotHTML += `
+          <tr>
+            <td>${coin.name}</td>
+            <td>${coin.price}</td>
+            <td>${coin.marketCap}</td>
+            <td>${coin.change}</td>
+            <td>${coin.volume}</td>
+            <td>${coin.rsi}</td>
+            <td>${coin.macd}</td>
+            <td>${coin.buySell}</td>
+            <td>${coin.predictedPrice}</td>
+            <td>${coin.holdTime}</td>
+          </tr>
+        `;
+      });
+      document.getElementById('moon-shot-coins').innerHTML = moonShotHTML;
+
+      // Populate Table 2: Mini Moons
+      let miniMoonsHTML = '';
+      data.forEach(coin => {
+        miniMoonsHTML += `
+          <tr>
+            <td>${coin.name}</td>
+            <td>${coin.price}</td>
+            <td>${coin.marketCap}</td>
+            <td>${coin.change}</td>
+            <td>${coin.volume}</td>
+            <td>${coin.rsi}</td>
+            <td>${coin.macd}</td>
+            <td>${coin.buySell}</td>
+            <td>${coin.predictedPrice}</td>
+            <td>${coin.holdTime}</td>
+          </tr>
+        `;
+      });
+      document.getElementById('mini-moons').innerHTML = miniMoonsHTML;
+
+      // Populate Table 3: Easy 10% Daily Gains
+      let easyGainsHTML = '';
+      data.forEach(coin => {
+        easyGainsHTML += `
+          <tr>
+            <td>${coin.name}</td>
+            <td>${coin.price}</td>
+            <td>${coin.marketCap}</td>
+            <td>${coin.change}</td>
+            <td>${coin.volume}</td>
+            <td>${coin.rsi}</td>
+            <td>${coin.macd}</td>
+            <td>${coin.buySell}</td>
+            <td>${coin.predictedPrice}</td>
+            <td>${coin.holdTime}</td>
+          </tr>
+        `;
+      });
+      document.getElementById('easy-gains').innerHTML = easyGainsHTML;
+    }
+
+    // Initial data load on page load
+    window.onload = loadData;
   </script>
 </body>
 </html>
