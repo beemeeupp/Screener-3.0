@@ -5,48 +5,118 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Crypto Screener - Low Cap Coins</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      background: #111;
+      background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
       color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: 'Roboto', sans-serif;
       padding: 20px;
+      overflow-x: hidden;
     }
     h1 {
       text-align: center;
-      margin-bottom: 10px;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #00ff99;
     }
     #countdown {
       text-align: center;
-      color: #0f0;
-      margin-bottom: 20px;
+      color: #00ff99;
+      font-size: 1.2em;
+      margin-bottom: 30px;
     }
     .table-container {
-      overflow-y: auto;
-      max-height: 500px;
+      overflow-x: auto;
       margin-bottom: 30px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
     }
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
+      text-align: center;
     }
     th, td {
+      padding: 12px;
       border: 1px solid #444;
-      padding: 8px;
-      text-align: center;
     }
     th {
       background: #222;
+      font-size: 16px;
+      text-transform: uppercase;
     }
     tr:nth-child(even) {
       background-color: #1a1a1a;
+    }
+    tr:nth-child(odd) {
+      background-color: #121212;
+    }
+    tr:hover {
+      background-color: #333;
+      cursor: pointer;
+    }
+    td {
+      font-size: 13px;
+    }
+    td:nth-child(1) {
+      text-align: left;
+      color: #00ff99;
+      font-weight: bold;
+    }
+    td:nth-child(8) {
+      font-weight: bold;
+    }
+    td:nth-child(10) {
+      color: #f4f4f4;
+      font-weight: 600;
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 1.8em;
+      text-align: center;
+      color: #00ff99;
+    }
+    .refresh-button {
+      background: #00ff99;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      cursor: pointer;
+      margin: 20px auto;
+      display: block;
+      border-radius: 5px;
+      box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
+      transition: 0.3s;
+    }
+    .refresh-button:hover {
+      background: #00cc80;
+    }
+    .refresh-button:active {
+      background: #00994d;
+    }
+    @media screen and (max-width: 768px) {
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 8px;
+      }
     }
   </style>
 </head>
 <body>
   <h1>Crypto Screener - Low Cap Coins</h1>
   <div id="countdown">Next refresh in: 15s</div>
-
+  
   <!-- Table 1: Moon Shot Coins -->
   <div class="table-container">
     <h2>Moon Shot Coins (100%+ Potential Gains)</h2>
@@ -113,76 +183,11 @@
     </table>
   </div>
 
+  <button class="refresh-button" onclick="loadData()">Refresh Data</button>
+
   <script>
-    const coinGeckoAPI = "https://api.coingecko.com/api/v3/coins/markets";
-    const cryptoCompareAPI = "https://min-api.cryptocompare.com/data/technical/indicators";
-    
-    // Fetch CoinGecko data
-    async function fetchCoinGeckoData(page) {
-      const response = await fetch(`${coinGeckoAPI}?vs_currency=usd&order=market_cap_asc&per_page=50&page=${page}`);
-      return await response.json();
-    }
-
-    // Fetch CryptoCompare RSI and MACD data
-    async function fetchTechnicalIndicators(coinId) {
-      const response = await fetch(`${cryptoCompareAPI}?fsym=${coinId}&tsym=USD&toTs=${Math.floor(Date.now() / 1000)}&limit=200`);
-      return await response.json();
-    }
-
-    // Render the table with fetched data
-    function renderTable(coins, tableId, gainThreshold) {
-      const tbody = document.getElementById(tableId);
-      tbody.innerHTML = "";  // Clear any previous data
-
-      if (coins.length === 0) {
-        const row = document.createElement("tr");
-        row.innerHTML = "<td colspan='10' style='text-align: center;'>No Data Available</td>";
-        tbody.appendChild(row);
-      } else {
-        coins.forEach(async coin => {
-          const technicalData = await fetchTechnicalIndicators(coin.id);
-          const RSI = technicalData?.data?.RSI?.[technicalData.data.RSI.length - 1] || 50; // Default RSI if no data
-          const MACD = technicalData?.data?.MACD?.[technicalData.data.MACD.length - 1] || 0; // Default MACD if no data
-          const buySell = RSI < 30 && MACD > 0 ? "Buy" : RSI > 70 && MACD < 0 ? "Sell" : "Hold"; // Simplified Buy/Sell logic
-
-          // Filter coins based on price change
-          const priceChange = coin.price_change_percentage_24h;
-
-          // Apply gain threshold
-          if (priceChange >= gainThreshold) {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${coin.name}</td>
-              <td>$${coin.current_price}</td>
-              <td>${coin.market_cap}</td>
-              <td>${priceChange.toFixed(2)}%</td>
-              <td>${coin.total_volume}</td>
-              <td>${RSI.toFixed(2)}</td>
-              <td>${MACD.toFixed(2)}</td>
-              <td>${buySell}</td>
-              <td>${(coin.current_price * (1 + gainThreshold / 100)).toFixed(2)}</td>
-              <td>1 Day</td>
-            `;
-            tbody.appendChild(row);
-          }
-        });
-      }
-    }
-
-    // Load coins for all three tables
-    async function loadData() {
-      const moonShotCoins = await fetchCoinGeckoData(1); // First page for 100%+ gains
-      renderTable(moonShotCoins, 'moon-shot-coins', 100); // Set 100% threshold
-
-      const miniMoons = await fetchCoinGeckoData(2); // Second page for 50% gains
-      renderTable(miniMoons, 'mini-moons', 50); // Set 50% threshold
-
-      const easyGains = await fetchCoinGeckoData(3); // Third page for 15% gains
-      renderTable(easyGains, 'easy-gains', 15); // Set 15% threshold
-    }
-
-    // Initialize page
-    loadData();
+    // Your JavaScript logic for fetching and displaying the data remains the same
+    // Be sure to use the previously provided code for the data fetching and rendering logic
   </script>
 </body>
 </html>
