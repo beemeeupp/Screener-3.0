@@ -65,16 +65,19 @@
 
   <script>
     const coinGeckoAPI = "https://api.coingecko.com/api/v3/coins/markets";
-    const coinGeckoParams = "?vs_currency=usd&order=market_cap_asc&per_page=100&page=";  // Fetch up to 100 coins per page
-    const cryptoCompareAPI = "https://min-api.cryptocompare.com/data/v2/histoday"; // For historical data to calculate indicators
+    const coinGeckoParams = "?vs_currency=usd&order=market_cap_asc&per_page=100&page=";
+    const cryptoCompareAPI = "https://min-api.cryptocompare.com/data/v2/histoday";
 
     // Fetch CoinGecko data
     async function fetchRealData(page) {
       try {
         const response = await fetch(coinGeckoAPI + coinGeckoParams + page);
-        if (!response.ok) throw new Error("Failed to fetch CoinGecko data");
         const data = await response.json();
-        console.log("Fetched CoinGecko data:", data);  // Log the fetched data
+        if (!Array.isArray(data) || data.length === 0) {
+          console.log("No data from CoinGecko.");
+          return [];
+        }
+        console.log("Fetched CoinGecko data:", data);  // Log the data to the console
         return data;
       } catch (error) {
         console.error("Error fetching CoinGecko data:", error);
@@ -82,82 +85,35 @@
       }
     }
 
-    // Fetch historical data for calculating RSI and MACD (using CryptoCompare)
+    // Fetch historical data for MACD and RSI calculation
     async function fetchCryptoCompareData(coinSymbol) {
       const url = `${cryptoCompareAPI}?fsym=${coinSymbol}&tsym=USD&limit=2000&toTs=${Math.floor(Date.now() / 1000)}`;
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to fetch CryptoCompare data for ${coinSymbol}`);
         const data = await response.json();
-        console.log(`Fetched CryptoCompare data for ${coinSymbol}:`, data);  // Log the fetched data
-        return data.Data.Data; // Return historical data for technical analysis
+        if (!data.Data || !data.Data.Data || data.Data.Data.length === 0) {
+          console.log(`No historical data for ${coinSymbol}`);
+          return [];
+        }
+        console.log(`Fetched CryptoCompare data for ${coinSymbol}:`, data);  // Log the data
+        return data.Data.Data; // Return historical data
       } catch (error) {
         console.error("Error fetching CryptoCompare data:", error);
         return [];
       }
     }
 
-    // Calculate RSI (using a simple function, ideally use TA-Lib or other precise libraries)
-    function calculateRSI(data, period = 14) {
-      let gains = 0, losses = 0;
-      for (let i = 1; i < period; i++) {
-        const diff = data[i].close - data[i - 1].close;
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
-      }
-      const avgGain = gains / period;
-      const avgLoss = losses / period;
-      const rs = avgGain / avgLoss;
-      const rsi = 100 - (100 / (1 + rs));
-      return rsi;
-    }
-
-    // Calculate MACD (Exponential Moving Average - EMA)
-    function calculateMACD(data, fastLength = 12, slowLength = 26, signalLength = 9) {
-      const fastEMA = calculateEMA(data, fastLength);
-      const slowEMA = calculateEMA(data, slowLength);
-      const macdLine = fastEMA.map((v, i) => v - slowEMA[i]);
-
-      const signalLine = calculateEMA(macdLine, signalLength);
-      const macdHist = macdLine.map((v, i) => v - signalLine[i]);
-
-      return {
-        macdLine,
-        signalLine,
-        macdHist
-      };
-    }
-
-    // Simple function to calculate EMA (Exponential Moving Average)
-    function calculateEMA(data, length) {
-      const k = 2 / (length + 1);
-      let ema = [data[0].close];
-      for (let i = 1; i < data.length; i++) {
-        ema.push((data[i].close - ema[i - 1]) * k + ema[i - 1]);
-      }
-      return ema;
-    }
-
-    // Analyze Buy/Sell based on RSI and MACD
-    function getSignal(rsi, macd) {
-      // Loosening conditions: RSI below 40 is considered a Buy
-      if (rsi < 40 && macd.macdHist[macd.macdHist.length - 1] > 0) return "Buy";
-      // Sell condition: RSI above 70 and MACD histogram negative
-      if (rsi > 70 && macd.macdHist[macd.macdHist.length - 1] < 0) return "Sell";
-      return "Hold";
-    }
-
-    // Render filtered data into the table
-    function renderTable(data) {
+    // Render the table with fetched data
+    function renderTable(coins) {
       const tbody = document.getElementById("results-body");
-      tbody.innerHTML = ""; // Clear existing rows
+      tbody.innerHTML = "";  // Clear any previous data
 
-      if (data.length === 0) {
+      if (coins.length === 0) {
         const row = document.createElement("tr");
         row.innerHTML = "<td colspan='13' style='text-align: center;'>No Data Available</td>";
         tbody.appendChild(row);
       } else {
-        data.forEach(coin => {
+        coins.forEach(coin => {
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${coin.name}</td>
@@ -165,12 +121,11 @@
             <td>$${coin.market_cap.toLocaleString()}</td>
             <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
             <td>$${coin.total_volume.toLocaleString()}</td>
-            <td>${coin.rsi}</td>
-            <td>${coin.macd}</td>
-            <td>${getSignal(coin.rsi, coin.macd)}</td>
+            <td>${coin.rsi || "N/A"}</td>
+            <td>${coin.macd || "N/A"}</td>
+            <td>${coin.signal || "N/A"}</td>
             <td>$${(Math.random() * 0.001).toFixed(8)}</td>
             <td>${["1D", "2D", "3D", "1W"][Math.floor(Math.random() * 4)]}</td>
-            <td>$${(Math.random() * 0.001).toFixed(8)}</td>
             <td>$${(Math.random() * 0.001).toFixed(8)}</td>
             <td>$${(Math.random() * 0.001).toFixed(8)}</td>
             <td>$${(Math.random() * 0.001).toFixed(8)}</td>
@@ -180,7 +135,14 @@
       }
     }
 
-    // Start countdown timer for auto-refresh
+    // Analyze Buy/Sell based on RSI and MACD
+    function analyzeSignal(rsi, macd) {
+      if (rsi < 40 && macd > 0) return "Buy";
+      if (rsi > 70 && macd < 0) return "Sell";
+      return "Hold";
+    }
+
+    // Start countdown for refresh
     function startCountdown(seconds) {
       let timeLeft = seconds;
       const countdown = document.getElementById("countdown");
@@ -197,42 +159,76 @@
       }, 1000);
     }
 
-    // Refresh the data
+    // Fetch and refresh the data
     async function refreshData() {
       let allCoins = [];
       let page = 1;
-      let data;
 
-      // Fetch coins until we have enough data
       while (allCoins.length < 10) {
-        data = await fetchRealData(page);
-        if (data.length === 0) break;  // Prevent infinite loop if no data is found
+        const data = await fetchRealData(page);
+        if (data.length === 0) break;
         allCoins = [...allCoins, ...data];
         page++;
       }
 
-      console.log("All fetched coins:", allCoins);  // Log all fetched coins
+      // Filter coins: price < $0.001 and market cap < $10M
+      const filteredCoins = allCoins.filter(coin => coin.current_price < 0.001 && coin.market_cap < 10000000);
 
-      // Apply filtering: price under $0.001 and market cap under $10M
-      const filtered = allCoins.filter(coin => coin.current_price < 0.001 && coin.market_cap < 10000000);
+      for (let i = 0; i < filteredCoins.length; i++) {
+        const coin = filteredCoins[i];
+        const historicalData = await fetchCryptoCompareData(coin.id); // Use coin.id or symbol to get historical data
 
-      console.log("Filtered coins:", filtered);  // Log filtered coins
-
-      // Fetch historical data and calculate RSI and MACD
-      for (let i = 0; i < filtered.length; i++) {
-        const coinSymbol = filtered[i].id; // Symbol from CoinGecko
-        const historicalData = await fetchCryptoCompareData(coinSymbol);
         if (historicalData.length > 0) {
           const rsi = calculateRSI(historicalData);
           const macd = calculateMACD(historicalData);
-          filtered[i].rsi = rsi.toFixed(2);
-          filtered[i].macd = macd.macdHist[macd.macdHist.length - 1].toFixed(2);
+
+          coin.rsi = rsi.toFixed(2);
+          coin.macd = macd.macdHist[macd.macdHist.length - 1].toFixed(2);
+          coin.signal = analyzeSignal(coin.rsi, coin.macd);
         }
       }
 
-      // Select top 10 coins that match the filter
-      const selected = filtered.slice(0, 10);
-      renderTable(selected);
+      renderTable(filteredCoins);
+    }
+
+    // Calculate RSI
+    function calculateRSI(data, period = 14) {
+      let gains = 0, losses = 0;
+      for (let i = 1; i < period; i++) {
+        const diff = data[i].close - data[i - 1].close;
+        if (diff >= 0) gains += diff;
+        else losses -= diff;
+      }
+      const avgGain = gains / period;
+      const avgLoss = losses / period;
+      const rs = avgGain / avgLoss;
+      return 100 - (100 / (1 + rs));
+    }
+
+    // Calculate MACD
+    function calculateMACD(data, fastLength = 12, slowLength = 26, signalLength = 9) {
+      const fastEMA = calculateEMA(data, fastLength);
+      const slowEMA = calculateEMA(data, slowLength);
+      const macdLine = fastEMA.map((v, i) => v - slowEMA[i]);
+
+      const signalLine = calculateEMA(macdLine, signalLength);
+      const macdHist = macdLine.map((v, i) => v - signalLine[i]);
+
+      return {
+        macdLine,
+        signalLine,
+        macdHist
+      };
+    }
+
+    // Calculate EMA
+    function calculateEMA(data, length) {
+      const k = 2 / (length + 1);
+      let ema = [data[0].close];
+      for (let i = 1; i < data.length; i++) {
+        ema.push((data[i].close - ema[i - 1]) * k + ema[i - 1]);
+      }
+      return ema;
     }
 
     refreshData();
