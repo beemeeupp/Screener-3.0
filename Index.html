@@ -2,56 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crypto Screener - Low Cap Coins</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Crypto Screener</title>
   <style>
     body {
-      background-color: #f4f4f4;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #333;
+      background-color: #f5f5f5;
       margin: 0;
       padding: 20px;
     }
+
     h1, h2 {
       text-align: center;
       margin-top: 30px;
-      color: #222;
+      color: #333;
     }
+
     .container {
       display: flex;
       justify-content: space-between;
-      flex-wrap: wrap;
       gap: 20px;
+      flex-wrap: wrap;
       margin-top: 30px;
     }
+
     .table-container {
-      width: 30%;
+      width: 32%;
       background-color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
+      min-height: 350px;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
     }
+
     th, td {
       padding: 12px;
       text-align: center;
       border: 1px solid #ddd;
     }
+
     th {
-      background-color: #f9f9f9;
+      background-color: #f0f0f0;
       color: #333;
     }
+
     td {
       color: #555;
     }
+
     .buy { color: #28a745; font-weight: bold; }
     .sell { color: #dc3545; font-weight: bold; }
     .hold { color: #ffc107; font-weight: bold; }
+
     .refresh-timer {
       text-align: center;
       margin-bottom: 20px;
@@ -61,7 +71,8 @@
   </style>
 </head>
 <body>
-  <h1>CRYPTO SCREENER - LOW CAP COINS</h1>
+
+  <h1>Advanced Crypto Screener</h1>
   <div class="refresh-timer" id="timer">Next refresh in: 30s</div>
 
   <div class="container">
@@ -70,7 +81,7 @@
       <table id="moon-table">
         <thead>
           <tr>
-            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th>
+            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -82,7 +93,7 @@
       <table id="mini-table">
         <thead>
           <tr>
-            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th>
+            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -94,7 +105,7 @@
       <table id="easy-table">
         <thead>
           <tr>
-            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th>
+            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -116,9 +127,9 @@
     }
     setInterval(updateTimer, 1000);
 
-    // Fetch data from CoinGecko API
+    // Function to fetch data from CoinGecko API for real-time market data
     async function fetchDataFromApiCoinGecko() {
-      const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=30&page=1&sparkline=false';
+      const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false';
       try {
         const response = await fetch(url);
         const data = await response.json();
@@ -128,108 +139,107 @@
       }
     }
 
-    // Fetch data from CoinMarketCap API (you need your API Key)
-    async function fetchDataFromApiCoinMarketCap() {
-      const url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=30&convert=USD';
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'X-CMC_PRO_API_KEY': 'YOUR_API_KEY' // Replace with your CoinMarketCap API key
-          }
-        });
-        const data = await response.json();
-        return data.data;
-      } catch (error) {
-        console.error('Error fetching data from CoinMarketCap:', error);
-      }
-    }
-
-    // Fetch data from CryptoCompare API
-    async function fetchDataFromApiCryptoCompare() {
-      const url = 'https://min-api.cryptocompare.com/data/top/totalvolfull?limit=30&tsym=USD';
+    // Function to fetch historical data for RSI and MACD calculations
+    async function fetchHistoricalDataForRSIandMACD(coinSymbol) {
+      const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${coinSymbol}&tsym=USD&limit=2000`;
       try {
         const response = await fetch(url);
         const data = await response.json();
         return data.Data;
       } catch (error) {
-        console.error('Error fetching data from CryptoCompare:', error);
+        console.error('Error fetching historical data for RSI and MACD:', error);
       }
     }
 
-    // Function to cross-reference data from all APIs
-    async function fetchAndCrossReferenceData() {
-      const coinGeckoData = await fetchDataFromApiCoinGecko();
-      const coinMarketCapData = await fetchDataFromApiCoinMarketCap();
-      const cryptoCompareData = await fetchDataFromApiCryptoCompare();
+    // RSI and MACD calculation functions
+    function calculateRSI(prices) {
+      let gains = 0;
+      let losses = 0;
+      for (let i = 1; i < prices.length; i++) {
+        let change = prices[i] - prices[i - 1];
+        if (change >= 0) gains += change;
+        else losses -= change;
+      }
+      let avgGain = gains / 14;
+      let avgLoss = losses / 14;
+      let rs = avgGain / avgLoss;
+      return 100 - (100 / (1 + rs));
+    }
 
-      // Combine the data from all APIs
+    function calculateMACD(prices) {
+      let shortTermEMA = prices.slice(-12).reduce((acc, price) => acc + price, 0) / 12;
+      let longTermEMA = prices.slice(-26).reduce((acc, price) => acc + price, 0) / 26;
+      return shortTermEMA - longTermEMA;
+    }
+
+    // Function to fetch and combine data from multiple APIs
+    async function fetchAndCombineData() {
+      const coinGeckoData = await fetchDataFromApiCoinGecko();
       const combinedData = [];
 
-      // Merge CoinGecko and CoinMarketCap Data
-      coinGeckoData.forEach(coin => {
-        const match = coinMarketCapData.find(item => item.name === coin.name);
-        if (match) {
-          combinedData.push({
-            ...coin,
-            marketCap: match.quote.USD.market_cap,
-            volume: match.quote.USD.volume_24h
-          });
-        }
-      });
-
-      // Add CryptoCompare Data
-      cryptoCompareData.forEach(coin => {
-        const match = combinedData.find(item => item.name === coin.CoinInfo.Name);
-        if (!match) {
-          combinedData.push({
-            name: coin.CoinInfo.Name,
-            price: coin.RAW.USD.PRICE,
-            marketCap: coin.RAW.USD.MKTCAP,
-            volume: coin.RAW.USD.VOLUME24H
-          });
-        }
-      });
+      for (let coin of coinGeckoData) {
+        const historicalData = await fetchHistoricalDataForRSIandMACD(coin.symbol.toUpperCase());
+        const prices = historicalData.map(item => item.close);
+        const rsi = calculateRSI(prices);
+        const macd = calculateMACD(prices);
+        combinedData.push({
+          ...coin,
+          rsi,
+          macd
+        });
+      }
 
       return combinedData;
     }
 
-    // Function to filter and update data on the tables
+    // Function to display data in the tables
     async function fetchAndDisplayData() {
-      const coins = await fetchAndCrossReferenceData();
+      const coins = await fetchAndCombineData();
       const moonTable = document.getElementById('moon-table').getElementsByTagName('tbody')[0];
       const miniTable = document.getElementById('mini-table').getElementsByTagName('tbody')[0];
       const easyTable = document.getElementById('easy-table').getElementsByTagName('tbody')[0];
-      
+
       moonTable.innerHTML = '';
       miniTable.innerHTML = '';
       easyTable.innerHTML = '';
 
-      // Filter coins for each category
+      // Filter coins for each category based on performance
       const moonShotCoins = coins.filter(coin => coin.price_change_percentage_24h > 100);
-      const miniMoons = coins.filter(coin => coin.price_change_percentage_24h > 50);
-      const easyGains = coins.filter(coin => coin.price_change_percentage_24h > 10);
+      const miniMoons = coins.filter(coin => coin.price_change_percentage_24h > 50 && coin.price_change_percentage_24h <= 100);
+      const easyGains = coins.filter(coin => coin.price_change_percentage_24h > 10 && coin.price_change_percentage_24h <= 50);
 
-      // Populate the tables with filtered data
+      // Populate the tables
       fillTable(moonTable, moonShotCoins);
       fillTable(miniTable, miniMoons);
       fillTable(easyTable, easyGains);
     }
 
-    // Function to populate the tables
+    // Function to fill the tables with data
     function fillTable(table, data) {
       data.slice(0, 5).forEach(coin => {
-        table.insertRow().innerHTML = `
+        let signal = "Hold"; // Default signal
+
+        if (coin.rsi > 70) signal = "Sell"; // RSI > 70 suggests overbought (sell)
+        if (coin.rsi < 30) signal = "Buy"; // RSI < 30 suggests oversold (buy)
+        if (coin.macd > 0) signal = "Buy"; // MACD positive suggests upward momentum
+
+        const row = table.insertRow();
+        row.innerHTML = `
           <td>${coin.name}</td>
-          <td>$${coin.price.toFixed(2)}</td>
-          <td>${coin.marketCap}</td>
+          <td>$${coin.current_price.toFixed(2)}</td>
+          <td>$${coin.market_cap.toLocaleString()}</td>
           <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-          <td>RSI Data Here</td>
-          <td>MACD Data Here</td>
-          <td>${coin.price_change_percentage_24h > 0 ? 'Buy' : 'Sell'}</td>
+          <td>${coin.rsi.toFixed(2)}</td>
+          <td>${coin.macd.toFixed(2)}</td>
+          <td class="${signal.toLowerCase()}">${signal}</td>
+          <td>${coin.price_change_percentage_24h > 100 ? 'Short-term' : 'Long-term'}</td>
         `;
       });
     }
+
+    // Initialize and load data
+    fetchAndDisplayData();
   </script>
+
 </body>
 </html>
