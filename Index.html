@@ -165,9 +165,10 @@
     function updateTableRow(coinId, rsiValue, macdValue, signal) {
       const rows = document.querySelectorAll(`tbody tr`);
       rows.forEach(row => {
-        if (row.children[0].textContent.includes(coinId)) {
-          row.children[4].textContent = rsiValue.toFixed(2);
-          row.children[5].textContent = macdValue.toFixed(2);
+        const coinName = row.children[0].textContent.split('(')[0].trim();
+        if (coinName === coinId) {
+          row.children[4].textContent = rsiValue !== undefined ? rsiValue.toFixed(2) : "N/A";
+          row.children[5].textContent = macdValue !== undefined ? macdValue.toFixed(2) : "N/A";
           row.children[6].textContent = signal;
           row.children[6].className = `signal-${signal.toLowerCase()}`;
         }
