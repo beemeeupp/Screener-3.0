@@ -6,48 +6,45 @@
   <title>Crypto Screener - Low Cap Coins</title>
   <style>
     body {
-      background-color: #0e0e10;
+      background-color: #f4f4f4;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #fff;
+      color: #333;
       margin: 0;
       padding: 20px;
     }
     h1, h2 {
       text-align: center;
       margin-top: 30px;
+      color: #222;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       margin: 20px auto;
-      background-color: #1a1a1d;
-      border: 1px solid #444;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     th, td {
-      padding: 10px;
+      padding: 12px;
       text-align: center;
-      border: 1px solid #333;
+      border: 1px solid #ddd;
     }
     th {
-      background-color: #222;
-      color: #00fff2;
+      background-color: #f9f9f9;
+      color: #333;
     }
     td {
-      color: #e0e0e0;
+      color: #555;
     }
-    .buy { color: #0f0; font-weight: bold; }
-    .sell { color: #f00; font-weight: bold; }
-    .hold { color: #ff0; font-weight: bold; }
+    .buy { color: #28a745; font-weight: bold; }
+    .sell { color: #dc3545; font-weight: bold; }
+    .hold { color: #ffc107; font-weight: bold; }
     .refresh-timer {
       text-align: center;
       margin-bottom: 20px;
       font-size: 18px;
-    }
-    .no-data {
-      text-align: center;
-      color: #888;
-      padding: 15px;
-      font-style: italic;
+      color: #555;
     }
   </style>
 </head>
@@ -55,41 +52,41 @@
   <h1>CRYPTO SCREENER - LOW CAP COINS</h1>
   <div class="refresh-timer" id="timer">Next refresh in: 30s</div>
 
-  <h2>Moon Shot Coins (30%+ Gains)</h2>
+  <h2>Moon Shot Coins (100%+ Potential Gains)</h2>
   <table id="moon-table">
     <thead>
       <tr>
-        <th>Name</th><th>Price (USD)</th><th>Market Cap</th><th>Change (24h)</th>
-        <th>Volume (24h)</th><th>RSI</th><th>MACD</th><th>Buy/Sell</th><th>Predicted Price</th><th>Hold Time</th>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
+        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-  <h2>Mini Moons (15%–30% Gains)</h2>
+  <h2>Mini Moons (50%+ Potential Gains)</h2>
   <table id="mini-table">
     <thead>
       <tr>
-        <th>Name</th><th>Price (USD)</th><th>Market Cap</th><th>Change (24h)</th>
-        <th>Volume (24h)</th><th>RSI</th><th>MACD</th><th>Buy/Sell</th><th>Predicted Price</th><th>Hold Time</th>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
+        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-  <h2>Easy 10% Daily Gains (5%–15%)</h2>
+  <h2>Easy 10% Daily Gains</h2>
   <table id="easy-table">
     <thead>
       <tr>
-        <th>Name</th><th>Price (USD)</th><th>Market Cap</th><th>Change (24h)</th>
-        <th>Volume (24h)</th><th>RSI</th><th>MACD</th><th>Buy/Sell</th><th>Predicted Price</th><th>Hold Time</th>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
+        <th>Volume</th><th>RSI</th><th>MACD</th><th>Signal</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <script>
-    const refreshTime = 30;
+    const refreshTime = 30; // Refresh every 30 seconds
     let countdown = refreshTime;
 
     function updateTimer() {
@@ -97,68 +94,103 @@
       countdown--;
       if (countdown < 0) {
         countdown = refreshTime;
-        fetchAndDisplayData();
+        fetchAndDisplayData(); // Refresh data when the countdown reaches 0
       }
     }
     setInterval(updateTimer, 1000);
 
+    // Fetch data from CoinGecko API
     async function fetchDataFromApi() {
-      const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=250&page=1&sparkline=false';
+      const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=30&page=1&sparkline=false';
       try {
         const response = await fetch(url);
         const data = await response.json();
-        return data.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h); // Sort by 24h gain
+        return data;
       } catch (error) {
         console.error('Error fetching data from CoinGecko:', error);
-        return [];
       }
     }
 
+    // Function to fetch historical data for RSI and MACD calculations
+    async function fetchHistoricalPrices(coinId) {
+      const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30&interval=daily`;
+      const response = await fetch(url);
+      const data = await response.json();
+      return data.prices.map(price => price[1]); // Return only the price data
+    }
+
+    // Calculate RSI
+    function calculateRSI(prices, period = 14) {
+      const gains = [];
+      const losses = [];
+      
+      for (let i = 1; i < prices.length; i++) {
+        const change = prices[i] - prices[i - 1];
+        if (change > 0) gains.push(change);
+        else losses.push(Math.abs(change));
+      }
+
+      const avgGain = gains.slice(0, period).reduce((a, b) => a + b, 0) / period;
+      const avgLoss = losses.slice(0, period).reduce((a, b) => a + b, 0) / period;
+
+      const rs = avgGain / avgLoss;
+      const rsi = 100 - (100 / (1 + rs));
+      return rsi.toFixed(2);
+    }
+
+    // Calculate MACD
+    function ema(prices, period) {
+      const k = 2 / (period + 1);
+      let ema = prices[0];
+      for (let i = 1; i < prices.length; i++) {
+        ema = prices[i] * k + ema * (1 - k);
+      }
+      return ema;
+    }
+
+    function calculateMACD(prices) {
+      const ema12 = ema(prices.slice(-12), 12);
+      const ema26 = ema(prices.slice(-26), 26);
+      return (ema12 - ema26).toFixed(4);
+    }
+
+    // Function to filter and update data on the tables
     async function fetchAndDisplayData() {
       const coins = await fetchDataFromApi();
-      const usedCoinIds = new Set();
+      const moonTable = document.getElementById('moon-table').getElementsByTagName('tbody')[0];
+      const miniTable = document.getElementById('mini-table').getElementsByTagName('tbody')[0];
+      const easyTable = document.getElementById('easy-table').getElementsByTagName('tbody')[0];
+      moonTable.innerHTML = '';
+      miniTable.innerHTML = '';
+      easyTable.innerHTML = '';
 
-      const moonData = coins.filter(coin => coin.price_change_percentage_24h >= 30 && !usedCoinIds.has(coin.id)).slice(0, 10);
-      moonData.forEach(coin => usedCoinIds.add(coin.id));
+      for (const coin of coins) {
+        const prices = await fetchHistoricalPrices(coin.id);
+        if (prices.length < 30) continue;
 
-      const miniData = coins.filter(coin => coin.price_change_percentage_24h >= 15 && coin.price_change_percentage_24h < 30 && !usedCoinIds.has(coin.id)).slice(0, 10);
-      miniData.forEach(coin => usedCoinIds.add(coin.id));
-
-      const easyData = coins.filter(coin => coin.price_change_percentage_24h >= 5 && coin.price_change_percentage_24h < 15 && !usedCoinIds.has(coin.id)).slice(0, 10);
-
-      fillTable("moon-table", moonData);
-      fillTable("mini-table", miniData);
-      fillTable("easy-table", easyData);
-    }
-
-    function fillTable(tableId, data) {
-      const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
-      tableBody.innerHTML = '';
-
-      if (data.length === 0) {
-        const row = tableBody.insertRow();
-        const cell = row.insertCell();
-        cell.colSpan = 10;
-        cell.className = 'no-data';
-        cell.innerText = 'No coins found matching this category at the moment.';
-        return;
-      }
-
-      data.forEach(coin => {
+        const rsi = calculateRSI(prices);
+        const macd = calculateMACD(prices);
         const signal = coin.price_change_percentage_24h > 0 ? "Buy" : "Sell";
-        tableBody.insertRow().innerHTML = `
+
+        const row = `<tr>
           <td>${coin.name}</td>
-          <td>$${coin.current_price.toFixed(6)}</td>
-          <td>${coin.market_cap.toLocaleString()}</td>
+          <td>$${coin.current_price.toFixed(4)}</td>
+          <td>$${coin.market_cap.toLocaleString()}</td>
           <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-          <td>${coin.total_volume.toLocaleString()}</td>
-          <td>${coin.rsi || 'N/A'}</td>
-          <td>${coin.macd || 'N/A'}</td>
+          <td>$${coin.total_volume.toLocaleString()}</td>
+          <td>${rsi}</td>
+          <td>${macd}</td>
           <td class="${signal.toLowerCase()}">${signal}</td>
-          <td>$${(coin.current_price * 1.5).toFixed(6)}</td>
-          <td>2 Days</td>
-        `;
-      });
+        </tr>`;
+
+        if (coin.price_change_percentage_24h > 100) {
+          moonTable.innerHTML += row;
+        } else if (coin.price_change_percentage_24h > 50) {
+          miniTable.innerHTML += row;
+        } else if (coin.price_change_percentage_24h > 10) {
+          easyTable.innerHTML += row;
+        }
+      }
     }
 
     fetchAndDisplayData();
