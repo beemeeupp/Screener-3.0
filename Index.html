@@ -100,7 +100,7 @@
     setInterval(updateTimer, 1000);
 
     // Fetch data from CoinGecko API
-    async function fetchDataFromApi() {
+    async function fetchDataFromApiCoinGecko() {
       const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_asc&per_page=30&page=1&sparkline=false';
       try {
         const response = await fetch(url);
@@ -109,6 +109,72 @@
       } catch (error) {
         console.error('Error fetching data from CoinGecko:', error);
       }
+    }
+
+    // Fetch data from CoinMarketCap API (you need your API Key)
+    async function fetchDataFromApiCoinMarketCap() {
+      const url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=30&convert=USD';
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'X-CMC_PRO_API_KEY': 'YOUR_API_KEY' // Replace with your CoinMarketCap API key
+          }
+        });
+        const data = await response.json();
+        return data.data;
+      } catch (error) {
+        console.error('Error fetching data from CoinMarketCap:', error);
+      }
+    }
+
+    // Fetch data from CryptoCompare API
+    async function fetchDataFromApiCryptoCompare() {
+      const url = 'https://min-api.cryptocompare.com/data/top/totalvolfull?limit=30&tsym=USD';
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.Data;
+      } catch (error) {
+        console.error('Error fetching data from CryptoCompare:', error);
+      }
+    }
+
+    // Function to cross-reference data from all APIs
+    async function fetchAndCrossReferenceData() {
+      const coinGeckoData = await fetchDataFromApiCoinGecko();
+      const coinMarketCapData = await fetchDataFromApiCoinMarketCap();
+      const cryptoCompareData = await fetchDataFromApiCryptoCompare();
+
+      // Combine the data from all APIs
+      const combinedData = [];
+
+      // Merge CoinGecko and CoinMarketCap Data
+      coinGeckoData.forEach(coin => {
+        const match = coinMarketCapData.find(item => item.name === coin.name);
+        if (match) {
+          combinedData.push({
+            ...coin,
+            marketCap: match.quote.USD.market_cap,
+            volume: match.quote.USD.volume_24h
+          });
+        }
+      });
+
+      // Add CryptoCompare Data
+      cryptoCompareData.forEach(coin => {
+        const match = combinedData.find(item => item.name === coin.CoinInfo.Name);
+        if (!match) {
+          combinedData.push({
+            name: coin.CoinInfo.Name,
+            price: coin.RAW.USD.PRICE,
+            marketCap: coin.RAW.USD.MKTCAP,
+            volume: coin.RAW.USD.VOLUME24H
+          });
+        }
+      });
+
+      return combinedData;
     }
 
     // Function to fetch historical data for RSI and MACD calculations
@@ -156,7 +222,7 @@
 
     // Function to filter and update data on the tables
     async function fetchAndDisplayData() {
-      const coins = await fetchDataFromApi();
+      const coins = await fetchAndCrossReferenceData();
       const moonTable = document.getElementById('moon-table').getElementsByTagName('tbody')[0];
       const miniTable = document.getElementById('mini-table').getElementsByTagName('tbody')[0];
       const easyTable = document.getElementById('easy-table').getElementsByTagName('tbody')[0];
@@ -164,74 +230,30 @@
       miniTable.innerHTML = '';
       easyTable.innerHTML = '';
 
-      const moonData = [];
-      const miniData = [];
-      const easyData = [];
+      // Sorting by performance (change percentage, volume, etc.)
+      coins.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
 
-      for (const coin of coins) {
-        const prices = await fetchHistoricalPrices(coin.id);
-        if (prices.length < 30) continue;
+      coins.slice(0, 5).forEach(coin => {
+        const historicalPrices = await fetchHistoricalPrices(coin.id);
+        const rsi = calculateRSI(historicalPrices);
+        const macd = calculateMACD(historicalPrices);
 
-        const rsi = calculateRSI(prices);
-        const macd = calculateMACD(prices);
         const signal = coin.price_change_percentage_24h > 0 ? "Buy" : "Sell";
-
-        const coinData = {
-          name: coin.name,
-          price: coin.current_price,
-          marketCap: coin.market_cap,
-          change24h: coin.price_change_percentage_24h,
-          volume: coin.total_volume,
-          rsi: rsi,
-          macd: macd,
-          signal: signal
-        };
-
-        if (coin.change24h >= 100) {
-          moonData.push(coinData);
-        } else if (coin.change24h >= 50) {
-          miniData.push(coinData);
-        } else if (coin.change24h >= 10) {
-          easyData.push(coinData);
-        }
-      }
-
-      // Sort coins in each category based on performance
-      moonData.sort((a, b) => {
-        return b.change24h - a.change24h || b.rsi - a.rsi || b.macd - a.macd;
-      });
-
-      miniData.sort((a, b) => {
-        return b.change24h - a.change24h || b.rsi - a.rsi || b.macd - a.macd;
-      });
-
-      easyData.sort((a, b) => {
-        return b.change24h - a.change24h || b.rsi - a.rsi || b.macd - a.macd;
-      });
-
-      // Insert data into tables
-      insertTableData(moonTable, moonData);
-      insertTableData(miniTable, miniData);
-      insertTableData(easyTable, easyData);
-    }
-
-    // Insert data into table
-    function insertTableData(table, data) {
-      data.slice(0, 5).forEach(coin => {
-        const row = `<tr>
+        
+        moonTable.insertRow().innerHTML = `
           <td>${coin.name}</td>
-          <td>$${coin.price.toFixed(4)}</td>
-          <td>$${coin.marketCap.toLocaleString()}</td>
-          <td>${coin.change24h.toFixed(2)}%</td>
-          <td>$${coin.volume.toLocaleString()}</td>
-          <td>${coin.rsi}</td>
-          <td>${coin.macd}</td>
-          <td class="${coin.signal.toLowerCase()}">${coin.signal}</td>
-        </tr>`;
-        table.innerHTML += row;
+          <td>$${coin.current_price.toFixed(2)}</td>
+          <td>${coin.market_cap}</td>
+          <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
+          <td>${coin.total_volume}</td>
+          <td>${rsi}</td>
+          <td>${macd}</td>
+          <td class="${signal.toLowerCase()}">${signal}</td>
+        `;
       });
     }
 
+    // Start the first data fetch
     fetchAndDisplayData();
   </script>
 </body>
