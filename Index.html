@@ -146,20 +146,30 @@
           const macdValue = macdData.value;
           const rsiValue = rsiData.value;
 
+          // Determine Buy/Hold/Sell Signal
+          let signal = "Hold";
+          if (rsiValue < 30 && macdValue > 0) {
+            signal = "Buy";
+          } else if (rsiValue > 70 && macdValue < 0) {
+            signal = "Sell";
+          }
+
           // Display RSI and MACD in the respective table rows
-          updateTableRow(coin.id, rsiValue, macdValue);
+          updateTableRow(coin.id, rsiValue, macdValue, signal);
         } catch (error) {
           console.error("Error fetching indicators:", error);
         }
       }
     }
 
-    function updateTableRow(coinId, rsiValue, macdValue) {
+    function updateTableRow(coinId, rsiValue, macdValue, signal) {
       const rows = document.querySelectorAll(`tbody tr`);
       rows.forEach(row => {
         if (row.children[0].textContent.includes(coinId)) {
-          row.children[4].textContent = rsiValue;
-          row.children[5].textContent = macdValue;
+          row.children[4].textContent = rsiValue.toFixed(2);
+          row.children[5].textContent = macdValue.toFixed(2);
+          row.children[6].textContent = signal;
+          row.children[6].className = `signal-${signal.toLowerCase()}`;
         }
       });
     }
@@ -176,7 +186,7 @@
           <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
           <td>Loading...</td> <!-- RSI -->
           <td>Loading...</td> <!-- MACD -->
-          <td>Hold</td> <!-- Signal -->
+          <td>Loading...</td> <!-- Signal -->
           <td>4h</td> <!-- Hold Time -->
         `;
         tbody.appendChild(row);
