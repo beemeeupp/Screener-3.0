@@ -4,80 +4,107 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Advanced Crypto Screener</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      background-color: #0e0e10;
-      font-family: Arial, sans-serif;
-      color: #ffffff;
-      padding: 20px;
+      background-color: #121212;
+      color: #fff;
+      padding-top: 20px;
     }
-    h1, h2 {
+    h1 {
       text-align: center;
+      margin-bottom: 30px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px auto;
-      background-color: #1c1c1e;
+    .section-title {
+      margin-top: 40px;
+      border-bottom: 2px solid #555;
+      padding-bottom: 5px;
     }
-    th, td {
-      padding: 10px;
-      border: 1px solid #444;
-      text-align: center;
-    }
-    th {
-      background-color: #2a2a2c;
-      color: #00ffff;
-    }
-    .buy { color: #0f0; font-weight: bold; }
-    .sell { color: #f00; font-weight: bold; }
-    .hold { color: #ff0; font-weight: bold; }
+    .signal-buy { color: #00ff00; font-weight: bold; }
+    .signal-sell { color: #ff4c4c; font-weight: bold; }
+    .signal-hold { color: #ffff00; font-weight: bold; }
+    .gain-20 { border-left: 5px solid #ff4c4c; }
+    .gain-15 { border-left: 5px solid #ff914c; }
+    .gain-10 { border-left: 5px solid #ffd24c; }
+    .gain-5 { border-left: 5px solid #4cff4c; }
     .refresh-timer {
       text-align: center;
-      margin-bottom: 20px;
       font-size: 18px;
+      margin-bottom: 20px;
+    }
+    th, td {
+      vertical-align: middle;
     }
   </style>
 </head>
 <body>
-  <h1>Advanced Crypto Screener</h1>
-  <div class="refresh-timer" id="timer">Next refresh in: 30s</div>
+  <div class="container">
+    <h1>Advanced Crypto Screener</h1>
+    <div id="timer" class="refresh-timer">Next refresh in: 30s</div>
 
-  <h2>Moon Shot Coins (100%+ Potential Gains)</h2>
-  <table id="moon-table">
-    <thead>
-      <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-        <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <!-- Gain 20%+ -->
+    <div class="section-title">20%+ Daily Gains</div>
+    <div class="table-responsive">
+      <table class="table table-dark table-bordered table-striped gain-20">
+        <thead>
+          <tr>
+            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
+            <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+          </tr>
+        </thead>
+        <tbody id="gain20-body"></tbody>
+      </table>
+    </div>
 
-  <h2>Mini Moons (50%+ Potential Gains)</h2>
-  <table id="mini-table">
-    <thead>
-      <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-        <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <!-- Gain 15%+ -->
+    <div class="section-title">15%+ Daily Gains</div>
+    <div class="table-responsive">
+      <table class="table table-dark table-bordered table-striped gain-15">
+        <thead>
+          <tr>
+            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
+            <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+          </tr>
+        </thead>
+        <tbody id="gain15-body"></tbody>
+      </table>
+    </div>
 
-  <h2>Easy 10% Daily Gains</h2>
-  <table id="easy-table">
-    <thead>
-      <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-        <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <!-- Gain 10%+ -->
+    <div class="section-title">10%+ Daily Gains</div>
+    <div class="table-responsive">
+      <table class="table table-dark table-bordered table-striped gain-10">
+        <thead>
+          <tr>
+            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
+            <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+          </tr>
+        </thead>
+        <tbody id="gain10-body"></tbody>
+      </table>
+    </div>
 
+    <!-- Gain 5%+ -->
+    <div class="section-title">5%+ Daily Gains</div>
+    <div class="table-responsive">
+      <table class="table table-dark table-bordered table-striped gain-5">
+        <thead>
+          <tr>
+            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
+            <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+          </tr>
+        </thead>
+        <tbody id="gain5-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- JavaScript to fetch and display data -->
   <script>
-    const refreshInterval = 30;
+    const refreshInterval = 30; // seconds
     let countdown = refreshInterval;
 
     function updateTimer() {
@@ -91,37 +118,73 @@
     setInterval(updateTimer, 1000);
 
     async function fetchData() {
-      const response = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=100&page=1&sparkline=false");
-      const data = await response.json();
-      if (data) {
-        populateTable("moon-table", data.filter(coin => coin.price_change_percentage_24h > 100));
-        populateTable("mini-table", data.filter(coin => coin.price_change_percentage_24h > 50 && coin.price_change_percentage_24h <= 100));
-        populateTable("easy-table", data.filter(coin => coin.price_change_percentage_24h > 10 && coin.price_change_percentage_24h <= 50));
+      try {
+        const response = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=100&page=1&sparkline=false");
+        const data = await response.json();
+        if (data) {
+          populateTable("gain20-body", data.filter(c => c.price_change_percentage_24h > 20));
+          populateTable("gain15-body", data.filter(c => c.price_change_percentage_24h > 15 && c.price_change_percentage_24h <= 20));
+          populateTable("gain10-body", data.filter(c => c.price_change_percentage_24h > 10 && c.price_change_percentage_24h <= 15));
+          populateTable("gain5-body", data.filter(c => c.price_change_percentage_24h > 5 && c.price_change_percentage_24h <= 10));
+
+          // Fetch RSI and MACD for each coin
+          await fetchIndicators(data);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
     }
 
-    function populateTable(tableId, coins) {
-      const tableBody = document.getElementById(tableId).querySelector("tbody");
-      tableBody.innerHTML = "";
-      coins.slice(0, 5).forEach(coin => {
-        const signal = coin.price_change_percentage_24h > 15 ? "Buy" : coin.price_change_percentage_24h < -15 ? "Sell" : "Hold";
-        const row = `
-          <tr>
-            <td>${coin.name}</td>
-            <td>$${coin.current_price.toFixed(4)}</td>
-            <td>$${coin.market_cap.toLocaleString()}</td>
-            <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-            <td>N/A</td>
-            <td>N/A</td>
-            <td class="${signal.toLowerCase()}">${signal}</td>
-            <td>2 Days</td>
-          </tr>
-        `;
-        tableBody.innerHTML += row;
+    async function fetchIndicators(coins) {
+      for (let coin of coins) {
+        try {
+          const macdResponse = await fetch(`https://api.taapi.io/macd?secret=YOUR_API_KEY&symbol=binance:${coin.symbol.toUpperCase()}USDT`);
+          const rsiResponse = await fetch(`https://api.taapi.io/rsi?secret=YOUR_API_KEY&symbol=binance:${coin.symbol.toUpperCase()}USDT`);
+          const macdData = await macdResponse.json();
+          const rsiData = await rsiResponse.json();
+
+          const macdValue = macdData.value;
+          const rsiValue = rsiData.value;
+
+          // Display RSI and MACD in the respective table rows
+          updateTableRow(coin.id, rsiValue, macdValue);
+        } catch (error) {
+          console.error("Error fetching indicators:", error);
+        }
+      }
+    }
+
+    function updateTableRow(coinId, rsiValue, macdValue) {
+      const rows = document.querySelectorAll(`tbody tr`);
+      rows.forEach(row => {
+        if (row.children[0].textContent.includes(coinId)) {
+          row.children[4].textContent = rsiValue;
+          row.children[5].textContent = macdValue;
+        }
       });
     }
 
-    fetchData(); // Initial load
+    function populateTable(tableId, coins) {
+      const tbody = document.getElementById(tableId);
+      tbody.innerHTML = "";
+      coins.forEach(coin => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${coin.name} (${coin.symbol.toUpperCase()})</td>
+          <td>$${coin.current_price.toLocaleString()}</td>
+          <td>$${coin.market_cap.toLocaleString()}</td>
+          <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
+          <td>Loading...</td> <!-- RSI -->
+          <td>Loading...</td> <!-- MACD -->
+          <td>Hold</td> <!-- Signal -->
+          <td>4h</td> <!-- Hold Time -->
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Initial fetch
+    fetchData();
   </script>
 </body>
 </html>
