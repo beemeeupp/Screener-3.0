@@ -164,6 +164,10 @@
       miniTable.innerHTML = '';
       easyTable.innerHTML = '';
 
+      const moonData = [];
+      const miniData = [];
+      const easyData = [];
+
       for (const coin of coins) {
         const prices = await fetchHistoricalPrices(coin.id);
         if (prices.length < 30) continue;
@@ -172,25 +176,60 @@
         const macd = calculateMACD(prices);
         const signal = coin.price_change_percentage_24h > 0 ? "Buy" : "Sell";
 
-        const row = `<tr>
-          <td>${coin.name}</td>
-          <td>$${coin.current_price.toFixed(4)}</td>
-          <td>$${coin.market_cap.toLocaleString()}</td>
-          <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-          <td>$${coin.total_volume.toLocaleString()}</td>
-          <td>${rsi}</td>
-          <td>${macd}</td>
-          <td class="${signal.toLowerCase()}">${signal}</td>
-        </tr>`;
+        const coinData = {
+          name: coin.name,
+          price: coin.current_price,
+          marketCap: coin.market_cap,
+          change24h: coin.price_change_percentage_24h,
+          volume: coin.total_volume,
+          rsi: rsi,
+          macd: macd,
+          signal: signal
+        };
 
-        if (coin.price_change_percentage_24h > 100) {
-          moonTable.innerHTML += row;
-        } else if (coin.price_change_percentage_24h > 50) {
-          miniTable.innerHTML += row;
-        } else if (coin.price_change_percentage_24h > 10) {
-          easyTable.innerHTML += row;
+        if (coin.change24h >= 100) {
+          moonData.push(coinData);
+        } else if (coin.change24h >= 50) {
+          miniData.push(coinData);
+        } else if (coin.change24h >= 10) {
+          easyData.push(coinData);
         }
       }
+
+      // Sort coins in each category based on performance
+      moonData.sort((a, b) => {
+        return b.change24h - a.change24h || b.rsi - a.rsi || b.macd - a.macd;
+      });
+
+      miniData.sort((a, b) => {
+        return b.change24h - a.change24h || b.rsi - a.rsi || b.macd - a.macd;
+      });
+
+      easyData.sort((a, b) => {
+        return b.change24h - a.change24h || b.rsi - a.rsi || b.macd - a.macd;
+      });
+
+      // Insert data into tables
+      insertTableData(moonTable, moonData);
+      insertTableData(miniTable, miniData);
+      insertTableData(easyTable, easyData);
+    }
+
+    // Insert data into table
+    function insertTableData(table, data) {
+      data.slice(0, 5).forEach(coin => {
+        const row = `<tr>
+          <td>${coin.name}</td>
+          <td>$${coin.price.toFixed(4)}</td>
+          <td>$${coin.marketCap.toLocaleString()}</td>
+          <td>${coin.change24h.toFixed(2)}%</td>
+          <td>$${coin.volume.toLocaleString()}</td>
+          <td>${coin.rsi}</td>
+          <td>${coin.macd}</td>
+          <td class="${coin.signal.toLowerCase()}">${coin.signal}</td>
+        </tr>`;
+        table.innerHTML += row;
+      });
     }
 
     fetchAndDisplayData();
