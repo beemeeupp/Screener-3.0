@@ -50,8 +50,8 @@
 
   <h1>NYSE Screener</h1>
   <div id="nyse-tables-container">
-    <h2>Easy 10% Daily Gains</h2>
-    <table id="nyse-easy-gains">
+    <h2>5% Daily Gains</h2>
+    <table id="nyse-5-gains">
       <thead>
         <tr>
           <th>Ticker</th>
@@ -64,8 +64,8 @@
       <tbody></tbody>
     </table>
 
-    <h2>Mini Moons (50%+ Potential)</h2>
-    <table id="nyse-mini-moons">
+    <h2>10% Daily Gains</h2>
+    <table id="nyse-10-gains">
       <thead>
         <tr>
           <th>Ticker</th>
@@ -78,8 +78,8 @@
       <tbody></tbody>
     </table>
 
-    <h2>Moon Shot Stocks (100%+ Potential)</h2>
-    <table id="nyse-moon-shots">
+    <h2>15% Daily Gains</h2>
+    <table id="nyse-15-gains">
       <thead>
         <tr>
           <th>Ticker</th>
@@ -99,6 +99,102 @@
 
   <script src="https://cdn.jsdelivr.net/npm/technicalindicators"></script> <!-- For RSI and MACD calculations -->
   <script>
+    const apiKey = 'GGYIWPPUWG7Y3GW4'; // Alpha Vantage API key
+    const stockSymbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "FB"]; // Example NYSE stocks to track
+    
+    // Function to fetch data from Alpha Vantage API
+    async function fetchStockData(symbol) {
+      const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data["Time Series (Daily)"]) {
+        const timeSeries = data["Time Series (Daily)"];
+        const dates = Object.keys(timeSeries);
+        const latestData = timeSeries[dates[0]]; // Get the most recent day's data
+        const previousData = timeSeries[dates[1]]; // Get the second most recent day's data
+
+        const latestClose = parseFloat(latestData["4. close"]);
+        const previousClose = parseFloat(previousData["4. close"]);
+        const dailyChange = ((latestClose - previousClose) / previousClose) * 100; // Calculate percent change
+
+        return {
+          symbol: symbol,
+          price: latestClose.toFixed(2),
+          change: dailyChange.toFixed(2),
+        };
+      }
+      return null;
+    }
+
+    async function fetchNYSEStocks() {
+      const stocksData = [];
+      for (const symbol of stockSymbols) {
+        const stockData = await fetchStockData(symbol);
+        if (stockData) {
+          stocksData.push(stockData);
+        }
+      }
+      return stocksData;
+    }
+
+    function renderNYSEData(data) {
+      const nyseTables = {
+        "5% Daily Gains": [],
+        "10% Daily Gains": [],
+        "15% Daily Gains": []
+      };
+
+      // Classify data into gain categories
+      for (let stock of data) {
+        const change = parseFloat(stock.change);
+        const stockInfo = {
+          ticker: stock.symbol,
+          price: `$${stock.price}`,
+          change: `${stock.change}%`
+        };
+
+        if (change >= 15) nyseTables["15% Daily Gains"].push(stockInfo);
+        else if (change >= 10) nyseTables["10% Daily Gains"].push(stockInfo);
+        else if (change >= 5) nyseTables["5% Daily Gains"].push(stockInfo);
+      }
+
+      // Render tables on the page
+      for (let category in nyseTables) {
+        const tableData = nyseTables[category];
+        const table = document.getElementById(`nyse-${category.toLowerCase().replace(" ", "-")}`);
+        const tbody = table.querySelector('tbody');
+        tbody.innerHTML = '';
+
+        tableData.forEach(stock => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${stock.ticker}</td>
+            <td>${stock.price}</td>
+            <td>${"N/A"}</td>
+            <td>${"N/A"}</td>
+            <td class="${stock.change > 0 ? 'buy' : stock.change < 0 ? 'sell' : 'hold'}">${stock.change}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+    }
+
+    async function refreshNYSE() {
+      const nyseData = await fetchNYSEStocks();
+      renderNYSEData(nyseData);
+    }
+
+    let nyseCountdown = 15;
+    setInterval(() => {
+      nyseCountdown--;
+      if (nyseCountdown <= 0) {
+        nyseCountdown = 15;
+        refreshNYSE();
+      }
+      document.getElementById("nyse-countdown").innerText = nyseCountdown;
+    }, 1000);
+
     // Crypto Screener Script
     const tables = {
       "20%+ Daily Gains": [],
@@ -130,45 +226,6 @@
       }
     }
 
-    function calculateRSI(prices) {
-      if (!prices || prices.length < 15) return "N/A";
-      let gains = 0, losses = 0;
-      for (let i = 1; i < 15; i++) {
-        const diff = prices[i] - prices[i - 1];
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
-      }
-      if (losses === 0) return 100;
-      const rs = gains / losses;
-      const rsi = 100 - (100 / (1 + rs));
-      return rsi.toFixed(2);
-    }
-
-    function calculateMACD(prices) {
-      if (!prices || prices.length < 26) return "N/A";
-      const ema = (period, data) => {
-        const k = 2 / (period + 1);
-        let emaArray = [data[0]];
-        for (let i = 1; i < data.length; i++) {
-          emaArray.push(data[i] * k + emaArray[i - 1] * (1 - k));
-        }
-        return emaArray;
-      };
-      const ema12 = ema(12, prices);
-      const ema26 = ema(26, prices);
-      const macd = ema12.slice(-1)[0] - ema26.slice(-1)[0];
-      return macd.toFixed(4);
-    }
-
-    function determineSignal(rsi, macd) {
-      if (rsi === "N/A" || macd === "N/A") return "N/A";
-      rsi = parseFloat(rsi);
-      macd = parseFloat(macd);
-      if (rsi < 30 && macd > 0) return "<span class='buy'>Buy</span>";
-      else if (rsi > 70 && macd < 0) return "<span class='sell'>Sell</span>";
-      else return "<span class='hold'>Hold</span>";
-    }
-
     function renderTables() {
       const container = document.getElementById("tables-container");
       container.innerHTML = "";
@@ -192,87 +249,4 @@
             </thead>
             <tbody>
         `;
-        for (let coin of coins) {
-          const rsi = calculateRSI(coin.sparkline);
-          const macd = calculateMACD(coin.sparkline);
-          const signal = determineSignal(rsi, macd);
-          html += `
-            <tr>
-              <td>${coin.name}</td>
-              <td>${coin.price}</td>
-              <td>${coin.market_cap}</td>
-              <td>${coin.change}</td>
-              <td>${rsi}</td>
-              <td>${macd}</td>
-              <td>${signal}</td>
-              <td>4h</td>
-            </tr>
-          `;
-        }
-        html += `</tbody></table>`;
-        container.innerHTML += html;
-      }
-    }
-
-    async function refresh() {
-      await fetchCoins();
-      renderTables();
-    }
-
-    let countdown = 30;
-    setInterval(() => {
-      countdown--;
-      if (countdown <= 0) {
-        countdown = 30;
-        refresh();
-      }
-      document.getElementById("countdown").innerText = countdown;
-    }, 1000);
-
-    refresh(); // Initial load
-
-    // NYSE Stock Screener Code
-    async function fetchNYSEData() {
-      const tickers = ['AAPL', 'GOOGL', 'AMZN', 'MSFT', 'TSLA']; // Example tickers
-
-      for (const ticker of tickers) {
-        const res = await fetch(`https://api.twelvedata.com/time_series?symbol=${ticker}&interval=1day&apikey=YOUR_TWELVE_DATA_API_KEY`);
-        const data = await res.json();
-
-        if (data.values) {
-          const latestData = data.values[0];
-          const closePrice = parseFloat(latestData.close);
-          const rsi = calculateRSI(data.values.map(item => parseFloat(item.close)));
-          const macd = calculateMACD(data.values.map(item => parseFloat(item.close)));
-          const signal = determineSignal(rsi, macd);
-
-          // Insert into table based on certain criteria (e.g., change, RSI, etc.)
-          let tableId = "nyse-easy-gains";  // Example for 10% daily gains
-          if (closePrice >= 100) tableId = "nyse-mini-moons";
-          else if (closePrice >= 200) tableId = "nyse-moon-shots";
-
-          document.querySelector(`#${tableId} tbody`).innerHTML += `
-            <tr>
-              <td>${ticker}</td>
-              <td>${closePrice.toFixed(2)}</td>
-              <td>${rsi}</td>
-              <td>${macd}</td>
-              <td>${signal}</td>
-            </tr>
-          `;
-        }
-      }
-    }
-
-    async function startNYSERefresh() {
-      await fetchNYSEData();
-      setInterval(() => {
-        fetchNYSEData();
-        document.getElementById("nyse-countdown").innerText = 15;
-      }, 15000);
-    }
-
-    startNYSERefresh(); // Initialize NYSE refresh
-  </script>
-</body>
-</html>
+        for (let coin of
