@@ -1,32 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Advanced Crypto Screener</title>
-  <script src="https://cdn.jsdelivr.net/npm/technicalindicators@3.0.0/dist/browser/technicalindicators.min.js"></script>
   <style>
+    /* Your custom styles */
     body {
       background-color: #0e0e10;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #fff;
       margin: 0;
       padding: 20px;
     }
     h1, h2 {
       text-align: center;
-      margin-bottom: 10px;
-    }
-    .refresh-timer {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 30px;
+      margin-top: 30px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 30px auto;
+      margin: 20px auto;
       background-color: #1a1a1d;
+      border: 1px solid #444;
     }
     th, td {
       padding: 10px;
@@ -46,15 +42,20 @@
   </style>
 </head>
 <body>
-  <h1>Advanced Crypto Screener</h1>
-  <div class="refresh-timer">Next refresh in: <span id="countdown">30</span>s</div>
 
+  <h1>Advanced Crypto Screener</h1>
   <h2>20%+ Daily Gains</h2>
   <table id="table-20">
     <thead>
       <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-        <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Market Cap</th>
+        <th>24h Change</th>
+        <th>RSI</th>
+        <th>MACD</th>
+        <th>Signal</th>
+        <th>Hold Time</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -64,8 +65,14 @@
   <table id="table-15">
     <thead>
       <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-        <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Market Cap</th>
+        <th>24h Change</th>
+        <th>RSI</th>
+        <th>MACD</th>
+        <th>Signal</th>
+        <th>Hold Time</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -75,8 +82,14 @@
   <table id="table-10">
     <thead>
       <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-        <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Market Cap</th>
+        <th>24h Change</th>
+        <th>RSI</th>
+        <th>MACD</th>
+        <th>Signal</th>
+        <th>Hold Time</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -86,102 +99,70 @@
   <table id="table-5">
     <thead>
       <tr>
-        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-        <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Market Cap</th>
+        <th>24h Change</th>
+        <th>RSI</th>
+        <th>MACD</th>
+        <th>Signal</th>
+        <th>Hold Time</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <script>
-    const coins = [
-      'bitcoin', 'ethereum', 'solana', 'binancecoin', 'kaspa', 'pepe', 'render-token', 
-      'dogecoin', 'shiba-inu', 'aptos', 'arbitrum', 'the-graph', 'blur', 'bonk'
-    ];
-
-    async function fetchPrices(id) {
-      const res = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=30`);
-      const data = await res.json();
-      return data.prices.map(p => p[1]);
+    async function fetchData() {
+      const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=100&page=1';
+      const response = await fetch(url);
+      const data = await response.json();
+      return data;
     }
 
-    function calculateIndicators(prices) {
-      const rsi = technicalindicators.RSI.calculate({ period: 14, values: prices });
-      const macd = technicalindicators.MACD.calculate({
-        values: prices,
-        fastPeriod: 12,
-        slowPeriod: 26,
-        signalPeriod: 9,
-        SimpleMAOscillator: false,
-        SimpleMASignal: false
+    function updateTables(coins) {
+      // Define tables for different gain percentages
+      const gainThresholds = [5, 10, 15, 20]; // Gains thresholds
+      gainThresholds.forEach(threshold => {
+        const filteredCoins = coins.filter(coin => coin.price_change_percentage_24h >= threshold);
+        populateTable(threshold, filteredCoins);
       });
-      return {
-        rsi: rsi.at(-1)?.toFixed(2) || 'N/A',
-        macdValue: macd.at(-1)?.MACD?.toFixed(2) || 'N/A',
-        signalValue: macd.at(-1)?.signal?.toFixed(2) || 'N/A'
-      };
     }
 
-    function getSignal(rsi, macd, signal) {
-      if (rsi < 30 && macd > signal) return 'Buy';
-      if (rsi > 70 && macd < signal) return 'Sell';
-      return 'Hold';
-    }
+    function populateTable(threshold, coins) {
+      const tableId = `table-${threshold}`;
+      const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+      tableBody.innerHTML = ''; // Clear previous data
 
-    async function updateData() {
-      const marketRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=percent_change_24h_desc`);
-      const marketData = await marketRes.json();
+      coins.slice(0, 10).forEach(coin => { // Display up to 10 coins
+        const rsi = "Loading..."; // Placeholder for RSI
+        const macd = "Loading..."; // Placeholder for MACD
+        const signal = "Hold"; // Placeholder for signal
+        const holdTime = "2 Days"; // Placeholder for hold time
 
-      const categories = {
-        "20": [],
-        "15": [],
-        "10": [],
-        "5": []
-      };
-
-      for (const coin of marketData) {
-        if (coin.price_change_percentage_24h < 5) continue;
-
-        const prices = await fetchPrices(coin.id);
-        const indicators = calculateIndicators(prices);
-        const signal = getSignal(Number(indicators.rsi), Number(indicators.macdValue), Number(indicators.signalValue));
-
-        const row = `
-          <tr>
-            <td>${coin.name} (${coin.symbol.toUpperCase()})</td>
-            <td>$${coin.current_price.toFixed(4)}</td>
-            <td>$${Number(coin.market_cap).toLocaleString()}</td>
-            <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-            <td>${indicators.rsi}</td>
-            <td>${indicators.macdValue}</td>
-            <td class="${signal.toLowerCase()}">${signal}</td>
-            <td>4h</td>
-          </tr>
+        tableBody.insertRow().innerHTML = `
+          <td>${coin.name}</td>
+          <td>$${coin.current_price.toFixed(2)}</td>
+          <td>$${coin.market_cap.toLocaleString()}</td>
+          <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
+          <td>${rsi}</td>
+          <td>${macd}</td>
+          <td class="${signal.toLowerCase()}">${signal}</td>
+          <td>${holdTime}</td>
         `;
-
-        if (coin.price_change_percentage_24h >= 20) categories["20"].push(row);
-        else if (coin.price_change_percentage_24h >= 15) categories["15"].push(row);
-        else if (coin.price_change_percentage_24h >= 10) categories["10"].push(row);
-        else if (coin.price_change_percentage_24h >= 5) categories["5"].push(row);
-      }
-
-      document.querySelector('#table-20 tbody').innerHTML = categories["20"].join('');
-      document.querySelector('#table-15 tbody').innerHTML = categories["15"].join('');
-      document.querySelector('#table-10 tbody').innerHTML = categories["10"].join('');
-      document.querySelector('#table-5 tbody').innerHTML = categories["5"].join('');
+      });
     }
 
-    let countdown = 30;
-    setInterval(() => {
-      countdown--;
-      document.getElementById('countdown').textContent = countdown;
-      if (countdown === 0) {
-        countdown = 30;
-        updateData();
-      }
-    }, 1000);
+    async function main() {
+      const coins = await fetchData();
+      updateTables(coins);
+    }
 
-    updateData();
+    // Refresh every 30 seconds
+    setInterval(main, 30000);
+    main(); // Initial load
+
   </script>
+
 </body>
 </html>
