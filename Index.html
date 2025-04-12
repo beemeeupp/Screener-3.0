@@ -44,7 +44,8 @@
 </head>
 <body>
   <h1>Advanced Crypto Screener</h1>
-  <div class="countdown">Next refresh in: <span id="countdown">15</span>s</div>
+  <div class="countdown">Next refresh in: <span id="countdown">30</span>s</div>
+
   <div id="tables-container"></div>
 
   <script>
@@ -59,8 +60,10 @@
       const res = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h");
       const data = await res.json();
 
+      // Clear tables
       Object.keys(tables).forEach(key => tables[key] = []);
 
+      // Filter coins into each gain tier
       for (let coin of data) {
         const change = coin.price_change_percentage_24h;
         const obj = {
@@ -68,7 +71,7 @@
           price: `$${coin.current_price.toFixed(4)}`,
           market_cap: `$${coin.market_cap.toLocaleString()}`,
           change: `${change.toFixed(2)}%`,
-          sparkline: coin.sparkline_in_7d.price.slice(-30)
+          sparkline: coin.sparkline_in_7d.price
         };
 
         if (change >= 20) tables["20%+ Daily Gains"].push(obj);
@@ -81,42 +84,40 @@
     function calculateRSI(prices) {
       if (!prices || prices.length < 15) return "N/A";
       let gains = 0, losses = 0;
-      for (let i = 1; i < prices.length; i++) {
+      for (let i = 1; i < 15; i++) {
         const diff = prices[i] - prices[i - 1];
-        if (diff > 0) gains += diff;
+        if (diff >= 0) gains += diff;
         else losses -= diff;
       }
       if (losses === 0) return 100;
       const rs = gains / losses;
-      return (100 - (100 / (1 + rs))).toFixed(2);
+      const rsi = 100 - (100 / (1 + rs));
+      return rsi.toFixed(2);
     }
 
     function calculateMACD(prices) {
-      if (prices.length < 26) return "N/A";
-
-      function EMA(period, prices) {
+      if (!prices || prices.length < 26) return "N/A";
+      const ema = (period, data) => {
         const k = 2 / (period + 1);
-        let ema = prices[0];
-        let results = [ema];
-        for (let i = 1; i < prices.length; i++) {
-          ema = prices[i] * k + ema * (1 - k);
-          results.push(ema);
+        let emaArray = [data[0]];
+        for (let i = 1; i < data.length; i++) {
+          emaArray.push(data[i] * k + emaArray[i - 1] * (1 - k));
         }
-        return results;
-      }
-
-      const ema12 = EMA(12, prices);
-      const ema26 = EMA(26, prices);
-      return (ema12[ema12.length - 1] - ema26[ema26.length - 1]).toFixed(4);
+        return emaArray;
+      };
+      const ema12 = ema(12, prices);
+      const ema26 = ema(26, prices);
+      const macd = ema12.slice(-1)[0] - ema26.slice(-1)[0];
+      return macd.toFixed(4);
     }
 
     function determineSignal(rsi, macd) {
-      if (rsi === "N/A" || macd === "N/A") return "<span class='hold'>N/A</span>";
+      if (rsi === "N/A" || macd === "N/A") return "N/A";
       rsi = parseFloat(rsi);
       macd = parseFloat(macd);
       if (rsi < 30 && macd > 0) return "<span class='buy'>Buy</span>";
-      if (rsi > 70 && macd < 0) return "<span class='sell'>Sell</span>";
-      return "<span class='hold'>Hold</span>";
+      else if (rsi > 70 && macd < 0) return "<span class='sell'>Sell</span>";
+      else return "<span class='hold'>Hold</span>";
     }
 
     function renderTables() {
@@ -169,19 +170,17 @@
       renderTables();
     }
 
-    // Initial load
-    refresh();
-
-    // Auto-refresh every 15 seconds with countdown
-    let countdown = 15;
+    let countdown = 30;
     setInterval(() => {
       countdown--;
       if (countdown <= 0) {
-        countdown = 15;
+        countdown = 30;
         refresh();
       }
       document.getElementById("countdown").innerText = countdown;
     }, 1000);
+
+    refresh(); // Initial load
   </script>
 </body>
 </html>
