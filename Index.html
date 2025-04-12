@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Advanced Crypto Screener</title>
+  <title>Advanced Crypto and NYSE Screener</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -48,7 +48,58 @@
 
   <div id="tables-container"></div>
 
+  <h1>NYSE Screener</h1>
+  <div id="nyse-tables-container">
+    <h2>Easy 10% Daily Gains</h2>
+    <table id="nyse-easy-gains">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Price</th>
+          <th>RSI</th>
+          <th>MACD</th>
+          <th>Signal</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>Mini Moons (50%+ Potential)</h2>
+    <table id="nyse-mini-moons">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Price</th>
+          <th>RSI</th>
+          <th>MACD</th>
+          <th>Signal</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>Moon Shot Stocks (100%+ Potential)</h2>
+    <table id="nyse-moon-shots">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Price</th>
+          <th>RSI</th>
+          <th>MACD</th>
+          <th>Signal</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="refresh-timer" id="nyse-timer">
+      Refreshing in <span id="nyse-countdown">15</span> seconds...
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/technicalindicators"></script> <!-- For RSI and MACD calculations -->
   <script>
+    // Crypto Screener Script
     const tables = {
       "20%+ Daily Gains": [],
       "15%+ Daily Gains": [],
@@ -60,10 +111,8 @@
       const res = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h");
       const data = await res.json();
 
-      // Clear tables
       Object.keys(tables).forEach(key => tables[key] = []);
 
-      // Filter coins into each gain tier
       for (let coin of data) {
         const change = coin.price_change_percentage_24h;
         const obj = {
@@ -181,6 +230,49 @@
     }, 1000);
 
     refresh(); // Initial load
+
+    // NYSE Stock Screener Code
+    async function fetchNYSEData() {
+      const tickers = ['AAPL', 'GOOGL', 'AMZN', 'MSFT', 'TSLA']; // Example tickers
+
+      for (const ticker of tickers) {
+        const res = await fetch(`https://api.twelvedata.com/time_series?symbol=${ticker}&interval=1day&apikey=YOUR_TWELVE_DATA_API_KEY`);
+        const data = await res.json();
+
+        if (data.values) {
+          const latestData = data.values[0];
+          const closePrice = parseFloat(latestData.close);
+          const rsi = calculateRSI(data.values.map(item => parseFloat(item.close)));
+          const macd = calculateMACD(data.values.map(item => parseFloat(item.close)));
+          const signal = determineSignal(rsi, macd);
+
+          // Insert into table based on certain criteria (e.g., change, RSI, etc.)
+          let tableId = "nyse-easy-gains";  // Example for 10% daily gains
+          if (closePrice >= 100) tableId = "nyse-mini-moons";
+          else if (closePrice >= 200) tableId = "nyse-moon-shots";
+
+          document.querySelector(`#${tableId} tbody`).innerHTML += `
+            <tr>
+              <td>${ticker}</td>
+              <td>${closePrice.toFixed(2)}</td>
+              <td>${rsi}</td>
+              <td>${macd}</td>
+              <td>${signal}</td>
+            </tr>
+          `;
+        }
+      }
+    }
+
+    async function startNYSERefresh() {
+      await fetchNYSEData();
+      setInterval(() => {
+        fetchNYSEData();
+        document.getElementById("nyse-countdown").innerText = 15;
+      }, 15000);
+    }
+
+    startNYSERefresh(); // Initialize NYSE refresh
   </script>
 </body>
 </html>
