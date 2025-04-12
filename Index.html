@@ -107,20 +107,30 @@
     }
     setInterval(updateTimer, 1000);
 
-    // Fetch data from API
+    // Fetch data from CoinGecko API for crypto market data
     async function fetchData() {
       const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false';
       try {
         const response = await fetch(url);
         const data = await response.json();
-        console.log(data); // Check the data in the console
+        console.log("CoinGecko API Response:", data); // Log response for debugging
         handleData(data);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching data from CoinGecko:', error);
+      }
+
+      // Fetch RSI and MACD data from CryptoCompare API
+      const cryptoCompareUrl = 'https://min-api.cryptocompare.com/data/v2/histoday';
+      try {
+        const cryptoCompareResponse = await fetch(cryptoCompareUrl + '?fsym=BTC&tsym=USD&limit=2000&toTs=' + Math.floor(Date.now() / 1000));
+        const cryptoCompareData = await cryptoCompareResponse.json();
+        console.log("CryptoCompare API Response:", cryptoCompareData); // Log response for debugging
+        updateIndicators(cryptoCompareData);
+      } catch (error) {
+        console.error('Error fetching data from CryptoCompare:', error);
       }
     }
 
-    // Handle data and display in tables
     function handleData(coins) {
       const filterCoins = (coins, percentage) => {
         return coins.filter(coin => coin.price_change_percentage_24h >= percentage);
@@ -147,13 +157,15 @@
       coins.slice(0, 5).forEach(coin => {
         const signal = getSignal(coin); // Get Buy/Sell signal
         const holdTime = getHoldTime(); // Estimate Hold Time
+        const rsi = coin.rsi || 'Loading...'; // Placeholder for RSI data
+        const macd = coin.macd || 'Loading...'; // Placeholder for MACD data
         tableBody.insertRow().innerHTML = `
           <td>${coin.name}</td>
           <td>$${coin.current_price.toFixed(2)}</td>
           <td>$${coin.market_cap.toLocaleString()}</td>
           <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-          <td>${coin.rsi || 'N/A'}</td>
-          <td>${coin.macd || 'N/A'}</td>
+          <td>${rsi}</td>
+          <td>${macd}</td>
           <td class="${signal.toLowerCase()}">${signal}</td>
           <td>${holdTime}</td>
         `;
@@ -171,7 +183,13 @@
     function getHoldTime() {
       return "4h"; // Temporary placeholder
     }
-    
+
+    // Update RSI and MACD
+    function updateIndicators(data) {
+      // You'll need to process the raw data and calculate RSI and MACD
+      // For now, I'm using placeholders. Implement logic for indicator calculation.
+    }
+
     // Initial data load
     fetchData();
   </script>
