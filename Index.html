@@ -103,6 +103,7 @@
         }
         setInterval(updateTimer, 1000);
 
+        // Fetch data from CoinGecko API (real-time data)
         async function fetchDataFromCoinGecko() {
             const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1';
             try {
@@ -114,17 +115,19 @@
             }
         }
 
-        async function fetchTechnicalIndicators(coinId) {
-            const url = `https://min-api.cryptocompare.com/data/histoday?fsym=${coinId}&tsym=USD&limit=2000`;
+        // Fetch historical data from CryptoCompare (RSI and MACD)
+        async function fetchHistoricalData(coinId) {
+            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${coinId}&tsym=USD&limit=2000`;
             try {
                 const response = await fetch(url);
                 const data = await response.json();
-                return data;
+                return data.Data.Data;
             } catch (error) {
-                console.error('Error fetching technical data from CryptoCompare:', error);
+                console.error('Error fetching historical data from CryptoCompare:', error);
             }
         }
 
+        // Calculate RSI based on the historical data
         function calculateRSI(data) {
             const gains = [];
             const losses = [];
@@ -138,6 +141,7 @@
                     gains.push(0);
                 }
             }
+
             const avgGain = gains.slice(-14).reduce((a, b) => a + b, 0) / 14;
             const avgLoss = losses.slice(-14).reduce((a, b) => a + b, 0) / 14;
 
@@ -146,6 +150,7 @@
             return rsi.toFixed(2);
         }
 
+        // Calculate MACD based on the historical data
         function calculateMACD(data) {
             const shortTerm = 12;
             const longTerm = 26;
@@ -160,6 +165,7 @@
             }));
         }
 
+        // Calculate Exponential Moving Average (EMA)
         function calculateEMA(data, period) {
             const k = 2 / (period + 1);
             const ema = [];
@@ -171,14 +177,15 @@
             return ema;
         }
 
+        // Fetch data and display it
         async function fetchAndDisplayData() {
             const coins = await fetchDataFromCoinGecko();
             const allData = [];
 
             for (let coin of coins) {
-                const technicalData = await fetchTechnicalIndicators(coin.id);
-                const rsi = calculateRSI(technicalData.Data);
-                const macdData = calculateMACD(technicalData.Data);
+                const historicalData = await fetchHistoricalData(coin.id);
+                const rsi = calculateRSI(historicalData);
+                const macdData = calculateMACD(historicalData);
 
                 const signal = macdData[macdData.length - 1].macd > macdData[macdData.length - 1].signal ? 'Buy' : 'Sell';
 
@@ -201,6 +208,7 @@
             fillTable("table-5", allData.filter(coin => coin.priceChange >= 5));
         }
 
+        // Fill table with data
         function fillTable(tableId, data) {
             const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
             tableBody.innerHTML = ''; // Clear previous table data
@@ -221,4 +229,4 @@
         fetchAndDisplayData(); // Initial data fetch on page load
     </script>
 </body>
-</html>
+</html
