@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Advanced Crypto and NYSE Screener</title>
+  <title>Advanced Crypto Screener</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -44,150 +44,10 @@
 </head>
 <body>
   <h1>Advanced Crypto Screener</h1>
-  <div class="countdown">Next refresh in: <span id="countdown">30</span>s</div>
-
+  <div class="countdown">Next refresh in: <span id="countdown">15</span>s</div>
   <div id="tables-container"></div>
 
-  <h1>NYSE Screener</h1>
-  <div id="nyse-tables-container">
-    <h2>5% Daily Gains</h2>
-    <table id="nyse-5-gains">
-      <thead>
-        <tr>
-          <th>Ticker</th>
-          <th>Price</th>
-          <th>Change</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <h2>10% Daily Gains</h2>
-    <table id="nyse-10-gains">
-      <thead>
-        <tr>
-          <th>Ticker</th>
-          <th>Price</th>
-          <th>Change</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <h2>15% Daily Gains</h2>
-    <table id="nyse-15-gains">
-      <thead>
-        <tr>
-          <th>Ticker</th>
-          <th>Price</th>
-          <th>Change</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <div class="refresh-timer" id="nyse-timer">
-      Refreshing in <span id="nyse-countdown">15</span> seconds...
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/technicalindicators"></script> <!-- For RSI and MACD calculations -->
   <script>
-    const apiKey = 'GGYIWPPUWG7Y3GW4'; // Alpha Vantage API key
-    const stockSymbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "FB"]; // Example NYSE stocks to track
-    
-    // Function to fetch data from Alpha Vantage API
-    async function fetchStockData(symbol) {
-      const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`;
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data["Time Series (Daily)"]) {
-        const timeSeries = data["Time Series (Daily)"];
-        const dates = Object.keys(timeSeries);
-        const latestData = timeSeries[dates[0]]; // Get the most recent day's data
-        const previousData = timeSeries[dates[1]]; // Get the second most recent day's data
-
-        const latestClose = parseFloat(latestData["4. close"]);
-        const previousClose = parseFloat(previousData["4. close"]);
-        const dailyChange = ((latestClose - previousClose) / previousClose) * 100; // Calculate percent change
-
-        return {
-          symbol: symbol,
-          price: latestClose.toFixed(2),
-          change: dailyChange.toFixed(2),
-        };
-      }
-      return null;
-    }
-
-    async function fetchNYSEStocks() {
-      const stocksData = [];
-      for (const symbol of stockSymbols) {
-        const stockData = await fetchStockData(symbol);
-        if (stockData) {
-          stocksData.push(stockData);
-        }
-      }
-      return stocksData;
-    }
-
-    function renderNYSEData(data) {
-      const nyseTables = {
-        "5% Daily Gains": [],
-        "10% Daily Gains": [],
-        "15% Daily Gains": []
-      };
-
-      // Classify data into gain categories
-      for (let stock of data) {
-        const change = parseFloat(stock.change);
-        const stockInfo = {
-          ticker: stock.symbol,
-          price: `$${stock.price}`,
-          change: `${stock.change}%`
-        };
-
-        if (change >= 15) nyseTables["15% Daily Gains"].push(stockInfo);
-        else if (change >= 10) nyseTables["10% Daily Gains"].push(stockInfo);
-        else if (change >= 5) nyseTables["5% Daily Gains"].push(stockInfo);
-      }
-
-      // Render tables on the page
-      for (let category in nyseTables) {
-        const tableData = nyseTables[category];
-        const table = document.getElementById(`nyse-${category.toLowerCase().replace(" ", "-")}`);
-        const tbody = table.querySelector('tbody');
-        tbody.innerHTML = '';
-
-        tableData.forEach(stock => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${stock.ticker}</td>
-            <td>${stock.price}</td>
-            <td class="${stock.change > 0 ? 'buy' : stock.change < 0 ? 'sell' : 'hold'}">${stock.change}</td>
-          `;
-          tbody.appendChild(row);
-        });
-      }
-    }
-
-    async function refreshNYSE() {
-      const nyseData = await fetchNYSEStocks();
-      renderNYSEData(nyseData);
-    }
-
-    let nyseCountdown = 15;
-    setInterval(() => {
-      nyseCountdown--;
-      if (nyseCountdown <= 0) {
-        nyseCountdown = 15;
-        refreshNYSE();
-      }
-      document.getElementById("nyse-countdown").innerText = nyseCountdown;
-    }, 1000);
-
-    // Crypto Screener Script
     const tables = {
       "20%+ Daily Gains": [],
       "15%+ Daily Gains": [],
@@ -208,7 +68,7 @@
           price: `$${coin.current_price.toFixed(4)}`,
           market_cap: `$${coin.market_cap.toLocaleString()}`,
           change: `${change.toFixed(2)}%`,
-          sparkline: coin.sparkline_in_7d.price
+          sparkline: coin.sparkline_in_7d.price.slice(-30)
         };
 
         if (change >= 20) tables["20%+ Daily Gains"].push(obj);
@@ -216,6 +76,47 @@
         else if (change >= 10) tables["10%+ Daily Gains"].push(obj);
         else if (change >= 5) tables["5%+ Daily Gains"].push(obj);
       }
+    }
+
+    function calculateRSI(prices) {
+      if (!prices || prices.length < 15) return "N/A";
+      let gains = 0, losses = 0;
+      for (let i = 1; i < prices.length; i++) {
+        const diff = prices[i] - prices[i - 1];
+        if (diff > 0) gains += diff;
+        else losses -= diff;
+      }
+      if (losses === 0) return 100;
+      const rs = gains / losses;
+      return (100 - (100 / (1 + rs))).toFixed(2);
+    }
+
+    function calculateMACD(prices) {
+      if (prices.length < 26) return "N/A";
+
+      function EMA(period, prices) {
+        const k = 2 / (period + 1);
+        let ema = prices[0];
+        let results = [ema];
+        for (let i = 1; i < prices.length; i++) {
+          ema = prices[i] * k + ema * (1 - k);
+          results.push(ema);
+        }
+        return results;
+      }
+
+      const ema12 = EMA(12, prices);
+      const ema26 = EMA(26, prices);
+      return (ema12[ema12.length - 1] - ema26[ema26.length - 1]).toFixed(4);
+    }
+
+    function determineSignal(rsi, macd) {
+      if (rsi === "N/A" || macd === "N/A") return "<span class='hold'>N/A</span>";
+      rsi = parseFloat(rsi);
+      macd = parseFloat(macd);
+      if (rsi < 30 && macd > 0) return "<span class='buy'>Buy</span>";
+      if (rsi > 70 && macd < 0) return "<span class='sell'>Sell</span>";
+      return "<span class='hold'>Hold</span>";
     }
 
     function renderTables() {
@@ -242,9 +143,9 @@
             <tbody>
         `;
         for (let coin of coins) {
-          const rsi = "N/A";  // RSI and MACD are not calculated in this part
-          const macd = "N/A";
-          const signal = "N/A"; // Placeholder for now
+          const rsi = calculateRSI(coin.sparkline);
+          const macd = calculateMACD(coin.sparkline);
+          const signal = determineSignal(rsi, macd);
           html += `
             <tr>
               <td>${coin.name}</td>
@@ -268,17 +169,19 @@
       renderTables();
     }
 
-    let countdown = 30;
+    // Initial load
+    refresh();
+
+    // Auto-refresh every 15 seconds with countdown
+    let countdown = 15;
     setInterval(() => {
       countdown--;
       if (countdown <= 0) {
-        countdown = 30;
+        countdown = 15;
         refresh();
       }
       document.getElementById("countdown").innerText = countdown;
     }, 1000);
-
-    refresh(); // Initial load
   </script>
 </body>
 </html>
