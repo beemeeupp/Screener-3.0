@@ -56,9 +56,7 @@
         <tr>
           <th>Ticker</th>
           <th>Price</th>
-          <th>RSI</th>
-          <th>MACD</th>
-          <th>Signal</th>
+          <th>Change</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -70,9 +68,7 @@
         <tr>
           <th>Ticker</th>
           <th>Price</th>
-          <th>RSI</th>
-          <th>MACD</th>
-          <th>Signal</th>
+          <th>Change</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -84,9 +80,7 @@
         <tr>
           <th>Ticker</th>
           <th>Price</th>
-          <th>RSI</th>
-          <th>MACD</th>
-          <th>Signal</th>
+          <th>Change</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -171,8 +165,6 @@
           row.innerHTML = `
             <td>${stock.ticker}</td>
             <td>${stock.price}</td>
-            <td>${"N/A"}</td>
-            <td>${"N/A"}</td>
             <td class="${stock.change > 0 ? 'buy' : stock.change < 0 ? 'sell' : 'hold'}">${stock.change}</td>
           `;
           tbody.appendChild(row);
@@ -249,4 +241,44 @@
             </thead>
             <tbody>
         `;
-        for (let coin of
+        for (let coin of coins) {
+          const rsi = "N/A";  // RSI and MACD are not calculated in this part
+          const macd = "N/A";
+          const signal = "N/A"; // Placeholder for now
+          html += `
+            <tr>
+              <td>${coin.name}</td>
+              <td>${coin.price}</td>
+              <td>${coin.market_cap}</td>
+              <td>${coin.change}</td>
+              <td>${rsi}</td>
+              <td>${macd}</td>
+              <td>${signal}</td>
+              <td>4h</td>
+            </tr>
+          `;
+        }
+        html += `</tbody></table>`;
+        container.innerHTML += html;
+      }
+    }
+
+    async function refresh() {
+      await fetchCoins();
+      renderTables();
+    }
+
+    let countdown = 30;
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        countdown = 30;
+        refresh();
+      }
+      document.getElementById("countdown").innerText = countdown;
+    }, 1000);
+
+    refresh(); // Initial load
+  </script>
+</body>
+</html>
