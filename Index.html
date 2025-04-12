@@ -2,181 +2,177 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Advanced Crypto Screener</title>
   <style>
     body {
-      background-color: #0e0e10;
-      color: #ffffff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
       padding: 20px;
     }
-    h1, h2 {
+    h1 {
       text-align: center;
+      font-size: 2rem;
+      margin-bottom: 20px;
     }
     table {
       width: 100%;
-      margin: 20px auto;
       border-collapse: collapse;
-      background-color: #1a1a1d;
-      border: 1px solid #333;
+      margin-bottom: 30px;
+      background-color: #222;
+      border-radius: 8px;
     }
     th, td {
-      padding: 12px;
+      padding: 10px;
       text-align: center;
       border: 1px solid #444;
     }
     th {
-      background-color: #2c2c2e;
+      background-color: #333;
       color: #00fff2;
     }
-    .buy { color: #00ff00; font-weight: bold; }
-    .sell { color: #ff0000; font-weight: bold; }
-    .hold { color: #ffff00; font-weight: bold; }
+    td {
+      color: #ccc;
+    }
+    .buy { color: green; }
+    .sell { color: red; }
+    .hold { color: yellow; }
     #timer {
       text-align: center;
       font-size: 18px;
-      margin-bottom: 20px;
+      margin: 20px 0;
     }
   </style>
 </head>
 <body>
   <h1>Advanced Crypto Screener</h1>
   <div id="timer">Next refresh in: 30s</div>
+  
+  <!-- 20%+ Daily Gains -->
+  <h2>20%+ Daily Gains</h2>
+  <table id="table-20">
+    <thead>
+      <tr>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <div id="tables-container">
-    <h2>20%+ Daily Gains</h2>
-    <table id="gain20"><thead></thead><tbody></tbody></table>
+  <!-- 15%+ Daily Gains -->
+  <h2>15%+ Daily Gains</h2>
+  <table id="table-15">
+    <thead>
+      <tr>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-    <h2>15%+ Daily Gains</h2>
-    <table id="gain15"><thead></thead><tbody></tbody></table>
+  <!-- 10%+ Daily Gains -->
+  <h2>10%+ Daily Gains</h2>
+  <table id="table-10">
+    <thead>
+      <tr>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-    <h2>10%+ Daily Gains</h2>
-    <table id="gain10"><thead></thead><tbody></tbody></table>
-
-    <h2>5%+ Daily Gains</h2>
-    <table id="gain5"><thead></thead><tbody></tbody></table>
-  </div>
+  <!-- 5%+ Daily Gains -->
+  <h2>5%+ Daily Gains</h2>
+  <table id="table-5">
+    <thead>
+      <tr>
+        <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th><th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
-    const tables = {
-      gain20: [],
-      gain15: [],
-      gain10: [],
-      gain5: []
-    };
+    const refreshTime = 30; // Refresh every 30 seconds
+    let countdown = refreshTime;
 
-    const timerEl = document.getElementById("timer");
-    let countdown = 30;
-
-    function startTimer() {
-      setInterval(() => {
-        countdown--;
-        if (countdown <= 0) {
-          countdown = 30;
-          fetchData();
-        }
-        timerEl.textContent = `Next refresh in: ${countdown}s`;
-      }, 1000);
+    function updateTimer() {
+      document.getElementById("timer").innerText = `Next refresh in: ${countdown}s`;
+      countdown--;
+      if (countdown < 0) {
+        countdown = refreshTime;
+        fetchData(); // Fetch new data when the timer reaches 0
+      }
     }
+    setInterval(updateTimer, 1000);
 
+    // Fetch data from API
     async function fetchData() {
+      const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false';
       try {
-        const marketRes = await fetch(
-          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=50&page=1&sparkline=false"
-        );
-        const marketData = await marketRes.json();
-
-        for (let key in tables) tables[key] = [];
-
-        for (let coin of marketData) {
-          const change = coin.price_change_percentage_24h;
-          if (change >= 20) tables.gain20.push(coin);
-          else if (change >= 15) tables.gain15.push(coin);
-          else if (change >= 10) tables.gain10.push(coin);
-          else if (change >= 5) tables.gain5.push(coin);
-        }
-
-        await renderTables();
-      } catch (err) {
-        console.error("Error fetching data:", err);
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log(data); // Check the data in the console
+        handleData(data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
     }
 
-    async function fetchHistoricalPrices(id) {
-      const url = `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=1&interval=hourly`;
-      const res = await fetch(url);
-      const json = await res.json();
-      return json.prices.map(p => p[1]);
-    }
-
-    function calculateRSI(prices, period = 14) {
-      let gains = 0, losses = 0;
-      for (let i = 1; i <= period; i++) {
-        const diff = prices[i] - prices[i - 1];
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
-      }
-      const rs = gains / (losses || 1);
-      return Math.min(100, Math.max(0, 100 - 100 / (1 + rs)));
-    }
-
-    function calculateMACD(prices) {
-      const ema = (arr, n) => {
-        let k = 2 / (n + 1);
-        return arr.reduce((prev, curr, i) =>
-          i === 0 ? [curr] : [...prev, curr * k + prev[i - 1] * (1 - k)], []);
+    // Handle data and display in tables
+    function handleData(coins) {
+      const filterCoins = (coins, percentage) => {
+        return coins.filter(coin => coin.price_change_percentage_24h >= percentage);
       };
-      const ema12 = ema(prices, 12);
-      const ema26 = ema(prices, 26);
-      const macdLine = ema12.slice(-1)[0] - ema26.slice(-1)[0];
-      return macdLine.toFixed(3);
+
+      const tableData = [
+        { tableId: 'table-20', filter: 20 },
+        { tableId: 'table-15', filter: 15 },
+        { tableId: 'table-10', filter: 10 },
+        { tableId: 'table-5', filter: 5 }
+      ];
+
+      tableData.forEach(({ tableId, filter }) => {
+        const filteredCoins = filterCoins(coins, filter);
+        fillTable(tableId, filteredCoins);
+      });
     }
 
-    async function renderTables() {
-      for (let level in tables) {
-        const table = document.getElementById(level);
-        const coins = tables[level].slice(0, 5);
-        table.innerHTML = `
-          <thead>
-            <tr>
-              <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-              <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
-            </tr>
-          </thead><tbody></tbody>
+    // Fill table with filtered data
+    function fillTable(tableId, coins) {
+      const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+      tableBody.innerHTML = ''; // Clear previous table data
+
+      coins.slice(0, 5).forEach(coin => {
+        const signal = getSignal(coin); // Get Buy/Sell signal
+        const holdTime = getHoldTime(); // Estimate Hold Time
+        tableBody.insertRow().innerHTML = `
+          <td>${coin.name}</td>
+          <td>$${coin.current_price.toFixed(2)}</td>
+          <td>$${coin.market_cap.toLocaleString()}</td>
+          <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
+          <td>${coin.rsi || 'N/A'}</td>
+          <td>${coin.macd || 'N/A'}</td>
+          <td class="${signal.toLowerCase()}">${signal}</td>
+          <td>${holdTime}</td>
         `;
-
-        const tbody = table.querySelector("tbody");
-
-        for (let coin of coins) {
-          const prices = await fetchHistoricalPrices(coin.id);
-          const rsi = calculateRSI(prices).toFixed(2);
-          const macd = calculateMACD(prices);
-          const signal =
-            rsi < 30 ? "Buy" :
-            rsi > 70 ? "Sell" :
-            "Hold";
-
-          const signalClass = signal.toLowerCase();
-
-          tbody.innerHTML += `
-            <tr>
-              <td>${coin.name}</td>
-              <td>$${coin.current_price.toFixed(4)}</td>
-              <td>$${coin.market_cap.toLocaleString()}</td>
-              <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-              <td>${rsi}</td>
-              <td>${macd}</td>
-              <td class="${signalClass}">${signal}</td>
-              <td>4h</td>
-            </tr>
-          `;
-        }
-      }
+      });
     }
 
-    startTimer();
+    // Get signal based on change percentage
+    function getSignal(coin) {
+      if (coin.price_change_percentage_24h > 10) return "Buy";
+      if (coin.price_change_percentage_24h < -10) return "Sell";
+      return "Hold";
+    }
+
+    // Estimate hold time
+    function getHoldTime() {
+      return "4h"; // Temporary placeholder
+    }
+    
+    // Initial data load
     fetchData();
   </script>
 </body>
