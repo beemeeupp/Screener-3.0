@@ -1,201 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Advanced Crypto Screener</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Real-Time Advanced Crypto Screener</title>
+  <script src="https://cdn.jsdelivr.net/npm/technicalindicators@3.0.0/dist/browser/technicalindicators.min.js"></script>
   <style>
     body {
-      background-color: #121212;
-      color: #fff;
-      padding-top: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #0d1117;
+      color: #c9d1d9;
+      padding: 20px;
     }
     h1 {
       text-align: center;
-      margin-bottom: 30px;
+      color: #58a6ff;
     }
-    .section-title {
-      margin-top: 40px;
-      border-bottom: 2px solid #555;
-      padding-bottom: 5px;
-    }
-    .signal-buy { color: #00ff00; font-weight: bold; }
-    .signal-sell { color: #ff4c4c; font-weight: bold; }
-    .signal-hold { color: #ffff00; font-weight: bold; }
-    .gain-20 { border-left: 5px solid #ff4c4c; }
-    .gain-15 { border-left: 5px solid #ff914c; }
-    .gain-10 { border-left: 5px solid #ffd24c; }
-    .gain-5 { border-left: 5px solid #4cff4c; }
-    .refresh-timer {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 20px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
     }
     th, td {
-      vertical-align: middle;
+      padding: 10px;
+      border: 1px solid #30363d;
+      text-align: center;
+    }
+    th {
+      background-color: #161b22;
+    }
+    .buy {
+      color: #00ff00;
+    }
+    .sell {
+      color: #ff4d4d;
+    }
+    .hold {
+      color: #ffd700;
+    }
+    #refresh-timer {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 10px;
+      color: #8b949e;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Advanced Crypto Screener</h1>
-    <div id="timer" class="refresh-timer">Next refresh in: 30s</div>
+  <h1>Real-Time Advanced Crypto Screener</h1>
+  <div id="refresh-timer">Refreshing in: <span id="countdown">30</span>s</div>
+  <table id="screener">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Market Cap</th>
+        <th>24h %</th>
+        <th>RSI</th>
+        <th>MACD</th>
+        <th>Signal</th>
+        <th>Hold Time</th>
+      </tr>
+    </thead>
+    <tbody id="screener-body">
+      <!-- Data will be populated here -->
+    </tbody>
+  </table>
 
-    <!-- Gain 20%+ -->
-    <div class="section-title">20%+ Daily Gains</div>
-    <div class="table-responsive">
-      <table class="table table-dark table-bordered table-striped gain-20">
-        <thead>
-          <tr>
-            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-            <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
-          </tr>
-        </thead>
-        <tbody id="gain20-body"></tbody>
-      </table>
-    </div>
-
-    <!-- Gain 15%+ -->
-    <div class="section-title">15%+ Daily Gains</div>
-    <div class="table-responsive">
-      <table class="table table-dark table-bordered table-striped gain-15">
-        <thead>
-          <tr>
-            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-            <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
-          </tr>
-        </thead>
-        <tbody id="gain15-body"></tbody>
-      </table>
-    </div>
-
-    <!-- Gain 10%+ -->
-    <div class="section-title">10%+ Daily Gains</div>
-    <div class="table-responsive">
-      <table class="table table-dark table-bordered table-striped gain-10">
-        <thead>
-          <tr>
-            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-            <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
-          </tr>
-        </thead>
-        <tbody id="gain10-body"></tbody>
-      </table>
-    </div>
-
-    <!-- Gain 5%+ -->
-    <div class="section-title">5%+ Daily Gains</div>
-    <div class="table-responsive">
-      <table class="table table-dark table-bordered table-striped gain-5">
-        <thead>
-          <tr>
-            <th>Name</th><th>Price</th><th>Market Cap</th><th>24h Change</th>
-            <th>RSI</th><th>MACD</th><th>Signal</th><th>Hold Time</th>
-          </tr>
-        </thead>
-        <tbody id="gain5-body"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Bootstrap JS and dependencies -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- JavaScript to fetch and display data -->
   <script>
-    const refreshInterval = 30; // seconds
-    let countdown = refreshInterval;
+    const coins = [
+      { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+      { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+      { id: 'solana', symbol: 'SOL', name: 'Solana' },
+      { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
+      { id: 'render-token', symbol: 'RNDR', name: 'Render' },
+      { id: 'kaspa', symbol: 'KAS', name: 'Kaspa' },
+      { id: 'pepe', symbol: 'PEPE', name: 'Pepe' }
+    ];
 
-    function updateTimer() {
-      document.getElementById("timer").innerText = `Next refresh in: ${countdown}s`;
-      countdown--;
-      if (countdown < 0) {
-        countdown = refreshInterval;
-        fetchData();
-      }
-    }
-    setInterval(updateTimer, 1000);
-
-    async function fetchData() {
-      try {
-        const response = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=100&page=1&sparkline=false");
-        const data = await response.json();
-        if (data) {
-          populateTable("gain20-body", data.filter(c => c.price_change_percentage_24h > 20));
-          populateTable("gain15-body", data.filter(c => c.price_change_percentage_24h > 15 && c.price_change_percentage_24h <= 20));
-          populateTable("gain10-body", data.filter(c => c.price_change_percentage_24h > 10 && c.price_change_percentage_24h <= 15));
-          populateTable("gain5-body", data.filter(c => c.price_change_percentage_24h > 5 && c.price_change_percentage_24h <= 10));
-
-          // Fetch RSI and MACD for each coin
-          await fetchIndicators(data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
+    async function fetchCoinData(coin) {
+      const url = `https://api.coingecko.com/api/v3/coins/${coin.id}/market_chart?vs_currency=usd&days=30&interval=daily`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const prices = data.prices.map(p => p[1]);
+      return prices;
     }
 
-    async function fetchIndicators(coins) {
-      for (let coin of coins) {
-        try {
-          const macdResponse = await fetch(`https://api.taapi.io/macd?secret=YOUR_API_KEY&symbol=binance:${coin.symbol.toUpperCase()}USDT`);
-          const rsiResponse = await fetch(`https://api.taapi.io/rsi?secret=YOUR_API_KEY&symbol=binance:${coin.symbol.toUpperCase()}USDT`);
-          const macdData = await macdResponse.json();
-          const rsiData = await rsiResponse.json();
+    function calculateIndicators(prices) {
+      const rsi = technicalindicators.RSI.calculate({ period: 14, values: prices }) || [0];
+      const macd = technicalindicators.MACD.calculate({
+        values: prices,
+        fastPeriod: 12,
+        slowPeriod: 26,
+        signalPeriod: 9,
+        SimpleMAOscillator: false,
+        SimpleMASignal: false
+      }) || [{ MACD: 0, signal: 0 }];
 
-          const macdValue = macdData.value;
-          const rsiValue = rsiData.value;
-
-          // Determine Buy/Hold/Sell Signal
-          let signal = "Hold";
-          if (rsiValue < 30 && macdValue > 0) {
-            signal = "Buy";
-          } else if (rsiValue > 70 && macdValue < 0) {
-            signal = "Sell";
-          }
-
-          // Display RSI and MACD in the respective table rows
-          updateTableRow(coin.id, rsiValue, macdValue, signal);
-        } catch (error) {
-          console.error("Error fetching indicators:", error);
-        }
-      }
+      return {
+        rsi: rsi[rsi.length - 1] || 0,
+        macd: macd[macd.length - 1] || { MACD: 0, signal: 0 }
+      };
     }
 
-    function updateTableRow(coinId, rsiValue, macdValue, signal) {
-      const rows = document.querySelectorAll(`tbody tr`);
-      rows.forEach(row => {
-        const coinName = row.children[0].textContent.split('(')[0].trim();
-        if (coinName === coinId) {
-          row.children[4].textContent = rsiValue !== undefined ? rsiValue.toFixed(2) : "N/A";
-          row.children[5].textContent = macdValue !== undefined ? macdValue.toFixed(2) : "N/A";
-          row.children[6].textContent = signal;
-          row.children[6].className = `signal-${signal.toLowerCase()}`;
-        }
-      });
+    function generateSignal(rsi, macd) {
+      if (rsi < 30 && macd.MACD > macd.signal) return 'Buy';
+      if (rsi > 70 && macd.MACD < macd.signal) return 'Sell';
+      return 'Hold';
     }
 
-    function populateTable(tableId, coins) {
-      const tbody = document.getElementById(tableId);
-      tbody.innerHTML = "";
-      coins.forEach(coin => {
-        const row = document.createElement("tr");
+    async function updateTable() {
+      const tbody = document.getElementById('screener-body');
+      tbody.innerHTML = '';
+      const marketData = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.map(c => c.id).join(',')}&order=market_cap_desc&sparkline=false`).then(r => r.json());
+
+      for (const coin of coins) {
+        const market = marketData.find(c => c.id === coin.id);
+        const prices = await fetchCoinData(coin);
+        const { rsi, macd } = calculateIndicators(prices);
+        const signal = generateSignal(rsi, macd);
+
+        const row = document.createElement('tr');
         row.innerHTML = `
           <td>${coin.name} (${coin.symbol.toUpperCase()})</td>
-          <td>$${coin.current_price.toLocaleString()}</td>
-          <td>$${coin.market_cap.toLocaleString()}</td>
-          <td>${coin.price_change_percentage_24h.toFixed(2)}%</td>
-          <td>Loading...</td> <!-- RSI -->
-          <td>Loading...</td> <!-- MACD -->
-          <td>Loading...</td> <!-- Signal -->
-          <td>4h</td> <!-- Hold Time -->
+          <td>$${market.current_price.toFixed(2)}</td>
+          <td>$${Number(market.market_cap).toLocaleString()}</td>
+          <td>${market.price_change_percentage_24h.toFixed(2)}%</td>
+          <td>${rsi.toFixed(2)}</td>
+          <td>${macd.MACD.toFixed(2)}</td>
+          <td class="${signal.toLowerCase()}">${signal}</td>
+          <td>4h</td>
         `;
         tbody.appendChild(row);
-      });
+      }
     }
 
-    // Initial fetch
-    fetchData();
+    let countdown = 30;
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        countdown = 30;
+        updateTable();
+      }
+      document.getElementById('countdown').textContent = countdown;
+    }, 1000);
+
+    updateTable();
   </script>
 </body>
 </html>
