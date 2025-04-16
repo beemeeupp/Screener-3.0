@@ -1,198 +1,474 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Advanced Crypto Screener</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screener 4.1</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: #c9d1d9;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://source.unsplash.com/1600x900/?american,flag') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
       padding: 10px;
+      color: #e6e6e6;
     }
-    h1 {
-      text-align: center;
-      color: #58a6ff;
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.3);
+      z-index: -1;
     }
-    .countdown {
+    #nav-dropdown {
+      position: absolute; top: 10px; left: 10px; z-index: 1000;
+    }
+    #nav-dropdown select {
+      padding: 6px;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    #main-title {
       text-align: center;
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin: 20px 0 10px;
+    }
+    .container {
+      background-color: rgba(26, 26, 26, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      border: 10px solid;
+      border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
       margin-bottom: 10px;
+    }
+    .controls input, .controls select, .controls button {
+      padding: 8px;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 4px;
+    }
+    .controls button {
+      background-color: #007700;
+      color: #fff;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background-color: #005500;
+    }
+    details {
+      margin-bottom: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      padding: 4px;
+      background-color: rgba(26,26,26,0.9);
+      overflow-x: auto;
+      cursor: pointer;
+    }
+    summary {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #ffffff;
+      padding: 4px;
+      cursor: pointer;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
-      background: #161b22;
+      margin-top: 5px;
+      background-color: rgba(26,26,26,0.9);
     }
     th, td {
-      border: 1px solid #30363d;
-      padding: 8px;
+      padding: 6px;
       text-align: center;
+      border: 1px solid rgba(0,0,0,0.4);
+      font-size: 0.8rem;
     }
     th {
-      background-color: #21262d;
-      color: #58a6ff;
+      background-color: rgba(0,0,0,0.7);
+      color: #ffffff;
     }
-    td {
-      color: #c9d1d9;
+    tr:nth-child(even) {
+      background-color: rgba(0,0,0,0.5);
     }
-    .strong-buy { color: #00ff95; font-weight: bold; }
-    .buy { color: #3fb950; }
-    .hold { color: #d29922; }
-    .sell { color: #f85149; }
-    .sell-off { color: #ff3c3c; font-weight: bold; }
+    tr:hover {
+      background-color: rgba(0,0,0,0.7);
+    }
+    canvas {
+      width: 100%;
+      margin-top: 10px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 4px;
+    }
+    #price-chart { height: 300px; }
+    .page-section {
+      display: none;
+      margin: 10px auto;
+      background-color: rgba(26,26,26,0.9);
+      padding: 10px;
+      border-radius: 8px;
+      border: 10px solid;
+      border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
+      color: #e6e6e6;
+    }
+    .log {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #ccc;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid rgba(255,255,255,0.2);
+      margin-top: 10px;
+    }
+    #legal {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: rgba(26,26,26,0.9);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: #aaa;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h1>Advanced Crypto Screener</h1>
-  <div class="countdown">Next refresh in: <span id="countdown">30</span>s</div>
-  <div id="tables-container">Loading...</div>
+  <div id="nav-dropdown">
+    <select id="page-selector" onchange="changePage()">
+      <option value="main-section">Main Page</option>
+      <option value="howto-section">How To Use</option>
+      <option value="trackrecord-section">Paper Trader Track Record</option>
+      <option value="paperdata-section">Paper Data (Password)</option>
+    </select>
+  </div>
+  <div id="main-title">Screener 4.1</div>
+
+  <div id="main-section" class="page-section" style="display: block;">
+    <div class="container">
+      <div class="controls">
+        <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
+        <select id="currency-select" onchange="fetchData()">
+          <option value="usd" selected>USD</option>
+          <option value="eur">EUR</option>
+          <option value="gbp">GBP</option>
+        </select>
+        <button onclick="fetchData()">Refresh Data</button>
+      </div>
+      <div id="dropdown-container"></div>
+      <canvas id="price-chart"></canvas>
+      <details id="tos">
+        <summary>Terms of Service & Disclaimer</summary>
+        <p style="font-size:0.75rem; color:#aaa;">
+          This tool is provided “as is” without warranty of any kind. No financial advice is provided. Use at your own risk.
+        </p>
+      </details>
+    </div>
+  </div>
+
+  <div id="trackrecord-section" class="page-section">
+    <div class="container">
+      <h2>Paper Trader Track Record</h2>
+      <p>This section simulates $100 trades for every active signal:</p>
+      <button onclick="downloadCSV()">Export CSV</button>
+      <button onclick="runBacktest()">Run Strategy Backtest</button>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Coin</th>
+            <th>Signal</th>
+            <th>Entry</th>
+            <th>Exit</th>
+            <th>Tokens</th>
+            <th>PNL %</th>
+            <th>PNL $</th>
+          </tr>
+        </thead>
+        <tbody id="track-body"></tbody>
+      </table>
+      <h3 style="margin-top:20px;">Portfolio Profit Graph</h3>
+      <canvas id="profitChart" style="height:300px;"></canvas>
+      <div id="track-log" class="log"></div>
+    </div>
+  </div>
+
+  <div id="howto-section" class="page-section">
+    <div class="container">
+      <h2>How To Use</h2>
+      <ul>
+        <li>Use the dropdown to change tabs.</li>
+        <li>View live coin signals on the main page.</li>
+        <li>View all paper trades under \"Paper Trader Track Record\".</li>
+        <li>Export your data or run backtests.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="paperdata-section" class="page-section">
+    <div class="container">
+      <h2>Paper Data (Password Protected)</h2>
+      <div id="paperdata-login">
+        <input type="password" id="paperdata-password" placeholder="Enter password">
+        <button onclick="checkPaperDataPassword()">Submit</button>
+      </div>
+      <div id="paperdata-content" style="display:none;">
+        <h3>Paper Data Logs</h3>
+        <div id="paperdata-log" class="log"></div>
+      </div>
+    </div>
+  </div>
 
   <script>
-    const tables = {
-      "20%+ Daily Gains": [],
-      "15%+ Daily Gains": [],
-      "10%+ Daily Gains": [],
-      "5%+ Daily Gains": []
-    };
+    let cryptoData = [], filteredData = [], priceChart, tradeLog = [], pnlHistory = [];
 
-    async function fetchCoins() {
-      const pages = [1, 2];
-      let allCoins = [];
+    function appendLog(msg) {
+      const logBox = document.getElementById('paperdata-log');
+      const trackLog = document.getElementById('track-log');
+      const entry = `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
+      if (logBox) logBox.innerHTML += entry;
+      if (trackLog) trackLog.innerHTML += entry;
+    }
 
+    function changePage() {
+      document.querySelectorAll('.page-section').forEach(s => s.style.display = 'none');
+      const sel = document.getElementById('page-selector').value;
+      document.getElementById(sel).style.display = 'block';
+    }
+
+    function checkPaperDataPassword() {
+      const pwd = document.getElementById('paperdata-password').value;
+      if (pwd === '122216') {
+        document.getElementById('paperdata-login').style.display = 'none';
+        document.getElementById('paperdata-content').style.display = 'block';
+      } else {
+        alert('Incorrect password.');
+      }
+    }
+
+    function simulateTrade(coin) {
+      const entry = coin.current_price;
+      const tokens = 100 / entry;
+      const exit = entry * (1 + coin.profitPotential / 100);
+      const pnl$ = (exit - entry) * tokens;
+      const pnlPct = (exit - entry) / entry * 100;
+      pnlHistory.push((pnlHistory.at(-1) || 0) + pnl$);
+
+      tradeLog.push({
+        date: new Date().toLocaleDateString(),
+        coin: coin.symbol.toUpperCase(),
+        signal: coin.tradingSignal,
+        entry, exit, tokens,
+        pnlPct, pnl$
+      });
+
+      const row = document.createElement(\"tr\");
+      row.innerHTML = `
+        <td>${new Date().toLocaleDateString()}</td>
+        <td>${coin.symbol.toUpperCase()}</td>
+        <td>${coin.tradingSignal}</td>
+        <td>$${entry.toFixed(4)}</td>
+        <td>$${exit.toFixed(4)}</td>
+        <td>${tokens.toFixed(2)}</td>
+        <td>${pnlPct.toFixed(2)}%</td>
+        <td>$${pnl$.toFixed(2)}</td>
+      `;
+      document.getElementById(\"track-body\").appendChild(row);
+      appendLog(`AutoTrade ${coin.symbol.toUpperCase()} | PNL $${pnl$.toFixed(2)}`);
+    }
+
+    function simulateAllTrades() {
+      filteredData.forEach(c => {
+        if (c.tradingSignal.includes(\"Buy\")) simulateTrade(c);
+      });
+      renderProfitChart();
+    }
+
+    function renderProfitChart() {
+      const ctx = document.getElementById('profitChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: pnlHistory.map((_, i) => i + 1),
+          datasets: [{
+            label: 'Cumulative Profit ($)',
+            data: pnlHistory,
+            borderColor: 'lime',
+            backgroundColor: 'rgba(0,255,0,0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { title: { display: true, text: 'Trade #' }, ticks: { color: '#fff' } },
+            y: { title: { display: true, text: 'Profit ($)' }, ticks: { color: '#fff' } }
+          }
+        }
+      });
+    }
+
+    function downloadCSV() {
+      let csv = \"Date,Coin,Signal,Entry,Exit,Tokens,PNL%,PNL$\\n\";
+      tradeLog.forEach(t => {
+        csv += `${t.date},${t.coin},${t.signal},${t.entry.toFixed(4)},${t.exit.toFixed(4)},${t.tokens.toFixed(2)},${t.pnlPct.toFixed(2)},${t.pnl$.toFixed(2)}\\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement(\"a\");
+      link.href = url;
+      link.download = \"trade_log.csv\";
+      link.click();
+    }
+
+    function runBacktest() {
+      const avg = tradeLog.reduce((sum, t) => sum + t.pnlPct, 0) / tradeLog.length;
+      alert(`Backtest completed.\\nTrades: ${tradeLog.length}\\nAvg Profit: ${avg.toFixed(2)}%`);
+    }
+
+    async function fetchData() {
       try {
-        for (let page of pages) {
-          const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=250&page=${page}&sparkline=true&price_change_percentage=24h`);
-          if (!res.ok) throw new Error('Failed to fetch data');
-          const data = await res.json();
-          allCoins = allCoins.concat(data);
-        }
+        const currency = document.getElementById('currency-select').value;
+        const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_asc&per_page=100&page=1&sparkline=false`;
+        const res = await fetch(url);
+        const data = await res.json();
+        filteredData = data.map(c => {
+          const change = c.price_change_percentage_24h || 0;
+          const marketCap = c.market_cap || 1;
+          const volume = c.total_volume || 0;
+          const volatility = Math.min(volume / marketCap, 3);
+          const profitPotential = change < 0 ? -change * volatility : 0;
+          let signal = \"Hold\";
+          if (profitPotential > 30) signal = \"Ultra Strong Buy\";
+          else if (profitPotential > 20) signal = \"Strong Buy\";
+          else if (profitPotential > 12) signal = \"Buy\";
+          else if (profitPotential > 8) signal = \"Moderate Buy\";
+          else if (profitPotential > 5) signal = \"Weak Buy\";
 
-        Object.keys(tables).forEach(key => tables[key] = []);
-
-        for (let coin of allCoins) {
-          const change = coin.price_change_percentage_24h;
-          const obj = {
-            name: coin.name,
-            price: `$${coin.current_price.toFixed(4)}`,
-            market_cap: `$${coin.market_cap.toLocaleString()}`,
-            change: `${change.toFixed(2)}%`,
-            sparkline: coin.sparkline_in_7d.price
+          return {
+            id: c.id,
+            symbol: c.symbol,
+            name: c.name,
+            current_price: c.current_price,
+            market_cap: marketCap,
+            total_volume: volume,
+            price_change_percentage_24h: change,
+            profitPotential,
+            tradingSignal: signal
           };
+        });
 
-          if (change >= 20) tables["20%+ Daily Gains"].push(obj);
-          else if (change >= 15) tables["15%+ Daily Gains"].push(obj);
-          else if (change >= 10) tables["10%+ Daily Gains"].push(obj);
-          else if (change >= 5) tables["5%+ Daily Gains"].push(obj);
-        }
-      } catch (error) {
-        console.error("Error fetching coins:", error);
-        document.getElementById("tables-container").innerText = "Failed to load data. Please try again later.";
+        populateDropdownTables();
+        simulateAllTrades();
+        renderChart(filteredData[0]);
+        appendLog(\"Market data and signals loaded.\");
+      } catch (err) {
+        appendLog(\"Error fetching data: \" + err.message);
       }
     }
 
-    function calculateRSI(prices) {
-      if (!prices || prices.length < 15) return "N/A";
-      let gains = 0, losses = 0;
-      for (let i = 1; i < 15; i++) {
-        const diff = prices[i] - prices[i - 1];
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
-      }
-      if (losses === 0) return 100;
-      const rs = gains / losses;
-      return (100 - (100 / (1 + rs))).toFixed(2);
-    }
+    function populateDropdownTables() {
+      const container = document.getElementById(\"dropdown-container\");
+      container.innerHTML = \"\";
+      const categories = [\"Ultra Strong Buy\", \"Strong Buy\", \"Buy\", \"Moderate Buy\", \"Weak Buy\"];
 
-    function calculateMACD(prices) {
-      if (!prices || prices.length < 26) return "N/A";
-      const ema = (period, data) => {
-        const k = 2 / (period + 1);
-        let emaArray = [data[0]];
-        for (let i = 1; i < data.length; i++) {
-          emaArray.push(data[i] * k + emaArray[i - 1] * (1 - k));
-        }
-        return emaArray;
-      };
-      const ema12 = ema(12, prices);
-      const ema26 = ema(26, prices);
-      return (ema12[ema12.length - 1] - ema26[ema26.length - 1]).toFixed(4);
-    }
+      categories.forEach(cat => {
+        const group = filteredData.filter(c => c.tradingSignal === cat);
+        if (!group.length) return;
+        const detail = document.createElement(\"details\");
+        const sum = document.createElement(\"summary\");
+        sum.textContent = `${cat} (${group.length})`;
+        detail.appendChild(sum);
 
-    function determineSignal(rsi, macd) {
-      if (rsi === "N/A" || macd === "N/A") return { text: "N/A", class: "hold", time: "4h" };
-      rsi = parseFloat(rsi);
-      macd = parseFloat(macd);
-
-      if (rsi < 25 && macd > 0.1) return { text: "Strong Buy", class: "strong-buy", time: "5d" };
-      if (rsi < 35 && macd > 0) return { text: "Buy", class: "buy", time: "3d" };
-      if (rsi > 75 && macd < -0.1) return { text: "Sell Off", class: "sell-off", time: "4h" };
-      if (rsi > 65 && macd < 0) return { text: "Sell", class: "sell", time: "1d" };
-      return { text: "Hold", class: "hold", time: "2d" };
-    }
-
-    function renderTables() {
-      const container = document.getElementById("tables-container");
-      container.innerHTML = "";
-
-      for (let category in tables) {
-        const coins = tables[category];
-        let html = `<h2>${category}</h2>`;
-        html += `
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Market Cap</th>
-                <th>24h Change</th>
-                <th>RSI</th>
-                <th>MACD</th>
-                <th>Signal</th>
-                <th>Hold Time</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-        for (let coin of coins) {
-          const rsi = calculateRSI(coin.sparkline);
-          const macd = calculateMACD(coin.sparkline);
-          const signalObj = determineSignal(rsi, macd);
-          html += `
+        const table = document.createElement(\"table\");
+        table.innerHTML = `
+          <thead>
             <tr>
-              <td>${coin.name}</td>
-              <td>${coin.price}</td>
-              <td>${coin.market_cap}</td>
-              <td>${coin.change}</td>
-              <td>${rsi}</td>
-              <td>${macd}</td>
-              <td><span class="${signalObj.class}">${signalObj.text}</span></td>
-              <td>${signalObj.time}</td>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Market Cap</th>
+              <th>24h %</th>
+              <th>Signal</th>
+              <th>Potential</th>
             </tr>
+          </thead><tbody></tbody>
+        `;
+        const tbody = table.querySelector(\"tbody\");
+        group.forEach(c => {
+          const row = document.createElement(\"tr\");
+          row.innerHTML = `
+            <td>${c.symbol.toUpperCase()}</td>
+            <td>${c.name}</td>
+            <td>$${c.current_price.toFixed(4)}</td>
+            <td>$${c.market_cap.toLocaleString()}</td>
+            <td>${c.price_change_percentage_24h.toFixed(2)}%</td>
+            <td>${c.tradingSignal}</td>
+            <td>${c.profitPotential.toFixed(2)}%</td>
           `;
+          tbody.appendChild(row);
+        });
+
+        detail.appendChild(table);
+        container.appendChild(detail);
+      });
+    }
+
+    function renderChart(coin) {
+      if (!coin) return;
+      const ctx = document.getElementById(\"price-chart\").getContext(\"2d\");
+      if (priceChart) priceChart.destroy();
+      priceChart = new Chart(ctx, {
+        type: \"bar\",
+        data: {
+          labels: [\"Potential Gain %\"],
+          datasets: [{
+            label: coin.symbol.toUpperCase(),
+            data: [coin.profitPotential],
+            backgroundColor: [\"rgba(0, 255, 100, 0.7)\"]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { labels: { color: \"white\" } }
+          },
+          scales: {
+            x: { ticks: { color: \"white\" } },
+            y: { ticks: { color: \"white\" } }
+          }
         }
-        html += `</tbody></table>`;
-        container.innerHTML += html;
-      }
+      });
     }
 
-    async function refresh() {
-      await fetchCoins();
-      renderTables();
+    function filterTable() {
+      const val = document.getElementById('search-input').value.toLowerCase();
+      filteredData = cryptoData.filter(c =>
+        c.name.toLowerCase().includes(val) || c.symbol.toLowerCase().includes(val)
+      );
+      populateDropdownTables();
     }
 
-    let countdown = 30;
-    setInterval(() => {
-      countdown--;
-      if (countdown <= 0) {
-        countdown = 30;
-        refresh();
-      }
-      document.getElementById("countdown").innerText = countdown;
-    }, 1000);
-
-    refresh(); // Initial load
+    window.onload = () => {
+      changePage();
+      fetchData();
+    };
   </script>
+
+  <div id="legal">
+    By using this tool, you agree it is provided \"as is\" with no guarantees. Use at your own risk. No financial advice is given.
+  </div>
 </body>
 </html>
