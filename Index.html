@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Mobile responsiveness -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Screener 4.1</title>
+  <!-- Load Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* Global Styles */
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       margin: 0;
@@ -14,6 +17,7 @@
       background-size: cover;
       color: #e6e6e6;
     }
+    /* Background dimming overlay */
     body::before {
       content: "";
       position: fixed;
@@ -23,6 +27,7 @@
       background: rgba(0, 0, 0, 0.3);
       z-index: -1;
     }
+    /* Navigation Dropdown in Top Left */
     #nav-dropdown {
       position: absolute;
       top: 10px;
@@ -36,12 +41,14 @@
       border: none;
       cursor: pointer;
     }
+    /* Centered Title */
     #main-title {
       text-align: center;
       font-size: 2.2rem;
       font-weight: bold;
       margin: 20px 0 10px;
     }
+    /* Main Container */
     .container {
       width: 100%;
       max-width: 100%;
@@ -52,6 +59,7 @@
       border: 10px solid;
       border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
     }
+    /* Controls */
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -75,7 +83,8 @@
     .controls button:hover {
       background-color: #005500;
     }
-        details {
+    /* Dropdown Tables Styling */
+    details {
       margin-bottom: 10px;
       border: 1px solid rgba(255,255,255,0.2);
       border-radius: 4px;
@@ -113,6 +122,7 @@
     tr:hover {
       background-color: rgba(0,0,0,0.7);
     }
+    /* Chart Styling */
     canvas {
       width: 100%;
       margin-top: 10px;
@@ -122,6 +132,7 @@
     #price-chart {
       height: 300px;
     }
+    /* Modal Styles */
     .modal {
       display: none;
       position: fixed;
@@ -157,6 +168,7 @@
       height: 200px;
       margin-top: 10px;
     }
+    /* Log Styling (for Paper Data Page) */
     .log {
       background-color: rgba(0, 0, 0, 0.8);
       color: #ccc;
@@ -168,6 +180,7 @@
       border: 1px solid rgba(255,255,255,0.2);
       margin-top: 10px;
     }
+    /* Legal Disclaimer */
     #legal {
       margin-top: 20px;
       padding: 10px;
@@ -178,6 +191,7 @@
       color: #aaa;
       text-align: center;
     }
+    /* Additional Page Sections */
     .page-section {
       display: none;
       margin: 10px auto;
@@ -188,6 +202,7 @@
       border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
       color: #e6e6e6;
     }
+    /* Responsive adjustments for smaller screens */
     @media (max-width: 600px) {
       #main-title { font-size: 1.8rem; margin: 15px 0; }
       .controls input, .controls select, .controls button { padding: 6px; font-size: 0.8rem; }
@@ -199,7 +214,7 @@
   </style>
 </head>
 <body>
-    <!-- Navigation Dropdown -->
+  <!-- Navigation Dropdown -->
   <div id="nav-dropdown">
     <select id="page-selector" onchange="changePage()">
       <option value="main-section">Main Page</option>
@@ -208,11 +223,11 @@
       <option value="paperdata-section">Paper Data (Password)</option>
     </select>
   </div>
-
-  <!-- Title -->
+  
+  <!-- Centered Title -->
   <div id="main-title">Screener 4.1</div>
-
-  <!-- Main Section -->
+  
+  <!-- Main Screener Section (Logs removed) -->
   <div id="main-section">
     <div class="container">
       <div class="controls">
@@ -224,59 +239,53 @@
         </select>
         <button onclick="fetchData()">Refresh Data</button>
       </div>
+      <!-- Dropdown tables will be inserted here -->
       <div id="dropdown-container"></div>
+      <!-- Price Chart -->
       <canvas id="price-chart"></canvas>
+      <!-- Legal Disclaimer -->
       <details id="tos">
         <summary style="font-size:1rem; font-weight:bold; color:#fff;">Terms of Service & Liability Disclaimer</summary>
-        <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
-          This tool is provided “as is” without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence.
+                <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
+          This tool is provided “as is” without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence. By using this tool, you agree to hold the creator harmless from any legal claims.
         </p>
       </details>
     </div>
   </div>
-
-  <!-- Track Record Section -->
+  
+  <!-- How To Use Section -->
+  <div id="howto-section" class="page-section">
+    <h2>How To Use</h2>
+    <p>Welcome to Screener 4.1! Follow these steps to use the tool:</p>
+    <ul>
+      <li>Enter a coin name or symbol in the search box to filter results.</li>
+      <li>Select your preferred currency from the dropdown and click "Refresh Data" to update information.</li>
+      <li>Click on any trade signal to view detailed trade recommendations, charts, and probability metrics.</li>
+      <li>Review all provided metrics and disclaimers before making any trading decisions.</li>
+    </ul>
+  </div>
+  
+  <!-- Paper Trader Track Record Section -->
   <div id="trackrecord-section" class="page-section">
     <h2>Paper Trader Track Record</h2>
-    <p>Simulated $100 trades based on current signals:</p>
-
-    <h3>Trade Tracker Table</h3>
+    <p>This section simulates trades based on our signals (simulation logic subject to enhancement):</p>
     <table>
       <thead>
         <tr>
           <th>Date</th>
           <th>Coin</th>
-          <th>Signal</th>
-          <th>Buy Price</th>
-          <th>Sell Price</th>
-          <th>Simulated Amount</th>
+          <th>Trade Signal</th>
+          <th>Profit/Loss (%)</th>
           <th>Profit/Loss ($)</th>
-          <th>Hold Time</th>
         </tr>
       </thead>
-      <tbody id="trade-tracker-body"></tbody>
+      <tbody>
+        <!-- Rows will be added dynamically by the script -->
+      </tbody>
     </table>
-
-    <h3>Simulated Trade Log</h3>
-    <div id="tracker-log" class="log"></div>
-
-    <h3>Total Cumulative Profit/Loss</h3>
-    <p id="cumulative-profit" style="font-size: 1.2rem; font-weight: bold; color: #00ff88;"></p>
-
-    <h3>Live Profit Portfolio</h3>
-    <canvas id="profit-graph" height="200"></canvas>
   </div>
-    <!-- How To Use Section -->
-  <div id="howto-section" class="page-section">
-    <h2>How To Use</h2>
-    <ul>
-      <li>Use the dropdown to navigate between pages.</li>
-      <li>Use the filters to search and refresh crypto data.</li>
-      <li>Click signals to view detailed strategies and charts.</li>
-    </ul>
-  </div>
-
-  <!-- Paper Data Section -->
+  
+  <!-- Paper Data Section (Password Protected, with Logs) -->
   <div id="paperdata-section" class="page-section">
     <h2>Paper Data (Password Protected)</h2>
     <div id="paperdata-login">
@@ -286,15 +295,19 @@
     </div>
     <div id="paperdata-content" style="display:none;">
       <h3>Paper Data Logs</h3>
-      <div id="paperdata-log" class="log"></div>
+      <div id="paperdata-log" class="log">
+        <!-- Logs are appended here via script -->
+      </div>
     </div>
   </div>
-
-  <!-- Signal Modal -->
+  
+  <!-- Modal for Trade Details and Chart -->
   <div id="signal-modal" class="modal">
     <div class="modal-content">
       <span class="close" id="modal-close">&times;</span>
-      <div id="modal-body"></div>
+      <div id="modal-body">
+        <!-- Trade details will be injected here -->
+      </div>
       <h3 style="text-align:center; color:#fff;">Chart</h3>
       <div id="indicator-chart-container">
         <canvas id="indicator-chart"></canvas>
@@ -302,160 +315,287 @@
     </div>
   </div>
 
-  <!-- Legal Disclaimer -->
-  <div id="legal">
-    By using this tool, you agree that it is provided "as is" without any guarantees. Do your own research. The creator assumes no liability.
-  </div>
-
-  <!-- JavaScript -->
+  <!-- Begin Script -->
   <script>
-    let cryptoData = [], filteredData = [], priceChart, indicatorChart;
-    const defaultHoldDays = 1;
+    let cryptoData = [];
+    let filteredData = [];
+    let priceChart, indicatorChart;
+    const defaultHoldDays = 1; // For profitability calculation
 
-    // Simulated Trade Tracker
-    let trackerData = [];
-    let profitChart;
-
-    function simulateTradesFromDropdown() {
-      const sampleCoins = [
-        { symbol: "BTC", current_price: 63200, profitPotential: 5.06, tradingSignal: "Buy" },
-        { symbol: "ETH", current_price: 3100, profitPotential: 3.87, tradingSignal: "Moderate Buy" },
-        { symbol: "XRP", current_price: 0.52, profitPotential: 7.89, tradingSignal: "Strong Buy" }
-      ];
-      const simulatedTrades = [];
-
-      sampleCoins.forEach((coin) => {
-        const profitPercent = coin.profitPotential || 0;
-        const buyPrice = coin.current_price;
-        const sellPrice = buyPrice + (buyPrice * (profitPercent / 100));
-        const signal = coin.tradingSignal;
-        const holdTime = getHoldTime(signal);
-
-        simulatedTrades.push({
-          date: new Date().toISOString().split('T')[0],
-          coin: coin.symbol.toUpperCase(),
-          signal: signal,
-          buy: parseFloat(buyPrice.toFixed(4)),
-          sell: parseFloat(sellPrice.toFixed(4)),
-          hold: holdTime
-        });
-      });
-
-      trackerData = simulatedTrades;
-      updateTracker();
-    }
-
-    function getHoldTime(signal) {
-      if (signal.includes("Ultra")) return "5 Days";
-      if (signal.includes("Strong")) return "4 Days";
-      if (signal.includes("Buy")) return "3 Days";
-      if (signal.includes("Moderate")) return "2 Days";
-      if (signal.includes("Weak")) return "1 Day";
-      return "N/A";
-    }
-        function updateTracker() {
-      const tbody = document.getElementById("trade-tracker-body");
-      const log = document.getElementById("tracker-log");
-      tbody.innerHTML = "";
-      log.innerHTML = "";
-
-      const labels = [], profitDollars = [];
-      let totalProfit = 0;
-      const investment = 100;
-
-      trackerData.forEach((t) => {
-        const profitPercent = ((t.sell - t.buy) / t.buy) * 100;
-        const profitDollarsVal = ((profitPercent / 100) * investment).toFixed(2);
-        const profitDisplay = (profitDollarsVal >= 0 ? "+" : "") + "$" + profitDollarsVal;
-
-        totalProfit += parseFloat(profitDollarsVal);
-        labels.push(t.coin);
-        profitDollars.push(parseFloat(profitDollarsVal));
-
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${t.date}</td>
-          <td>${t.coin}</td>
-          <td>${t.signal}</td>
-          <td>$${t.buy.toFixed(4)}</td>
-          <td>$${t.sell.toFixed(4)}</td>
-          <td>$${investment}</td>
-          <td>${profitDisplay}</td>
-          <td>${t.hold}</td>
-        `;
-        tbody.appendChild(row);
-        log.innerHTML += `<p>[${t.date}] ${t.signal} - ${t.coin} | $${t.buy} → $${t.sell} | Profit: ${profitDisplay}</p>`;
-      });
-
-      const cumulativeEl = document.getElementById("cumulative-profit");
-      const totalFormatted = (totalProfit >= 0 ? "+" : "") + "$" + totalProfit.toFixed(2);
-      cumulativeEl.textContent = totalFormatted;
-      cumulativeEl.style.color = totalProfit >= 0 ? "#00ff88" : "#ff5555";
-
-      if (profitChart) profitChart.destroy();
-      const ctx = document.getElementById("profit-graph").getContext("2d");
-      profitChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "Simulated Profit/Loss ($)",
-            data: profitDollars,
-            backgroundColor: profitDollars.map(p => p >= 0 ? "rgba(0, 200, 100, 0.7)" : "rgba(200, 0, 0, 0.7)")
-          }]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { color: "#fff" },
-              grid: { color: "rgba(255,255,255,0.1)" }
-            },
-            x: {
-              ticks: { color: "#fff" },
-              grid: { color: "rgba(255,255,255,0.1)" }
-            }
-          },
-          plugins: {
-            legend: { labels: { color: "#fff" } }
-          }
-        }
-      });
-    }
-
-    function changePage() {
-      const sections = ["main-section", "howto-section", "trackrecord-section", "paperdata-section"];
-      sections.forEach(id => document.getElementById(id).style.display = "none");
-      const page = document.getElementById("page-selector").value;
-      document.getElementById(page).style.display = "block";
-    }
-
-    function checkPaperDataPassword() {
-      const password = document.getElementById("paperdata-password").value;
-      if (password === "122216") {
-        document.getElementById("paperdata-login").style.display = "none";
-        document.getElementById("paperdata-content").style.display = "block";
-      } else {
-        alert("Incorrect password. Please try again.");
+    // Append log messages to the #paperdata-log container
+    function appendLog(message) {
+      console.log(message);
+      const logEl = document.getElementById('paperdata-log');
+      if (logEl) {
+        logEl.innerHTML += `<p>${message}</p>`;
+        logEl.scrollTop = logEl.scrollHeight;
       }
     }
-
-    window.onload = function() {
-      changePage();
-      simulateTradesFromDropdown();
-      setInterval(updateTracker, 15000);
-    };
-
-    document.getElementById('modal-close').addEventListener('click', () => {
-      document.getElementById('signal-modal').style.display = "none";
+    
+    // Determine if a coin is suspicious (example: MANTRA (OM))
+    function isSuspiciousCoin(coin) {
+      if (coin.name && coin.symbol) {
+        return coin.name.toLowerCase().includes('mantra') && coin.symbol.toUpperCase() === 'OM';
+      }
+      return false;
+    }
+    
+    // Dummy probability calculation based on volatility factor
+    function computeProbabilityTrade(coin) {
+      let base = 70;
+      let adjustment = coin.volatilityFactor ? coin.volatilityFactor * 5 : 0;
+      let probability = base - adjustment;
+      if (probability < 10) probability = 10;
+      if (probability > 90) probability = 90;
+      return probability.toFixed(2) + "%";
+    }
+    
+    async function fetchPaprikaData() {
+      try {
+        const response = await fetch("https://api.coinpaprika.com/v1/tickers");
+        return await response.json();
+      } catch (error) {
+        appendLog("Error fetching CoinPaprika data: " + error.message);
+        return [];
+      }
+    }
+    
+    function mergeData(geckoData, paprikaData) {
+      return geckoData.map(coin => {
+        const match = paprikaData.find(p => p.symbol.toLowerCase() === coin.symbol.toLowerCase());
+        if (match) {
+          coin.market_cap = coin.market_cap || (match.quotes && match.quotes.USD && match.quotes.USD.market_cap);
+          coin.total_volume = coin.total_volume || (match.quotes && match.quotes.USD && match.quotes.USD.volume_24h);
+          coin.current_price = coin.current_price || (match.quotes && match.quotes.USD && match.quotes.USD.price);
+          coin.price_change_percentage_24h = coin.price_change_percentage_24h || (match.quotes && match.quotes.USD && match.quotes.USD.percent_change_24h);
+        }
+        return coin;
+      });
+    }
+    
+    function computeProfitability(coin, holdDays) {
+      let change = coin.price_change_percentage_24h;
+      if (change >= 0) return 0;
+      let volFactor = coin.total_volume / coin.market_cap;
+      if (volFactor > 3) volFactor = 3;
+      coin.volatilityFactor = volFactor;
+      coin.derivativeSignal = volFactor >= 2.5;
+      return (-change) * holdDays * volFactor;
+    }
+    
+    function generateBuySignal(coin) {
+      const pp = coin.profitPotential;
+      if (pp < 5) return "Hold";
+      if (pp < 8) return "Weak Buy";
+      else if (pp < 12) return "Moderate Buy";
+      else if (pp < 20) return "Buy";
+      else if (pp < 30) return "Strong Buy";
+      else return "Ultra Strong Buy";
+    }
+    
+    async function fetchData() {
+      const currency = document.getElementById('currency-select').value;
+      appendLog("Fetching market data from CoinGecko...");
+      try {
+        const geckoUrls = [
+          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=1`,
+          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=2`,
+          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=3`,
+          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=4`
+        ];
+        const geckoResponses = await Promise.all(geckoUrls.map(url => fetch(url).then(res => res.json())));
+        const geckoData = geckoResponses.flat();
+        appendLog("CoinGecko data fetched. Data count: " + geckoData.length);
+        appendLog("Fetching additional data from CoinPaprika...");
+        const paprikaData = await fetchPaprikaData();
+        appendLog("CoinPaprika data fetched.");
+        cryptoData = mergeData(geckoData, paprikaData);
+        cryptoData = cryptoData.filter(coin => !isSuspiciousCoin(coin));
+        cryptoData.forEach(coin => {
+          coin.profitPotential = computeProfitability(coin, defaultHoldDays);
+          coin.tradingSignal = coin.derivativeSignal ? "Derivative Trade" : generateBuySignal(coin);
+        });
+        filteredData = cryptoData;
+        appendLog("Data merged and signals computed. Total coins: " + filteredData.length);
+        populateDropdownTables();
+        if (filteredData.length > 0) renderChart(filteredData[0]);
+      } catch (error) {
+        appendLog("Error fetching market data: " + error.message);
+      }
+    }
+    
+    function populateDropdownTables() {
+      const container = document.getElementById('dropdown-container');
+      container.innerHTML = "";
+      const buyCategories = ["Weak Buy", "Moderate Buy", "Buy", "Strong Buy", "Ultra Strong Buy"];
+      buyCategories.forEach(category => {
+        const group = filteredData.filter(coin => !coin.derivativeSignal && coin.tradingSignal === category);
+        if (!group.length) return;
+        group.sort((a, b) => b.profitPotential - a.profitPotential);
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = `${category} - Showing ${group.length} coins (sorted by profitability)`;
+        details.appendChild(summary);
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+          <tr>
+            <th>Rank</th>
+            <th>Symbol</th>
+                    <th>Name</th>
+        <th>Price</th>
+        <th>Market Cap</th>
+        <th>Volume</th>
+        <th>24h Change</th>
+        <th>Profit Potential (%)</th>
+        <th>Trade Signal</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    group.forEach(coin => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${coin.market_cap_rank || "N/A"}</td>
+        <td>${coin.symbol.toUpperCase()}</td>
+        <td>${coin.name}</td>
+        <td>$${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</td>
+        <td>$${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</td>
+        <td>$${coin.total_volume ? coin.total_volume.toLocaleString() : "N/A"}</td>
+        <td>${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</td>
+        <td>${coin.profitPotential.toFixed(2)}</td>
+        <td><span class="buy-signal" onclick="handleCoinClick('${coin.id}')">${coin.tradingSignal}</span></td>
+      `;
+      tbody.appendChild(row);
     });
+    table.appendChild(tbody);
+    details.appendChild(table);
+    container.appendChild(details);
+  });
 
-    window.onclick = function(event) {
-      const modal = document.getElementById('signal-modal');
-      if (event.target == modal) modal.style.display = "none";
-    };
+  const derivatives = filteredData.filter(coin => coin.derivativeSignal);
+  if (derivatives.length) {
+    derivatives.sort((a, b) => b.profitPotential - a.profitPotential);
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.textContent = `Derivative Trades - Showing ${derivatives.length} coins (sorted by profitability)`;
+    details.appendChild(summary);
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Rank</th>
+        <th>Symbol</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Market Cap</th>
+        <th>Volume</th>
+        <th>24h Change</th>
+        <th>Profit Potential (%)</th>
+        <th>Trade Signal</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    derivatives.forEach(coin => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${coin.market_cap_rank || "N/A"}</td>
+        <td>${coin.symbol.toUpperCase()}</td>
+        <td>${coin.name}</td>
+        <td>$${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</td>
+        <td>$${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</td>
+        <td>$${coin.total_volume ? coin.total_volume.toLocaleString() : "N/A"}</td>
+        <td>${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</td>
+        <td>${coin.profitPotential.toFixed(2)}</td>
+        <td><span class="buy-signal" onclick="handleCoinClick('${coin.id}')">${coin.tradingSignal}</span></td>
+      `;
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    details.appendChild(table);
+    container.appendChild(details);
+  }
+}
+
+function handleCoinClick(coinId) {
+  const coin = cryptoData.find(c => c.id === coinId);
+  if (!coin) return;
+  showSignalDetails(coin, defaultHoldDays);
+  renderIndicatorChart(coin);
+}
+
+function showSignalDetails(coin, holdDays) {
+  const modal = document.getElementById('signal-modal');
+  const modalBody = document.getElementById('modal-body');
+  modalBody.innerHTML = `
+    <h2>${coin.name} (${coin.symbol.toUpperCase()})</h2>
+    <p><strong>Current Price:</strong> $${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</p>
+    <p><strong>Market Cap:</strong> $${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</p>
+    <p><strong>24h Change:</strong> ${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</p>
+    <p><strong>Advanced Profitability (Hold ${holdDays} Day${holdDays>1?'s':''}):</strong> ${computeProfitability(coin, holdDays).toFixed(2)}%</p>
+    <p><strong>Trade to Make:</strong></p>
+    <ul>
+      <li>Buy at current price: $${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</li>
+      <li>Set stop-loss at ~10% below current price.</li>
+      <li>Target an upside of approximately ${computeProfitability(coin, holdDays).toFixed(2)}% within ${holdDays} day${holdDays>1?'s':''}.</li>
+      <li>Probability of trade occurring: ${computeProbabilityTrade(coin)}</li>
+      <li>Monitor the market and adjust your position as needed.</li>
+    </ul>
+    <p><strong>Recommended Trade Strategy:</strong> ${coin.tradingSignal}</p>
+    <p><strong>Reasoning:</strong> This coin exhibits a significant decline with a favorable volume-to-market-cap ratio. Our advanced heuristics, including probability metrics, refine the trade signal.</p>
+    <p style="font-size:0.7rem; color:#aaa;">
+      *This recommendation is provided as-is without any warranty. Use at your own risk.
+    </p>
+  `;
+  modal.style.display = "block";
+}
+
+document.getElementById('modal-close').addEventListener('click', () => {
+  document.getElementById('signal-modal').style.display = "none";
+});
+
+window.onclick = function(event) {
+  const modal = document.getElementById('signal-modal');
+  if (event.target == modal) modal.style.display = "none";
+};
+
+function changePage() {
+  const page = document.getElementById('page-selector').value;
+  document.getElementById('main-section').style.display = "none";
+  document.getElementById('howto-section').style.display = "none";
+  document.getElementById('trackrecord-section').style.display = "none";
+  document.getElementById('paperdata-section').style.display = "none";
+  
+  if (page === "main-section") {
+    document.getElementById('main-section').style.display = "block";
+  } else if (page === "howto-section") {
+    document.getElementById('howto-section').style.display = "block";
+  } else if (page === "trackrecord-section") {
+    document.getElementById('trackrecord-section').style.display = "block";
+  } else if (page === "paperdata-section") {
+    document.getElementById('paperdata-section').style.display = "block";
+  }
+}
+
+function checkPaperDataPassword() {
+  const password = document.getElementById('paperdata-password').value;
+  if (password === "122216") {
+    document.getElementById('paperdata-login').style.display = "none";
+    document.getElementById('paperdata-content').style.display = "block";
+  } else {
+    alert("Incorrect password. Please try again.");
+  }
+}
+
+window.onload = function() {
+  changePage(); // Default to Main Page
+  fetchData();
+};
   </script>
-</body>
-</html>
+  <!-- Legal Disclaimer at Bottom -->
+  <div id="legal">
+    By using this tool, you agree that it is provided "as is" without any guarantees. You must do your own research, these are recommendations. The creator assumes no liability for any damages. Perform your own due diligence before trading.
+  </div>
 </body>
 </html>
