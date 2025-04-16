@@ -2,28 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Screener 4.1</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: url('https://source.unsplash.com/1600x900/?american,flag') no-repeat center center fixed;
-      background-size: cover;
+      font-family: 'Segoe UI', Arial, sans-serif;
       margin: 0;
       padding: 10px;
+      background: url('https://source.unsplash.com/1600x900/?american,flag') no-repeat center center fixed;
+      background-size: cover;
       color: #e6e6e6;
     }
     body::before {
       content: "";
       position: fixed;
       top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.3);
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
       z-index: -1;
     }
     #nav-dropdown {
-      position: absolute; top: 10px; left: 10px; z-index: 1000;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
     }
     #nav-dropdown select {
       padding: 6px;
@@ -39,6 +43,9 @@
       margin: 20px 0 10px;
     }
     .container {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
       background-color: rgba(26, 26, 26, 0.9);
       padding: 10px;
       border-radius: 8px;
@@ -52,7 +59,9 @@
       justify-content: center;
       margin-bottom: 10px;
     }
-    .controls input, .controls select, .controls button {
+    .controls input,
+    .controls select,
+    .controls button {
       padding: 8px;
       font-size: 0.9rem;
       border: none;
@@ -66,7 +75,7 @@
     .controls button:hover {
       background-color: #005500;
     }
-    details {
+        details {
       margin-bottom: 10px;
       border: 1px solid rgba(255,255,255,0.2);
       border-radius: 4px;
@@ -110,23 +119,50 @@
       background-color: rgba(255, 255, 255, 0.95);
       border-radius: 4px;
     }
-    #price-chart { height: 300px; }
-    .page-section {
+    #price-chart {
+      height: 300px;
+    }
+    .modal {
       display: none;
-      margin: 10px auto;
-      background-color: rgba(26,26,26,0.9);
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.85);
+    }
+    .modal-content {
+      position: relative;
+      background-color: #1a1a1a;
+      margin: 10% auto;
       padding: 10px;
+      border: 1px solid #444;
+      width: 90%;
+      max-width: 600px;
       border-radius: 8px;
-      border: 10px solid;
-      border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
       color: #e6e6e6;
+    }
+    .close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      color: #aaa;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #indicator-chart-container {
+      height: 200px;
+      margin-top: 10px;
     }
     .log {
       background-color: rgba(0, 0, 0, 0.8);
       color: #ccc;
       padding: 10px;
-      font-family: monospace;
-      font-size: 0.85rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
       max-height: 300px;
       overflow-y: auto;
       border: 1px solid rgba(255,255,255,0.2);
@@ -142,9 +178,28 @@
       color: #aaa;
       text-align: center;
     }
+    .page-section {
+      display: none;
+      margin: 10px auto;
+      background-color: rgba(26,26,26,0.9);
+      padding: 10px;
+      border-radius: 8px;
+      border: 10px solid;
+      border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
+      color: #e6e6e6;
+    }
+    @media (max-width: 600px) {
+      #main-title { font-size: 1.8rem; margin: 15px 0; }
+      .controls input, .controls select, .controls button { padding: 6px; font-size: 0.8rem; }
+      summary { font-size: 0.9rem; }
+      th, td { padding: 4px; font-size: 0.7rem; }
+      #price-chart { height: 250px; }
+      #indicator-chart-container { height: 150px; }
+    }
   </style>
 </head>
 <body>
+    <!-- Navigation Dropdown -->
   <div id="nav-dropdown">
     <select id="page-selector" onchange="changePage()">
       <option value="main-section">Main Page</option>
@@ -153,9 +208,12 @@
       <option value="paperdata-section">Paper Data (Password)</option>
     </select>
   </div>
+
+  <!-- Title -->
   <div id="main-title">Screener 4.1</div>
 
-  <div id="main-section" class="page-section" style="display: block;">
+  <!-- Main Section -->
+  <div id="main-section">
     <div class="container">
       <div class="controls">
         <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
@@ -169,306 +227,235 @@
       <div id="dropdown-container"></div>
       <canvas id="price-chart"></canvas>
       <details id="tos">
-        <summary>Terms of Service & Disclaimer</summary>
-        <p style="font-size:0.75rem; color:#aaa;">
-          This tool is provided “as is” without warranty of any kind. No financial advice is provided. Use at your own risk.
+        <summary style="font-size:1rem; font-weight:bold; color:#fff;">Terms of Service & Liability Disclaimer</summary>
+        <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
+          This tool is provided “as is” without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence.
         </p>
       </details>
     </div>
   </div>
 
+  <!-- Track Record Section -->
   <div id="trackrecord-section" class="page-section">
-    <div class="container">
-      <h2>Paper Trader Track Record</h2>
-      <p>This section simulates $100 trades for every active signal:</p>
-      <button onclick="downloadCSV()">Export CSV</button>
-      <button onclick="runBacktest()">Run Strategy Backtest</button>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Coin</th>
-            <th>Signal</th>
-            <th>Entry</th>
-            <th>Exit</th>
-            <th>Tokens</th>
-            <th>PNL %</th>
-            <th>PNL $</th>
-          </tr>
-        </thead>
-        <tbody id="track-body"></tbody>
-      </table>
-      <h3 style="margin-top:20px;">Portfolio Profit Graph</h3>
-      <canvas id="profitChart" style="height:300px;"></canvas>
-      <div id="track-log" class="log"></div>
-    </div>
-  </div>
+    <h2>Paper Trader Track Record</h2>
+    <p>Simulated $100 trades based on current signals:</p>
 
+    <h3>Trade Tracker Table</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Coin</th>
+          <th>Signal</th>
+          <th>Buy Price</th>
+          <th>Sell Price</th>
+          <th>Simulated Amount</th>
+          <th>Profit/Loss ($)</th>
+          <th>Hold Time</th>
+        </tr>
+      </thead>
+      <tbody id="trade-tracker-body"></tbody>
+    </table>
+
+    <h3>Simulated Trade Log</h3>
+    <div id="tracker-log" class="log"></div>
+
+    <h3>Total Cumulative Profit/Loss</h3>
+    <p id="cumulative-profit" style="font-size: 1.2rem; font-weight: bold; color: #00ff88;"></p>
+
+    <h3>Live Profit Portfolio</h3>
+    <canvas id="profit-graph" height="200"></canvas>
+  </div>
+    <!-- How To Use Section -->
   <div id="howto-section" class="page-section">
-    <div class="container">
-      <h2>How To Use</h2>
-      <ul>
-        <li>Use the dropdown to change tabs.</li>
-        <li>View live coin signals on the main page.</li>
-        <li>View all paper trades under \"Paper Trader Track Record\".</li>
-        <li>Export your data or run backtests.</li>
-      </ul>
-    </div>
+    <h2>How To Use</h2>
+    <ul>
+      <li>Use the dropdown to navigate between pages.</li>
+      <li>Use the filters to search and refresh crypto data.</li>
+      <li>Click signals to view detailed strategies and charts.</li>
+    </ul>
   </div>
 
+  <!-- Paper Data Section -->
   <div id="paperdata-section" class="page-section">
-    <div class="container">
-      <h2>Paper Data (Password Protected)</h2>
-      <div id="paperdata-login">
-        <input type="password" id="paperdata-password" placeholder="Enter password">
-        <button onclick="checkPaperDataPassword()">Submit</button>
-      </div>
-      <div id="paperdata-content" style="display:none;">
-        <h3>Paper Data Logs</h3>
-        <div id="paperdata-log" class="log"></div>
+    <h2>Paper Data (Password Protected)</h2>
+    <div id="paperdata-login">
+      <p>Enter password:</p>
+      <input type="password" id="paperdata-password">
+      <button onclick="checkPaperDataPassword()">Submit</button>
+    </div>
+    <div id="paperdata-content" style="display:none;">
+      <h3>Paper Data Logs</h3>
+      <div id="paperdata-log" class="log"></div>
+    </div>
+  </div>
+
+  <!-- Signal Modal -->
+  <div id="signal-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="modal-close">&times;</span>
+      <div id="modal-body"></div>
+      <h3 style="text-align:center; color:#fff;">Chart</h3>
+      <div id="indicator-chart-container">
+        <canvas id="indicator-chart"></canvas>
       </div>
     </div>
   </div>
 
-  <script>
-    let cryptoData = [], filteredData = [], priceChart, tradeLog = [], pnlHistory = [];
+  <!-- Legal Disclaimer -->
+  <div id="legal">
+    By using this tool, you agree that it is provided "as is" without any guarantees. Do your own research. The creator assumes no liability.
+  </div>
 
-    function appendLog(msg) {
-      const logBox = document.getElementById('paperdata-log');
-      const trackLog = document.getElementById('track-log');
-      const entry = `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
-      if (logBox) logBox.innerHTML += entry;
-      if (trackLog) trackLog.innerHTML += entry;
+  <!-- JavaScript -->
+  <script>
+    let cryptoData = [], filteredData = [], priceChart, indicatorChart;
+    const defaultHoldDays = 1;
+
+    // Simulated Trade Tracker
+    let trackerData = [];
+    let profitChart;
+
+    function simulateTradesFromDropdown() {
+      const sampleCoins = [
+        { symbol: "BTC", current_price: 63200, profitPotential: 5.06, tradingSignal: "Buy" },
+        { symbol: "ETH", current_price: 3100, profitPotential: 3.87, tradingSignal: "Moderate Buy" },
+        { symbol: "XRP", current_price: 0.52, profitPotential: 7.89, tradingSignal: "Strong Buy" }
+      ];
+      const simulatedTrades = [];
+
+      sampleCoins.forEach((coin) => {
+        const profitPercent = coin.profitPotential || 0;
+        const buyPrice = coin.current_price;
+        const sellPrice = buyPrice + (buyPrice * (profitPercent / 100));
+        const signal = coin.tradingSignal;
+        const holdTime = getHoldTime(signal);
+
+        simulatedTrades.push({
+          date: new Date().toISOString().split('T')[0],
+          coin: coin.symbol.toUpperCase(),
+          signal: signal,
+          buy: parseFloat(buyPrice.toFixed(4)),
+          sell: parseFloat(sellPrice.toFixed(4)),
+          hold: holdTime
+        });
+      });
+
+      trackerData = simulatedTrades;
+      updateTracker();
+    }
+
+    function getHoldTime(signal) {
+      if (signal.includes("Ultra")) return "5 Days";
+      if (signal.includes("Strong")) return "4 Days";
+      if (signal.includes("Buy")) return "3 Days";
+      if (signal.includes("Moderate")) return "2 Days";
+      if (signal.includes("Weak")) return "1 Day";
+      return "N/A";
+    }
+        function updateTracker() {
+      const tbody = document.getElementById("trade-tracker-body");
+      const log = document.getElementById("tracker-log");
+      tbody.innerHTML = "";
+      log.innerHTML = "";
+
+      const labels = [], profitDollars = [];
+      let totalProfit = 0;
+      const investment = 100;
+
+      trackerData.forEach((t) => {
+        const profitPercent = ((t.sell - t.buy) / t.buy) * 100;
+        const profitDollarsVal = ((profitPercent / 100) * investment).toFixed(2);
+        const profitDisplay = (profitDollarsVal >= 0 ? "+" : "") + "$" + profitDollarsVal;
+
+        totalProfit += parseFloat(profitDollarsVal);
+        labels.push(t.coin);
+        profitDollars.push(parseFloat(profitDollarsVal));
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${t.date}</td>
+          <td>${t.coin}</td>
+          <td>${t.signal}</td>
+          <td>$${t.buy.toFixed(4)}</td>
+          <td>$${t.sell.toFixed(4)}</td>
+          <td>$${investment}</td>
+          <td>${profitDisplay}</td>
+          <td>${t.hold}</td>
+        `;
+        tbody.appendChild(row);
+        log.innerHTML += `<p>[${t.date}] ${t.signal} - ${t.coin} | $${t.buy} → $${t.sell} | Profit: ${profitDisplay}</p>`;
+      });
+
+      const cumulativeEl = document.getElementById("cumulative-profit");
+      const totalFormatted = (totalProfit >= 0 ? "+" : "") + "$" + totalProfit.toFixed(2);
+      cumulativeEl.textContent = totalFormatted;
+      cumulativeEl.style.color = totalProfit >= 0 ? "#00ff88" : "#ff5555";
+
+      if (profitChart) profitChart.destroy();
+      const ctx = document.getElementById("profit-graph").getContext("2d");
+      profitChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Simulated Profit/Loss ($)",
+            data: profitDollars,
+            backgroundColor: profitDollars.map(p => p >= 0 ? "rgba(0, 200, 100, 0.7)" : "rgba(200, 0, 0, 0.7)")
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { color: "#fff" },
+              grid: { color: "rgba(255,255,255,0.1)" }
+            },
+            x: {
+              ticks: { color: "#fff" },
+              grid: { color: "rgba(255,255,255,0.1)" }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: "#fff" } }
+          }
+        }
+      });
     }
 
     function changePage() {
-      document.querySelectorAll('.page-section').forEach(s => s.style.display = 'none');
-      const sel = document.getElementById('page-selector').value;
-      document.getElementById(sel).style.display = 'block';
+      const sections = ["main-section", "howto-section", "trackrecord-section", "paperdata-section"];
+      sections.forEach(id => document.getElementById(id).style.display = "none");
+      const page = document.getElementById("page-selector").value;
+      document.getElementById(page).style.display = "block";
     }
 
     function checkPaperDataPassword() {
-      const pwd = document.getElementById('paperdata-password').value;
-      if (pwd === '122216') {
-        document.getElementById('paperdata-login').style.display = 'none';
-        document.getElementById('paperdata-content').style.display = 'block';
+      const password = document.getElementById("paperdata-password").value;
+      if (password === "122216") {
+        document.getElementById("paperdata-login").style.display = "none";
+        document.getElementById("paperdata-content").style.display = "block";
       } else {
-        alert('Incorrect password.');
+        alert("Incorrect password. Please try again.");
       }
     }
 
-    function simulateTrade(coin) {
-      const entry = coin.current_price;
-      const tokens = 100 / entry;
-      const exit = entry * (1 + coin.profitPotential / 100);
-      const pnl$ = (exit - entry) * tokens;
-      const pnlPct = (exit - entry) / entry * 100;
-      pnlHistory.push((pnlHistory.at(-1) || 0) + pnl$);
-
-      tradeLog.push({
-        date: new Date().toLocaleDateString(),
-        coin: coin.symbol.toUpperCase(),
-        signal: coin.tradingSignal,
-        entry, exit, tokens,
-        pnlPct, pnl$
-      });
-
-      const row = document.createElement(\"tr\");
-      row.innerHTML = `
-        <td>${new Date().toLocaleDateString()}</td>
-        <td>${coin.symbol.toUpperCase()}</td>
-        <td>${coin.tradingSignal}</td>
-        <td>$${entry.toFixed(4)}</td>
-        <td>$${exit.toFixed(4)}</td>
-        <td>${tokens.toFixed(2)}</td>
-        <td>${pnlPct.toFixed(2)}%</td>
-        <td>$${pnl$.toFixed(2)}</td>
-      `;
-      document.getElementById(\"track-body\").appendChild(row);
-      appendLog(`AutoTrade ${coin.symbol.toUpperCase()} | PNL $${pnl$.toFixed(2)}`);
-    }
-
-    function simulateAllTrades() {
-      filteredData.forEach(c => {
-        if (c.tradingSignal.includes(\"Buy\")) simulateTrade(c);
-      });
-      renderProfitChart();
-    }
-
-    function renderProfitChart() {
-      const ctx = document.getElementById('profitChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: pnlHistory.map((_, i) => i + 1),
-          datasets: [{
-            label: 'Cumulative Profit ($)',
-            data: pnlHistory,
-            borderColor: 'lime',
-            backgroundColor: 'rgba(0,255,0,0.1)',
-            fill: true,
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: { title: { display: true, text: 'Trade #' }, ticks: { color: '#fff' } },
-            y: { title: { display: true, text: 'Profit ($)' }, ticks: { color: '#fff' } }
-          }
-        }
-      });
-    }
-
-    function downloadCSV() {
-      let csv = \"Date,Coin,Signal,Entry,Exit,Tokens,PNL%,PNL$\\n\";
-      tradeLog.forEach(t => {
-        csv += `${t.date},${t.coin},${t.signal},${t.entry.toFixed(4)},${t.exit.toFixed(4)},${t.tokens.toFixed(2)},${t.pnlPct.toFixed(2)},${t.pnl$.toFixed(2)}\\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement(\"a\");
-      link.href = url;
-      link.download = \"trade_log.csv\";
-      link.click();
-    }
-
-    function runBacktest() {
-      const avg = tradeLog.reduce((sum, t) => sum + t.pnlPct, 0) / tradeLog.length;
-      alert(`Backtest completed.\\nTrades: ${tradeLog.length}\\nAvg Profit: ${avg.toFixed(2)}%`);
-    }
-
-    async function fetchData() {
-      try {
-        const currency = document.getElementById('currency-select').value;
-        const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_asc&per_page=100&page=1&sparkline=false`;
-        const res = await fetch(url);
-        const data = await res.json();
-        filteredData = data.map(c => {
-          const change = c.price_change_percentage_24h || 0;
-          const marketCap = c.market_cap || 1;
-          const volume = c.total_volume || 0;
-          const volatility = Math.min(volume / marketCap, 3);
-          const profitPotential = change < 0 ? -change * volatility : 0;
-          let signal = \"Hold\";
-          if (profitPotential > 30) signal = \"Ultra Strong Buy\";
-          else if (profitPotential > 20) signal = \"Strong Buy\";
-          else if (profitPotential > 12) signal = \"Buy\";
-          else if (profitPotential > 8) signal = \"Moderate Buy\";
-          else if (profitPotential > 5) signal = \"Weak Buy\";
-
-          return {
-            id: c.id,
-            symbol: c.symbol,
-            name: c.name,
-            current_price: c.current_price,
-            market_cap: marketCap,
-            total_volume: volume,
-            price_change_percentage_24h: change,
-            profitPotential,
-            tradingSignal: signal
-          };
-        });
-
-        populateDropdownTables();
-        simulateAllTrades();
-        renderChart(filteredData[0]);
-        appendLog(\"Market data and signals loaded.\");
-      } catch (err) {
-        appendLog(\"Error fetching data: \" + err.message);
-      }
-    }
-
-    function populateDropdownTables() {
-      const container = document.getElementById(\"dropdown-container\");
-      container.innerHTML = \"\";
-      const categories = [\"Ultra Strong Buy\", \"Strong Buy\", \"Buy\", \"Moderate Buy\", \"Weak Buy\"];
-
-      categories.forEach(cat => {
-        const group = filteredData.filter(c => c.tradingSignal === cat);
-        if (!group.length) return;
-        const detail = document.createElement(\"details\");
-        const sum = document.createElement(\"summary\");
-        sum.textContent = `${cat} (${group.length})`;
-        detail.appendChild(sum);
-
-        const table = document.createElement(\"table\");
-        table.innerHTML = `
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Market Cap</th>
-              <th>24h %</th>
-              <th>Signal</th>
-              <th>Potential</th>
-            </tr>
-          </thead><tbody></tbody>
-        `;
-        const tbody = table.querySelector(\"tbody\");
-        group.forEach(c => {
-          const row = document.createElement(\"tr\");
-          row.innerHTML = `
-            <td>${c.symbol.toUpperCase()}</td>
-            <td>${c.name}</td>
-            <td>$${c.current_price.toFixed(4)}</td>
-            <td>$${c.market_cap.toLocaleString()}</td>
-            <td>${c.price_change_percentage_24h.toFixed(2)}%</td>
-            <td>${c.tradingSignal}</td>
-            <td>${c.profitPotential.toFixed(2)}%</td>
-          `;
-          tbody.appendChild(row);
-        });
-
-        detail.appendChild(table);
-        container.appendChild(detail);
-      });
-    }
-
-    function renderChart(coin) {
-      if (!coin) return;
-      const ctx = document.getElementById(\"price-chart\").getContext(\"2d\");
-      if (priceChart) priceChart.destroy();
-      priceChart = new Chart(ctx, {
-        type: \"bar\",
-        data: {
-          labels: [\"Potential Gain %\"],
-          datasets: [{
-            label: coin.symbol.toUpperCase(),
-            data: [coin.profitPotential],
-            backgroundColor: [\"rgba(0, 255, 100, 0.7)\"]
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { labels: { color: \"white\" } }
-          },
-          scales: {
-            x: { ticks: { color: \"white\" } },
-            y: { ticks: { color: \"white\" } }
-          }
-        }
-      });
-    }
-
-    function filterTable() {
-      const val = document.getElementById('search-input').value.toLowerCase();
-      filteredData = cryptoData.filter(c =>
-        c.name.toLowerCase().includes(val) || c.symbol.toLowerCase().includes(val)
-      );
-      populateDropdownTables();
-    }
-
-    window.onload = () => {
+    window.onload = function() {
       changePage();
-      fetchData();
+      simulateTradesFromDropdown();
+      setInterval(updateTracker, 15000);
+    };
+
+    document.getElementById('modal-close').addEventListener('click', () => {
+      document.getElementById('signal-modal').style.display = "none";
+    });
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('signal-modal');
+      if (event.target == modal) modal.style.display = "none";
     };
   </script>
-
-  <div id="legal">
-    By using this tool, you agree it is provided \"as is\" with no guarantees. Use at your own risk. No financial advice is given.
-  </div>
+</body>
+</html>
 </body>
 </html>
