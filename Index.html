@@ -1,4 +1,5 @@
-async function fetchWithRetry(url, retries = 3) {
+
+// removed duplicate fetchWithRetry {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url);
@@ -254,6 +255,23 @@ canvas {
     100% { transform: rotate(360deg); }
   }
 </style>
+
+
+<script>
+async function fetchWithRetry(url, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return await res.json();
+      console.warn("Retry", i + 1, "for", url);
+    } catch (e) {
+      console.warn("Fetch error:", e);
+    }
+    await new Promise(r => setTimeout(r, 800));
+  }
+  throw new Error("Failed to fetch after retries: " + url);
+}
+</script>
 
 </head>
 <body>
