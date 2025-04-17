@@ -1,6 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+<style>
+html, body {
+  background-color: #121212 !important;
+  color: #e6e6e6 !important;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+table {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 6px;
+  border: 1px solid #333;
+  text-align: center;
+}
+input, select, button {
+  background: #1f1f1f;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 6px;
+  margin: 4px;
+  border-radius: 4px;
+}
+button {
+  background-color: #28a745;
+}
+#main-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 20px 0 10px;
+}
+</style>
+
   <!-- Navigation Dropdown -->
   <div id="nav-dropdown">
     <select id="page-selector" onchange="changePage()">
