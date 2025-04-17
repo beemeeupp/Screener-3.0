@@ -240,7 +240,36 @@
         <button onclick="fetchData()">Refresh Data</button>
       </div>
       <!-- Dropdown tables will be inserted here -->
-      <div id="dropdown-container"></div>
+      <div id="dropdown-container">
+<details>
+  <summary>Weak Buy Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody><tr><td>INJ</td><td>Weak Buy</td><td>$24.55</td><td>$120M</td></tr></tbody>
+  </table>
+</details>
+<details>
+  <summary>Moderate Buy Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody><tr><td>ETH</td><td>Moderate Buy</td><td>$3200</td><td>$9B</td></tr></tbody>
+  </table>
+</details>
+<details>
+  <summary>Buy Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody><tr><td>XRP</td><td>Buy</td><td>$0.47</td><td>$590M</td></tr></tbody>
+  </table>
+</details>
+<details>
+  <summary>Strong Buy Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody><tr><td>ARB</td><td>Strong Buy</td><td>$1.08</td><td>$380M</td></tr></tbody>
+  </table>
+</details>
+</div>
       <!-- Price Chart -->
       <canvas id="price-chart"></canvas>
       <!-- Legal Disclaimer -->
@@ -278,7 +307,8 @@
           <th>Profit/Loss (%)</th>
         </tr>
       </thead>
-      <tbody id="trade-log-body">      </tbody>
+      <tbody id="trade-log-body">
+      </tbody>
     </table>
   </div>
   
@@ -713,15 +743,18 @@
 
   function simulatePaperTrade(coin) {
     if (!coin || !coin.name || !coin.current_price) return;
-    if (paperTrades.find(t => t.name === coin.name)) return; // prevent duplicates
+    if (paperTrades.find(t => t.name === coin.name)) return;
+
+    const exitPrice = coin.current_price * 1.05;
+    const pnl = ((exitPrice - coin.current_price) / coin.current_price * 100).toFixed(2);
 
     const trade = {
       name: coin.name,
       signal: coin.tradingSignal || 'Buy',
       entryPrice: coin.current_price.toFixed(4),
       holdTime: '2d',
-      exitPrice: (coin.current_price * 1.05).toFixed(4),
-      pnl: (((coin.current_price * 1.05 - coin.current_price) / coin.current_price) * 100).toFixed(2) + "%"
+      exitPrice: exitPrice.toFixed(4),
+      pnl: `${pnl}%`
     };
     paperTrades.push(trade);
     updatePaperTraderTable();
@@ -739,10 +772,16 @@
         <td>$${t.entryPrice}</td>
         <td>${t.holdTime}</td>
         <td>$${t.exitPrice}</td>
-        <td>${t.pnl}</td>
-      `;
+        <td>${t.pnl}</td>`;
       tbody.appendChild(row);
     });
+  }
+
+  function handleCoinClick(coinId) {
+    const coin = cryptoData.find(c => c.id === coinId);
+    if (!coin) return;
+    showSignalDetails(coin, 2);
+    renderIndicatorChart(coin);
   }
 </script>
 
