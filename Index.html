@@ -247,7 +247,7 @@
       <details id="tos">
         <summary style="font-size:1rem; font-weight:bold; color:#fff;">Terms of Service & Liability Disclaimer</summary>
         <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
-          This tool is provided “as is” without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence. By using this tool, you agree to hold the creator harmless from any legal claims.
+          This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence. By using this tool, you agree to hold the creator harmless from any legal claims.
         </p>
       </details>
     </div>
@@ -266,24 +266,102 @@
   </div>
   
   <!-- Paper Trader Track Record Section -->
-  <div id="trackrecord-section" class="page-section">
+  
+<div id="trackrecord-section" class="page-section">
+  <h2>Paper Trader Track Record</h2>
+  <button onclick="exportCSV()">Export to CSV</button>
+  <canvas id="profitChart" height="200"></canvas>
+  <table>
+    <thead>
+      <tr>
+        <th>Coin</th>
+        <th>Signal</th>
+        <th>Entry Price</th>
+        <th>Hold Time</th>
+        <th>Time</th>
+        <th>Exit Price</th>
+        <th>P/L</th>
+      </tr>
+    </thead>
+    <tbody id="trade-log-body"></tbody>
+  </table>
+</div>
+
+<script>
+  let paperTrades = [];
+
+  function simulatePaperTrade(coin, signal, price, holdTime) {
+    const now = new Date();
+    paperTrades.push({
+      coin, signal, entryPrice: price, holdTime,
+      time: now.toLocaleString(), exitPrice: null, profitLoss: null
+    });
+    updateTradeLog();
+    updateProfitChart();
+  }
+
+  function updateTradeLog() {
+    const tbody = document.getElementById("trade-log-body");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    paperTrades.forEach(t => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${t.coin}</td><td>${t.signal}</td><td>$${t.entryPrice}</td>
+        <td>${t.holdTime}h</td><td>${t.time}</td>
+        <td>${t.exitPrice ? '$' + t.exitPrice : 'â'}</td>
+        <td>${t.profitLoss != null ? (t.profitLoss >= 0 ? '+' : '') + t.profitLoss.toFixed(4) : 'â'}</td>`;
+      tbody.appendChild(row);
+    });
+  }
+
+  function updateProfitChart() {
+    const ctx = document.getElementById('profitChart')?.getContext('2d');
+    if (!ctx) return;
+    const profitSeries = paperTrades.filter(t => t.profitLoss != null)
+      .reduce((acc, t, i) => { acc.push((acc[i - 1] || 0) + t.profitLoss); return acc; }, []);
+    if (window.profitChartInstance) window.profitChartInstance.destroy();
+    window.profitChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: profitSeries.map((_, i) => i + 1),
+        datasets: [{ label: "Portfolio P/L", data: profitSeries, borderWidth: 2 }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  function exportCSV() {
+    const csv = ['Coin,Signal,Entry Price,Hold Time,Time,Exit Price,P/L'];
+    paperTrades.forEach(t => {
+      csv.push([t.coin, t.signal, t.entryPrice, t.holdTime, t.time, t.exitPrice || "", t.profitLoss || ""].join(","));
+    });
+    const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "paper_trades.csv";
+    link.click();
+  }
+
+  setInterval(() => {
+    const now = new Date();
+    paperTrades.forEach(t => {
+      if (!t.exitPrice) {
+        const entryTime = new Date(t.time);
+        if (now - entryTime >= t.holdTime * 3600000) {
+          t.exitPrice = (t.entryPrice * (Math.random() * 0.1 + 0.95)).toFixed(6);
+          t.profitLoss = parseFloat((t.exitPrice - t.entryPrice).toFixed(6));
+        }
+      }
+    });
+    updateTradeLog();
+    updateProfitChart();
+  }, 60000);
+</script>
+
     <h2>Paper Trader Track Record</h2>
     <p>This section simulates trades based on our signals (simulation logic subject to enhancement):</p>
-    <table id="trade-log-table">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Coin</th>
-      <th>Entry Price</th>
-      <th>Exit Price</th>
-      <th>Profit/Loss ($)</th>
-      <th>Profit/Loss (%)</th>
-    </tr>
-  </thead>
-  <tbody id="trade-log-body">
-    <!-- Auto-traded entries will appear here -->
-  </tbody>
-</table>
+    <table>
       <thead>
         <tr>
           <th>Date</th>
@@ -442,7 +520,6 @@
         appendLog("Data merged and signals computed. Total coins: " + filteredData.length);
         populateDropdownTables();
         if (filteredData.length > 0) renderChart(filteredData[0]);
-        runAutoPaperTrader(filteredData);
       } catch (error) {
         appendLog("Error fetching market data: " + error.message);
       }
@@ -699,58 +776,6 @@
     };
     
     function changePage() {
-      function checkPaperDataPassword() {
-  const password = document.getElementById('paperdata-password').value;
-  if (password === "122216") {
-    document.getElementById('paperdata-login').style.display = "none";
-    document.getElementById('paperdata-content').style.display = "block";
-  } else {
-    alert("Incorrect password. Please try again.");
-  }
-}
-      const paperTrades = [];
-
-function simulateTradeLog(coin) {
-  const now = new Date().toISOString().split("T")[0];
-  const entry = coin.current_price;
-  const exit = coin.current_price * (1 + (coin.price_change_percentage_24h / 100));
-  const pl = exit - entry;
-  const plPercent = (pl / entry) * 100;
-
-  paperTrades.push({
-    date: now,
-    coin: coin.symbol.toUpperCase(),
-    entryPrice: entry,
-    exitPrice: exit,
-    pl: pl,
-    plPercent: plPercent
-  });
-}
-
-function updateTradeLogTable() {
-  const tbody = document.getElementById("trade-log-body");
-  tbody.innerHTML = "";
-  paperTrades.forEach(trade => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${trade.date}</td>
-      <td>${trade.coin}</td>
-      <td>$${trade.entryPrice.toFixed(2)}</td>
-      <td>$${trade.exitPrice.toFixed(2)}</td>
-      <td style="color:${trade.pl >= 0 ? 'lightgreen' : 'salmon'};">$${trade.pl.toFixed(2)}</td>
-      <td style="color:${trade.plPercent >= 0 ? 'lightgreen' : 'salmon'};">${trade.plPercent.toFixed(2)}%</td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-function runAutoPaperTrader(coins) {
-  coins.forEach(coin => {
-    if (coin.tradingSignal && coin.tradingSignal.toLowerCase().includes("buy")) {
-      simulateTradeLog(coin);
-    }
-  });
-  updateTradeLogTable();
-}
       const page = document.getElementById('page-selector').value;
       document.getElementById('main-section').style.display = "none";
       document.getElementById('howto-section').style.display = "none";
