@@ -1,280 +1,6 @@
-
-// removed duplicate fetchWithRetry {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) return await res.json();
-      console.warn("Retry", i + 1, "for", url);
-    } catch (e) {
-      console.warn("Fetch error:", e);
-    }
-    await new Promise(r => setTimeout(r, 800));
-  }
-  throw new Error("Failed to fetch after retries: " + url);
-}
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <!-- Mobile responsiveness -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Screener 4.1</title>
-  <!-- Load Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    /* Global Styles */
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      margin: 0;
-      padding: 10px;
-      background: url('https://source.unsplash.com/1600x900/?american,flag') no-repeat center center fixed;
-      background-size: cover;
-      color: #e6e6e6;
-    }
-    /* Background dimming overlay */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: -1;
-    }
-    /* Navigation Dropdown in Top Left */
-    #nav-dropdown {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-    }
-    #nav-dropdown select {
-      padding: 6px;
-      font-size: 0.9rem;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-    }
-    /* Centered Title */
-    #main-title {
-      text-align: center;
-      font-size: 2.2rem; text-shadow: 1px 1px 3px #000; color: #ffffff;
-      font-weight: bold;
-      margin: 20px 0 10px;
-    }
-    /* Main Container */
-    .container {
-      width: 100%;
-      max-width: 100%;
-      margin: 0 auto;
-      background-color: rgba(26, 26, 26, 0.9);
-      padding: 10px;
-      border-radius: 8px;
-      border: 10px solid;
-      border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
-    }
-    /* Controls */
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 10px;
-    }
-    .controls input,
-    .controls select,
-    .controls button {
-      padding: 8px;
-      font-size: 0.9rem;
-      border: none;
-      border-radius: 4px;
-    }
-    .controls button {
-      background-color: #007700;
-      color: #fff;
-      cursor: pointer;
-    }
-    .controls button:hover {
-      background-color: #005500;
-    }
-    /* Dropdown Tables Styling */
-    details {
-      margin-bottom: 10px;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 4px;
-      padding: 4px;
-      background-color: rgba(26,26,26,0.9);
-      overflow-x: auto;
-      cursor: pointer;
-    }
-    summary {
-      font-size: 1rem;
-      font-weight: bold;
-      color: #ffffff;
-      padding: 4px;
-      cursor: pointer;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 5px;
-      background-color: rgba(26,26,26,0.9);
-    }
-    th, td {
-      padding: 6px;
-      text-align: center;
-      border: 1px solid rgba(0,0,0,0.4);
-      font-size: 0.8rem;
-    }
-    th {
-      background-color: rgba(0,0,0,0.7);
-      color: #ffffff;
-    }
-    tr:nth-child(even) {
-      background-color: rgba(0,0,0,0.5);
-    }
-    tr:hover {
-      background-color: rgba(0,0,0,0.7);
-    }
-    /* Chart Styling */
-    canvas {
-      width: 100%;
-      margin-top: 10px;
-      background-color: #0e0e0e;
-      border-radius: 4px;
-    }
-    #price-chart {
-      height: 300px;
-    }
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0, 0, 0, 0.85);
-    }
-    .modal-content {
-      position: relative;
-      background-color: #1a1a1a;
-      margin: 10% auto;
-      padding: 10px;
-      border: 1px solid #444;
-      width: 90%;
-      max-width: 600px;
-      border-radius: 8px;
-      color: #e6e6e6;
-    }
-    .close {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      color: #aaa;
-      font-size: 24px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #indicator-chart-container {
-      height: 200px;
-      margin-top: 10px;
-    }
-    /* Log Styling (for Paper Data Page) */
-    .log {
-      background-color: rgba(0, 0, 0, 0.8);
-      color: #ccc;
-      padding: 10px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid rgba(255,255,255,0.2);
-      margin-top: 10px;
-    }
-    /* Legal Disclaimer */
-    #legal {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: rgba(26,26,26,0.9);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 4px;
-      font-size: 0.8rem;
-      color: #aaa;
-      text-align: center;
-    }
-    /* Additional Page Sections */
-    .page-section {
-      display: none;
-      margin: 10px auto;
-      background-color: rgba(26,26,26,0.9);
-      padding: 10px;
-      border-radius: 8px;
-      border: 10px solid;
-      border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
-      color: #e6e6e6;
-    }
-    /* Responsive adjustments for smaller screens */
-    @media (max-width: 600px) {
-      #main-title { font-size: 1.8rem; margin: 15px 0; }
-      .controls input, .controls select, .controls button { padding: 6px; font-size: 0.8rem; }
-      summary { font-size: 0.9rem; }
-      th, td { padding: 4px; font-size: 0.7rem; }
-      #price-chart { height: 250px; }
-      #indicator-chart-container { height: 150px; }
-    }
-  </style>
-
-<style>
-canvas {
-  background-color: #0f0f0f !important;
-  border-radius: 6px;
-}
-.chartjs-render-monitor {
-  color: #ffffff !important;
-}
-</style>
-
-
-<style>
-  .spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ccc;
-    border-top: 2px solid #33ffcc;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-left: 6px;
-  }
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-</style>
-
-
-<script>
-async function fetchWithRetry(url, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) return await res.json();
-      console.warn("Retry", i + 1, "for", url);
-    } catch (e) {
-      console.warn("Fetch error:", e);
-    }
-    await new Promise(r => setTimeout(r, 800));
-  }
-  throw new Error("Failed to fetch after retries: " + url);
-}
-</script>
-
-</head>
-<body>
   <!-- Navigation Dropdown -->
   <div id="nav-dropdown">
     <select id="page-selector" onchange="changePage()">
@@ -286,7 +12,7 @@ async function fetchWithRetry(url, retries = 3) {
   </div>
   
   <!-- Centered Title -->
-  <div id="main-title">Screener 4.1</div>
+  <div id="main-title" style="margin-top: 30px; padding-top: 5px;">Screener 5.2</div>
   
   <!-- Main Screener Section (Logs removed) -->
   <div id="main-section" style="display:none;">
@@ -341,7 +67,7 @@ async function fetchWithRetry(url, retries = 3) {
 
 <div id="howto-section" class="page-section">
     <h2>How To Use</h2>
-    <p>Welcome to Screener 4.1! Follow these steps to use the tool:</p>
+    <p>Welcome to Screener 5.2! Follow these steps to use the tool:</p>
     <ul>
       <li>Enter a coin name or symbol in the search box to filter results.</li>
       <li>Select your preferred currency from the dropdown and click "Refresh Data" to update information.</li>
@@ -1046,6 +772,102 @@ async function fetchData() {
     setStatus("Failed to fetch live data. Please try again.");
   }
 }
+</script>
+
+
+<script>
+// Profitability Optimizer v1.0 - Filters & Dynamic Trading Logic
+
+function meetsOptimizerCriteria(coin) {
+  if (!coin || !coin.current_price || !coin.market_cap || !coin.total_volume || !coin.price_change_percentage_24h) return false;
+
+  const rsi = coin.rsi || 45; // fallback value
+  const macd = coin.macd || 0; // placeholder if missing
+  const volumeSpike = (coin.total_volume / coin.market_cap) > 0.10;
+  const bullishRSI = rsi > 35 && rsi < 70;
+  const bullishMACD = macd > 0;
+
+  return bullishRSI && bullishMACD && volumeSpike;
+}
+
+function getConfidenceScore(coin) {
+  let score = 0;
+  if ((coin.total_volume / coin.market_cap) > 0.10) score += 1;
+  if (coin.macd > 0) score += 1;
+  if (coin.rsi >= 40 && coin.rsi <= 70) score += 1;
+  if (coin.profitPotential > 10) score += 1;
+  return score;
+}
+
+function runAutoPaperTrader() {
+  const table = document.getElementById("trade-log-body");
+  if (!table || !filteredData || !filteredData.length) return;
+
+  const now = new Date().toLocaleTimeString();
+  filteredData.forEach(coin => {
+    const signal = coin.tradingSignal;
+    const isValid = ["Buy", "Strong Buy", "Ultra Strong Buy", "Derivative Trade"].includes(signal);
+    const meetsCriteria = meetsOptimizerCriteria(coin);
+    if (!isValid || !meetsCriteria) return;
+
+    const confidence = getConfidenceScore(coin);
+    const entryPrice = coin.current_price;
+    const holdTime = confidence >= 3 ? 12 : confidence >= 2 ? 6 : 2;
+    const targetGain = confidence * 2;
+    const exitPrice = +(entryPrice * (1 + (targetGain / 100))).toFixed(4);
+
+    paperTrades.push({
+      coin: coin.symbol.toUpperCase(),
+      signal,
+      entryPrice,
+      holdTime,
+      time: now,
+      exitPrice: null,
+      profitLoss: null,
+      confidence
+    });
+  });
+
+  updateTradeLog();
+}
+</script>
+
+
+<style>
+#floating-summary {
+  position: fixed;
+  bottom: 15px;
+  right: 10px;
+  background: #111;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px;
+  color: #eee;
+  font-size: 0.8rem;
+  z-index: 1000;
+  box-shadow: 0 0 6px #000;
+}
+</style>
+<div id="floating-summary">
+  <div><strong>Active Trades:</strong> <span id="summary-count">0</span></div>
+  <div><strong>Win %:</strong> <span id="summary-win">0%</span></div>
+  <div><strong>Avg P/L:</strong> <span id="summary-avg">0%</span></div>
+</div>
+
+
+<script>
+function updateFloatingSummary() {
+  const wins = paperTrades.filter(t => t.profitLoss > 0).length;
+  const total = paperTrades.length;
+  const avg = paperTrades.filter(t => t.profitLoss !== null).reduce((acc, t) => acc + t.profitLoss, 0) / (total || 1);
+
+  document.getElementById("summary-count").innerText = total;
+  document.getElementById("summary-win").innerText = total ? ((wins / total) * 100).toFixed(1) + "%" : "0%";
+  document.getElementById("summary-avg").innerText = avg.toFixed(2) + "%";
+}
+
+// Hook into existing interval
+setInterval(updateFloatingSummary, 3000);
 </script>
 
 </body>
