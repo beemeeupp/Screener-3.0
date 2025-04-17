@@ -871,5 +871,57 @@ window.onload = function() {
 };
 </script>
 
+
+<script>
+async function renderIndicatorChartFromTrade(coinId) {
+  const currency = document.getElementById('currency-select')?.value || 'usd';
+  try {
+    const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=${currency}&days=30`;
+    const response = await fetch(url);
+    const data = await response.json();
+    const historicalData = data.prices.map(p => ({
+      date: new Date(p[0]).toLocaleDateString(),
+      price: p[1]
+    }));
+
+    const ctx = document.getElementById('indicator-chart')?.getContext('2d');
+    if (!ctx) return;
+    if (window.indicatorChart) window.indicatorChart.destroy();
+
+    window.indicatorChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: historicalData.map(d => d.date),
+        datasets: [{
+          label: `${coinId.toUpperCase()} Price`,
+          data: historicalData.map(d => d.price),
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          fill: true,
+          tension: 0.2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: { color: '#fff' },
+            grid: { color: 'rgba(200,200,200,0.1)' }
+          },
+          x: {
+            ticks: { color: '#fff' },
+            grid: { color: 'rgba(200,200,200,0.1)' }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Chart rendering failed:", error);
+  }
+}
+</script>
+
 </body>
 </html>
