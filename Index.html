@@ -870,5 +870,82 @@ function updateFloatingSummary() {
 setInterval(updateFloatingSummary, 3000);
 </script>
 
+
+<script>
+document.getElementById("modal-close").onclick = () => {
+  document.getElementById("signal-modal").style.display = "none";
+};
+window.onclick = function(event) {
+  const modal = document.getElementById("signal-modal");
+  if (event.target === modal) modal.style.display = "none";
+};
+
+function handleCoinClick(coinId) {
+  const coin = (window.filteredData || []).find(c => c.id === coinId);
+  if (!coin) return;
+  showSignalDetails(coin, 1);
+  renderIndicatorChart(coin);
+  document.getElementById("signal-modal").style.display = "block";
+}
+
+async function renderIndicatorChart(coin) {
+  const currency = document.getElementById('currency-select')?.value || 'usd';
+  try {
+    const url = `https://api.coingecko.com/api/v3/coins/${coin.id}/market_chart?vs_currency=${currency}&days=30`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const points = data.prices.map(d => ({
+      date: new Date(d[0]).toLocaleDateString(),
+      price: d[1]
+    }));
+    const ctx = document.getElementById("indicator-chart").getContext("2d");
+    if (window.indicatorChart) window.indicatorChart.destroy();
+    window.indicatorChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: points.map(p => p.date),
+        datasets: [{
+          label: `${coin.name} Price`,
+          data: points.map(p => p.price),
+          borderColor: '#00ccff',
+          backgroundColor: 'rgba(0,204,255,0.2)',
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            ticks: { color: '#fff' },
+            grid: { color: 'rgba(200,200,200,0.1)' }
+          },
+          x: {
+            ticks: { color: '#fff' },
+            grid: { color: 'rgba(200,200,200,0.1)' }
+          }
+        }
+      }
+    });
+  } catch (e) {
+    console.error("Chart error", e);
+  }
+}
+
+function showSignalDetails(coin, holdDays) {
+  const el = document.getElementById("modal-body");
+  el.innerHTML = `
+    <h3>${coin.name} (${coin.symbol.toUpperCase()})</h3>
+    <p><b>Current Price:</b> $${coin.current_price.toFixed(4)}</p>
+    <p><b>Market Cap:</b> $${(coin.market_cap || 0).toLocaleString()}</p>
+    <p><b>24h Change:</b> ${coin.price_change_percentage_24h?.toFixed(2)}%</p>
+    <p><b>Trade Signal:</b> ${coin.tradingSignal}</p>
+    <p><b>Projected Gain:</b> ${coin.profitPotential.toFixed(2)}%</p>
+    <p><b>Confidence Score:</b> ${getConfidenceScore(coin)}</p>
+    <p><b>Strategy:</b> Buy and hold ${holdDays}h unless target hit earlier.</p>
+  `;
+}
+</script>
+
 </body>
 </html>
