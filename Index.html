@@ -279,18 +279,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>2025-04-10</td>
-          <td>BTC</td>
-          <td>Buy</td>
-          <td>+5.20%</td>
-        </tr>
-        <tr>
-          <td>2025-04-15</td>
-          <td>ETH</td>
-          <td>Moderate Buy</td>
-          <td>+3.80%</td>
-        </tr>
+        
       </tbody>
     </table>
   </div>
@@ -927,16 +916,16 @@ window.handleCoinClick = function(coinId) {
 let paperTrades = [];
 let profitHistory = [];
 
-function simulateAutoTradesFromScreener() {
-  if (!window.filteredData) return;
+function simulateScreenerTriggeredTrades() {
+  if (!window.filteredData || !Array.isArray(filteredData)) return;
 
   filteredData.forEach(coin => {
-    if (!coin.tradingSignal || coin.tradingSignal === "Hold") return;
+    if (!coin.tradingSignal || coin.tradingSignal.toLowerCase().includes("hold")) return;
     if (paperTrades.find(t => t.name === coin.name)) return;
 
     const entry = coin.current_price;
     const target = entry * 1.05;
-    const timeout = 8000;
+    const timeout = 6000;
 
     const trade = {
       name: coin.name,
@@ -955,10 +944,10 @@ function simulateAutoTradesFromScreener() {
     setTimeout(() => {
       if (!trade.active) return;
       trade.exitPrice = target.toFixed(4);
-      const profit = parseFloat((target - entry) / entry * 100).toFixed(2);
-      trade.pnl = profit + "%";
+      const pnl = ((target - entry) / entry * 100).toFixed(2);
+      trade.pnl = pnl + "%";
       trade.active = false;
-      profitHistory.push(parseFloat(profit));
+      profitHistory.push(parseFloat(pnl));
       updatePerformanceChart();
       updatePaperTraderTable();
       updateSummary();
@@ -1009,20 +998,14 @@ function updatePerformanceChart() {
       responsive: true,
       animation: false,
       scales: {
-        y: {
-          ticks: { color: '#000' },
-          grid: { color: 'rgba(0,0,0,0.1)' }
-        },
-        x: {
-          ticks: { color: '#000' },
-          grid: { color: 'rgba(0,0,0,0.1)' }
-        }
+        y: { ticks: { color: '#000' }, grid: { color: 'rgba(0,0,0,0.1)' } },
+        x: { ticks: { color: '#000' }, grid: { color: 'rgba(0,0,0,0.1)' } }
       }
     }
   });
 }
 
-setInterval(simulateAutoTradesFromScreener, 5000);
+setInterval(simulateScreenerTriggeredTrades, 6000);
 </script>
 
 </body>
