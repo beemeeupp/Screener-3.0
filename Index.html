@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <!-- Mobile responsiveness -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Screener 4.1</title>
   <!-- Load Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -254,7 +254,26 @@
   </div>
   
   <!-- How To Use Section -->
-  <div id="howto-section" class="page-section">
+  
+<div id="trackrecord-section" class="page-section">
+  <h2>Paper Trader Track Record</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Coin</th>
+        <th>Signal</th>
+        <th>Entry Price</th>
+        <th>Hold Time</th>
+        <th>Time</th>
+        <th>Exit Price</th>
+        <th>P/L</th>
+      </tr>
+    </thead>
+    <tbody id="trade-log-body"></tbody>
+  </table>
+</div>
+
+<div id="howto-section" class="page-section">
     <h2>How To Use</h2>
     <p>Welcome to Screener 4.1! Follow these steps to use the tool:</p>
     <ul>
@@ -822,6 +841,23 @@ if (!window.filteredData) {
 } else {
   logDebug("filteredData exists. Length: " + filteredData.length);
 }
+</script>
+
+
+<script>
+function smoothLoadCheck() {
+  logDebug("Checking DOM readiness and filteredData...");
+  if (!window.filteredData || !Array.isArray(filteredData) || filteredData.length === 0) {
+    logDebug("filteredData is empty or not yet loaded. Retrying...");
+    setTimeout(smoothLoadCheck, 1000);
+  } else {
+    logDebug("filteredData loaded with " + filteredData.length + " coins.");
+    runAutoPaperTrader();
+  }
+}
+window.onload = function() {
+  setTimeout(smoothLoadCheck, 1000);
+};
 </script>
 
 </body>
