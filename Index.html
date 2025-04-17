@@ -927,15 +927,15 @@ window.handleCoinClick = function(coinId) {
 let paperTrades = [];
 let profitHistory = [];
 
-function simulatePortfolioTrades() {
+function simulateSignalTrades() {
   if (!window.filteredData || !Array.isArray(filteredData)) return;
 
   filteredData.forEach(coin => {
-    const existing = paperTrades.find(t => t.name === coin.name && t.active);
-    if (!coin.tradingSignal || coin.tradingSignal === "Hold" || existing) return;
+    const exists = paperTrades.find(t => t.name === coin.name && t.active);
+    if (!coin.tradingSignal || coin.tradingSignal === "Hold" || exists) return;
 
     const entryPrice = coin.current_price;
-    const targetPrice = entryPrice * 1.05;
+    const target = entryPrice * 1.05;
     const timestamp = new Date().toLocaleString();
 
     const trade = {
@@ -955,15 +955,15 @@ function simulatePortfolioTrades() {
 
     setTimeout(() => {
       if (!trade.active) return;
-      trade.exitPrice = targetPrice.toFixed(4);
-      const pnl = ((targetPrice - entryPrice) / entryPrice * 100).toFixed(2);
+      trade.exitPrice = target.toFixed(4);
+      const pnl = ((target - entryPrice) / entryPrice * 100).toFixed(2);
       trade.pnl = pnl + "%";
       trade.active = false;
       profitHistory.push(parseFloat(pnl));
       updatePerformanceChart();
       updatePaperTraderTable();
       updateSummary();
-    }, 9000);
+    }, 10000);
   });
 }
 
@@ -1022,7 +1022,7 @@ function updatePerformanceChart() {
   });
 }
 
-setInterval(simulatePortfolioTrades, 6000);
+setInterval(simulateSignalTrades, 6000);
 </script>
 
 </body>
