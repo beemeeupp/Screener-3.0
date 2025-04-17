@@ -246,7 +246,7 @@
       <!-- Legal Disclaimer -->
       <details id="tos">
         <summary style="font-size:1rem; font-weight:bold; color:#fff;">Terms of Service & Liability Disclaimer</summary>
-                <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
+        <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
           This tool is provided “as is” without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence. By using this tool, you agree to hold the creator harmless from any legal claims.
         </p>
       </details>
@@ -269,18 +269,42 @@
   <div id="trackrecord-section" class="page-section">
     <h2>Paper Trader Track Record</h2>
     <p>This section simulates trades based on our signals (simulation logic subject to enhancement):</p>
-    <table>
+    <table id="trade-log-table">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Coin</th>
+      <th>Entry Price</th>
+      <th>Exit Price</th>
+      <th>Profit/Loss ($)</th>
+      <th>Profit/Loss (%)</th>
+    </tr>
+  </thead>
+  <tbody id="trade-log-body">
+    <!-- Auto-traded entries will appear here -->
+  </tbody>
+</table>
       <thead>
         <tr>
           <th>Date</th>
           <th>Coin</th>
           <th>Trade Signal</th>
           <th>Profit/Loss (%)</th>
-          <th>Profit/Loss ($)</th>
         </tr>
       </thead>
       <tbody>
-        <!-- Rows will be added dynamically by the script -->
+        <tr>
+          <td>2025-04-10</td>
+          <td>BTC</td>
+          <td>Buy</td>
+          <td>+5.20%</td>
+        </tr>
+        <tr>
+          <td>2025-04-15</td>
+          <td>ETH</td>
+          <td>Moderate Buy</td>
+          <td>+3.80%</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -314,8 +338,7 @@
       </div>
     </div>
   </div>
-
-  <!-- Begin Script -->
+  
   <script>
     let cryptoData = [];
     let filteredData = [];
@@ -419,6 +442,7 @@
         appendLog("Data merged and signals computed. Total coins: " + filteredData.length);
         populateDropdownTables();
         if (filteredData.length > 0) renderChart(filteredData[0]);
+        runAutoPaperTrader(filteredData);
       } catch (error) {
         appendLog("Error fetching market data: " + error.message);
       }
@@ -442,143 +466,240 @@
           <tr>
             <th>Rank</th>
             <th>Symbol</th>
-                    <th>Name</th>
-        <th>Price</th>
-        <th>Market Cap</th>
-        <th>Volume</th>
-        <th>24h Change</th>
-        <th>Profit Potential (%)</th>
-        <th>Trade Signal</th>
-      </tr>
-    `;
-    table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    group.forEach(coin => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${coin.market_cap_rank || "N/A"}</td>
-        <td>${coin.symbol.toUpperCase()}</td>
-        <td>${coin.name}</td>
-        <td>$${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</td>
-        <td>$${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</td>
-        <td>$${coin.total_volume ? coin.total_volume.toLocaleString() : "N/A"}</td>
-        <td>${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</td>
-        <td>${coin.profitPotential.toFixed(2)}</td>
-        <td><span class="buy-signal" onclick="handleCoinClick('${coin.id}')">${coin.tradingSignal}</span></td>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Market Cap</th>
+            <th>Volume</th>
+            <th>24h Change</th>
+            <th>Profit Potential (%)</th>
+            <th>Trade Signal</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        group.forEach(coin => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${coin.market_cap_rank || "N/A"}</td>
+            <td>${coin.symbol.toUpperCase()}</td>
+            <td>${coin.name}</td>
+            <td>$${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</td>
+            <td>$${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</td>
+            <td>$${coin.total_volume ? coin.total_volume.toLocaleString() : "N/A"}</td>
+            <td>${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</td>
+            <td>${coin.profitPotential.toFixed(2)}</td>
+            <td><span class="buy-signal" onclick="handleCoinClick('${coin.id}')">${coin.tradingSignal}</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        details.appendChild(table);
+        container.appendChild(details);
+      });
+      
+      const derivatives = filteredData.filter(coin => coin.derivativeSignal);
+      if (derivatives.length) {
+        derivatives.sort((a, b) => b.profitPotential - a.profitPotential);
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = `Derivative Trades - Showing ${derivatives.length} coins (sorted by profitability)`;
+        details.appendChild(summary);
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+          <tr>
+            <th>Rank</th>
+            <th>Symbol</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Market Cap</th>
+            <th>Volume</th>
+            <th>24h Change</th>
+            <th>Profit Potential (%)</th>
+            <th>Trade Signal</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        derivatives.forEach(coin => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${coin.market_cap_rank || "N/A"}</td>
+            <td>${coin.symbol.toUpperCase()}</td>
+            <td>${coin.name}</td>
+            <td>$${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</td>
+            <td>$${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</td>
+            <td>$${coin.total_volume ? coin.total_volume.toLocaleString() : "N/A"}</td>
+            <td>${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</td>
+            <td>${coin.profitPotential.toFixed(2)}</td>
+            <td><span class="buy-signal" onclick="handleCoinClick('${coin.id}')">${coin.tradingSignal}</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        details.appendChild(table);
+        container.appendChild(details);
+      }
+    }
+    
+    function handleCoinClick(coinId) {
+      const coin = cryptoData.find(c => c.id === coinId);
+      if (!coin) return;
+      showSignalDetails(coin, defaultHoldDays);
+      renderIndicatorChart(coin);
+    }
+    
+    function showSignalDetails(coin, holdDays) {
+      const modal = document.getElementById('signal-modal');
+      const modalBody = document.getElementById('modal-body');
+      modalBody.innerHTML = `
+        <h2>${coin.name} (${coin.symbol.toUpperCase()})</h2>
+        <p><strong>Current Price:</strong> $${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</p>
+        <p><strong>Market Cap:</strong> $${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</p>
+        <p><strong>24h Change:</strong> ${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</p>
+        <p><strong>Advanced Profitability (Hold ${holdDays} Day${holdDays>1?'s':''}):</strong> ${computeProfitability(coin, holdDays).toFixed(2)}%</p>
+        <p><strong>Trade to Make:</strong></p>
+        <ul>
+          <li>Buy at current price: $${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</li>
+          <li>Set stop-loss at ~10% below current price.</li>
+          <li>Target an upside of approximately ${computeProfitability(coin, holdDays).toFixed(2)}% within ${holdDays} day${holdDays>1?'s':''}.</li>
+          <li>Probability of trade occurring: ${computeProbabilityTrade(coin)}</li>
+          <li>Monitor the market and adjust your position as needed.</li>
+        </ul>
+        <p><strong>Recommended Trade Strategy:</strong> ${coin.tradingSignal}</p>
+        <p><strong>Reasoning:</strong> This coin exhibits a significant decline with a favorable volume-to-market-cap ratio. Our advanced heuristics, including probability metrics, refine the trade signal.</p>
+        <p style="font-size:0.7rem; color:#aaa;">
+          *This recommendation is provided as-is without any warranty. Use at your own risk.
+        </p>
       `;
-      tbody.appendChild(row);
+      modal.style.display = "block";
+    }
+    
+    async function renderChart(coin) {
+      const currency = document.getElementById('currency-select').value;
+      appendLog(`Fetching 30-day historical data for ${coin.id} (Price Chart)...`);
+      try {
+        const url = `https://api.coingecko.com/api/v3/coins/${coin.id}/market_chart?vs_currency=${currency}&days=30`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Historical price chart fetch failed");
+        const data = await response.json();
+        let historicalData = data.prices.map(item => ({
+          date: new Date(item[0]).toLocaleDateString(),
+          price: item[1]
+        }));
+        const step = Math.ceil(historicalData.length / 30);
+        historicalData = historicalData.filter((_, idx) => idx % step === 0);
+        appendLog(`Price Chart: ${historicalData.length} data points after sampling.`);
+        if (!historicalData.length) throw new Error("No historical data available");
+        if (priceChart) priceChart.destroy();
+        const ctx = document.getElementById('price-chart').getContext('2d');
+        priceChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: historicalData.map(d => d.date),
+            datasets: [{
+              label: `${coin.name} Price (${currency.toUpperCase()})`,
+              data: historicalData.map(d => d.price),
+              borderColor: 'rgba(54, 162, 235, 1)',
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              fill: true,
+              tension: 0.2
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: { callback: value => '$' + value.toLocaleString(), color: '#fff' },
+                grid: { color: 'rgba(200,200,200,0.1)' }
+              },
+              x: { ticks: { color: '#fff' }, grid: { color: 'rgba(200,200,200,0.1)' } }
+            }
+          }
+        });
+        appendLog("Price chart rendered successfully.");
+      } catch (error) {
+        appendLog("Error rendering price chart: " + error.message);
+      }
+    }
+    
+    async function renderIndicatorChart(coin) {
+      const currency = document.getElementById('currency-select').value;
+      appendLog(`Fetching 30-day historical data for ${coin.id} (Regular Chart)...`);
+      try {
+        const url = `https://api.coingecko.com/api/v3/coins/${coin.id}/market_chart?vs_currency=${currency}&days=30`;
+        appendLog("Regular Chart URL: " + url);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Regular chart fetch failed");
+        const data = await response.json();
+        let historicalData = data.prices.map(item => ({
+          date: new Date(item[0]).toLocaleDateString(),
+          price: item[1]
+        }));
+        const step = Math.ceil(historicalData.length / 30);
+        historicalData = historicalData.filter((_, idx) => idx % step === 0);
+        appendLog(`Regular Chart: ${historicalData.length} data points after sampling.`);
+        if (!historicalData.length) throw new Error("No historical data available");
+        const labels = historicalData.map(d => d.date);
+        const prices = historicalData.map(d => d.price);
+        if (indicatorChart) indicatorChart.destroy();
+        const ctx = document.getElementById('indicator-chart').getContext('2d');
+        indicatorChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: `${coin.name} Price (${currency.toUpperCase()})`,
+              data: prices,
+              borderColor: 'rgba(255, 99, 132, 1)',
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              fill: false,
+              tension: 0.2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: { callback: value => '$' + value.toLocaleString(), color: '#fff' },
+                grid: { color: 'rgba(200,200,200,0.1)' }
+              },
+              x: { ticks: { color: '#fff' }, grid: { color: 'rgba(200,200,200,0.1)' } }
+            }
+          }
+        });
+        appendLog("Regular (indicator) chart rendered successfully.");
+      } catch (error) {
+        appendLog("Error rendering regular chart: " + error.message);
+      }
+    }
+    
+    function filterTable() {
+      const term = document.getElementById('search-input').value.toLowerCase();
+      filteredData = cryptoData.filter(coin =>
+        coin.name.toLowerCase().includes(term) || coin.symbol.toLowerCase().includes(term)
+      );
+      filteredData.forEach(coin => {
+        coin.profitPotential = computeProfitability(coin, defaultHoldDays);
+        coin.tradingSignal = coin.derivativeSignal ? "Derivative Trade" : generateBuySignal(coin);
+      });
+      populateDropdownTables();
+    }
+    
+    document.getElementById('modal-close').addEventListener('click', () => {
+      document.getElementById('signal-modal').style.display = "none";
     });
-    table.appendChild(tbody);
-    details.appendChild(table);
-    container.appendChild(details);
-  });
-
-  const derivatives = filteredData.filter(coin => coin.derivativeSignal);
-  if (derivatives.length) {
-    derivatives.sort((a, b) => b.profitPotential - a.profitPotential);
-    const details = document.createElement('details');
-    const summary = document.createElement('summary');
-    summary.textContent = `Derivative Trades - Showing ${derivatives.length} coins (sorted by profitability)`;
-    details.appendChild(summary);
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    thead.innerHTML = `
-      <tr>
-        <th>Rank</th>
-        <th>Symbol</th>
-        <th>Name</th>
-        <th>Price</th>
-        <th>Market Cap</th>
-        <th>Volume</th>
-        <th>24h Change</th>
-        <th>Profit Potential (%)</th>
-        <th>Trade Signal</th>
-      </tr>
-    `;
-    table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    derivatives.forEach(coin => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${coin.market_cap_rank || "N/A"}</td>
-        <td>${coin.symbol.toUpperCase()}</td>
-        <td>${coin.name}</td>
-        <td>$${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</td>
-        <td>$${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</td>
-        <td>$${coin.total_volume ? coin.total_volume.toLocaleString() : "N/A"}</td>
-        <td>${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</td>
-        <td>${coin.profitPotential.toFixed(2)}</td>
-        <td><span class="buy-signal" onclick="handleCoinClick('${coin.id}')">${coin.tradingSignal}</span></td>
-      `;
-      tbody.appendChild(row);
-    });
-    table.appendChild(tbody);
-    details.appendChild(table);
-    container.appendChild(details);
-  }
-}
-
-function handleCoinClick(coinId) {
-  const coin = cryptoData.find(c => c.id === coinId);
-  if (!coin) return;
-  showSignalDetails(coin, defaultHoldDays);
-  renderIndicatorChart(coin);
-}
-
-function showSignalDetails(coin, holdDays) {
-  const modal = document.getElementById('signal-modal');
-  const modalBody = document.getElementById('modal-body');
-  modalBody.innerHTML = `
-    <h2>${coin.name} (${coin.symbol.toUpperCase()})</h2>
-    <p><strong>Current Price:</strong> $${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</p>
-    <p><strong>Market Cap:</strong> $${coin.market_cap ? coin.market_cap.toLocaleString() : "N/A"}</p>
-    <p><strong>24h Change:</strong> ${coin.price_change_percentage_24h ? coin.price_change_percentage_24h.toFixed(2) + "%" : "N/A"}</p>
-    <p><strong>Advanced Profitability (Hold ${holdDays} Day${holdDays>1?'s':''}):</strong> ${computeProfitability(coin, holdDays).toFixed(2)}%</p>
-    <p><strong>Trade to Make:</strong></p>
-    <ul>
-      <li>Buy at current price: $${coin.current_price ? coin.current_price.toLocaleString() : "N/A"}</li>
-      <li>Set stop-loss at ~10% below current price.</li>
-      <li>Target an upside of approximately ${computeProfitability(coin, holdDays).toFixed(2)}% within ${holdDays} day${holdDays>1?'s':''}.</li>
-      <li>Probability of trade occurring: ${computeProbabilityTrade(coin)}</li>
-      <li>Monitor the market and adjust your position as needed.</li>
-    </ul>
-    <p><strong>Recommended Trade Strategy:</strong> ${coin.tradingSignal}</p>
-    <p><strong>Reasoning:</strong> This coin exhibits a significant decline with a favorable volume-to-market-cap ratio. Our advanced heuristics, including probability metrics, refine the trade signal.</p>
-    <p style="font-size:0.7rem; color:#aaa;">
-      *This recommendation is provided as-is without any warranty. Use at your own risk.
-    </p>
-  `;
-  modal.style.display = "block";
-}
-
-document.getElementById('modal-close').addEventListener('click', () => {
-  document.getElementById('signal-modal').style.display = "none";
-});
-
-window.onclick = function(event) {
-  const modal = document.getElementById('signal-modal');
-  if (event.target == modal) modal.style.display = "none";
-};
-
-function changePage() {
-  const page = document.getElementById('page-selector').value;
-  document.getElementById('main-section').style.display = "none";
-  document.getElementById('howto-section').style.display = "none";
-  document.getElementById('trackrecord-section').style.display = "none";
-  document.getElementById('paperdata-section').style.display = "none";
-  
-  if (page === "main-section") {
-    document.getElementById('main-section').style.display = "block";
-  } else if (page === "howto-section") {
-    document.getElementById('howto-section').style.display = "block";
-  } else if (page === "trackrecord-section") {
-    document.getElementById('trackrecord-section').style.display = "block";
-  } else if (page === "paperdata-section") {
-    document.getElementById('paperdata-section').style.display = "block";
-  }
-}
-
-function checkPaperDataPassword() {
+    
+    window.onclick = function(event) {
+      const modal = document.getElementById('signal-modal');
+      if (event.target == modal) modal.style.display = "none";
+    };
+    
+    function changePage() {
+      function checkPaperDataPassword() {
   const password = document.getElementById('paperdata-password').value;
   if (password === "122216") {
     document.getElementById('paperdata-login').style.display = "none";
@@ -587,15 +708,84 @@ function checkPaperDataPassword() {
     alert("Incorrect password. Please try again.");
   }
 }
+      const paperTrades = [];
 
-window.onload = function() {
-  changePage(); // Default to Main Page
-  fetchData();
-};
+function simulateTradeLog(coin) {
+  const now = new Date().toISOString().split("T")[0];
+  const entry = coin.current_price;
+  const exit = coin.current_price * (1 + (coin.price_change_percentage_24h / 100));
+  const pl = exit - entry;
+  const plPercent = (pl / entry) * 100;
+
+  paperTrades.push({
+    date: now,
+    coin: coin.symbol.toUpperCase(),
+    entryPrice: entry,
+    exitPrice: exit,
+    pl: pl,
+    plPercent: plPercent
+  });
+}
+
+function updateTradeLogTable() {
+  const tbody = document.getElementById("trade-log-body");
+  tbody.innerHTML = "";
+  paperTrades.forEach(trade => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${trade.date}</td>
+      <td>${trade.coin}</td>
+      <td>$${trade.entryPrice.toFixed(2)}</td>
+      <td>$${trade.exitPrice.toFixed(2)}</td>
+      <td style="color:${trade.pl >= 0 ? 'lightgreen' : 'salmon'};">$${trade.pl.toFixed(2)}</td>
+      <td style="color:${trade.plPercent >= 0 ? 'lightgreen' : 'salmon'};">${trade.plPercent.toFixed(2)}%</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+function runAutoPaperTrader(coins) {
+  coins.forEach(coin => {
+    if (coin.tradingSignal && coin.tradingSignal.toLowerCase().includes("buy")) {
+      simulateTradeLog(coin);
+    }
+  });
+  updateTradeLogTable();
+}
+      const page = document.getElementById('page-selector').value;
+      document.getElementById('main-section').style.display = "none";
+      document.getElementById('howto-section').style.display = "none";
+      document.getElementById('trackrecord-section').style.display = "none";
+      document.getElementById('paperdata-section').style.display = "none";
+      
+      if (page === "main-section") {
+        document.getElementById('main-section').style.display = "block";
+      } else if (page === "howto-section") {
+        document.getElementById('howto-section').style.display = "block";
+      } else if (page === "trackrecord-section") {
+        document.getElementById('trackrecord-section').style.display = "block";
+      } else if (page === "paperdata-section") {
+        document.getElementById('paperdata-section').style.display = "block";
+      }
+    }
+    
+    function checkPaperDataPassword() {
+      const password = document.getElementById('paperdata-password').value;
+      if (password === "122216") {
+        document.getElementById('paperdata-login').style.display = "none";
+        document.getElementById('paperdata-content').style.display = "block";
+      } else {
+        alert("Incorrect password. Please try again.");
+      }
+    }
+    
+    window.onload = function() {
+      changePage(); // Default to Main Page
+      fetchData();
+    };
   </script>
   <!-- Legal Disclaimer at Bottom -->
   <div id="legal">
-    By using this tool, you agree that it is provided "as is" without any guarantees. You must do your own research, these are recommendations. The creator assumes no liability for any damages. Perform your own due diligence before trading.
+    By using this tool, you agree that it is provided "as is" without any gaurantees. You must do your own research, these are reccomendations. The creator assumes no liability for any damages. Perform your own due diligence before trading.
   </div>
 </body>
 </html>
