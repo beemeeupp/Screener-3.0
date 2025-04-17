@@ -88,8 +88,45 @@ button {
   
   <!-- How To Use Section -->
   
+
+<div id="main-section" class="page-section" style="display: block;">
+  <div class="controls">
+    <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
+    <select id="currency-select" onchange="fetchData()">
+      <option value="usd">USD</option>
+      <option value="eur">EUR</option>
+    </select>
+    <button onclick="fetchData()">Refresh Data</button>
+  </div>
+  <div id="dropdown-container"></div>
+  <canvas id="price-chart"></canvas>
+  <details id="tos">
+    <summary>Terms of Service & Liability Disclaimer</summary>
+    <p>This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability...</p>
+  </details>
+</div>
+
 <div id="trackrecord-section" class="page-section">
-  <h2>Paper Trader Track Record</h2>
+  
+<div id="main-section" class="page-section" style="display: block;">
+  <div class="controls">
+    <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
+    <select id="currency-select" onchange="fetchData()">
+      <option value="usd">USD</option>
+      <option value="eur">EUR</option>
+    </select>
+    <button onclick="fetchData()">Refresh Data</button>
+  </div>
+  <div id="dropdown-container"></div>
+  <canvas id="price-chart"></canvas>
+  <details id="tos">
+    <summary>Terms of Service & Liability Disclaimer</summary>
+    <p>This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability...</p>
+  </details>
+</div>
+
+<div id="trackrecord-section" class="page-section">
+<h2>Paper Trader Track Record</h2>
   <table>
     <thead>
       <tr>
@@ -104,6 +141,7 @@ button {
     </thead>
     <tbody id="trade-log-body"></tbody>
   </table>
+</div>
 </div>
 
 <div id="howto-section" class="page-section">
@@ -120,17 +158,37 @@ button {
   <!-- Paper Trader Track Record Section -->
   
 
+
+<div id="main-section" class="page-section" style="display: block;">
+  <div class="controls">
+    <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
+    <select id="currency-select" onchange="fetchData()">
+      <option value="usd">USD</option>
+      <option value="eur">EUR</option>
+    </select>
+    <button onclick="fetchData()">Refresh Data</button>
+  </div>
+  <div id="dropdown-container"></div>
+  <canvas id="price-chart"></canvas>
+  <details id="tos">
+    <summary>Terms of Service & Liability Disclaimer</summary>
+    <p>This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability...</p>
+  </details>
+</div>
+
 <div id="trackrecord-section" class="page-section">
   
   </div>
   
   <!-- Paper Data Section (Password Protected, with Logs) -->
   <div id="paperdata-section" class="page-section">
-    <h2>Paper Data (Password Protected)</h2>
+    <div id="paperdata-section" class="page-section">
+<h2>Paper Data (Password Protected)</h2>
     <div id="paperdata-login">
       <p>Enter password:</p>
       <input type="password" id="paperdata-password">
       <button onclick="checkPaperDataPassword()">Submit</button>
+</div>
     </div>
     <div id="paperdata-content" style="display:none;">
       <h3>Paper Data Logs</h3>
