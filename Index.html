@@ -806,5 +806,23 @@
   }
 </script>
 
+
+<script>
+function logDebug(message) {
+  const out = document.getElementById('debug-output');
+  if (out) {
+    const time = new Date().toLocaleTimeString();
+    out.innerHTML += `[${time}] ${message}\n`;
+    out.scrollTop = out.scrollHeight;
+  }
+}
+logDebug("Debug log initialized...");
+if (!window.filteredData) {
+  logDebug("filteredData is not defined.");
+} else {
+  logDebug("filteredData exists. Length: " + filteredData.length);
+}
+</script>
+
 </body>
 </html>
