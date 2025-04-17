@@ -278,7 +278,7 @@
         <th>Signal</th>
         <th>Entry Price</th>
         <th>Hold Time</th>
-        <th>Time</th>
+        <th>Entry Time</th>
         <th>Exit Price</th>
         <th>P/L</th>
       </tr>
@@ -286,78 +286,6 @@
     <tbody id="trade-log-body"></tbody>
   </table>
 </div>
-
-<script>
-  let paperTrades = [];
-
-  function simulatePaperTrade(coin, signal, price, holdTime) {
-    const now = new Date();
-    paperTrades.push({
-      coin, signal, entryPrice: price, holdTime,
-      time: now.toLocaleString(), exitPrice: null, profitLoss: null
-    });
-    updateTradeLog();
-    updateProfitChart();
-  }
-
-  function updateTradeLog() {
-    const tbody = document.getElementById("trade-log-body");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    paperTrades.forEach(t => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${t.coin}</td><td>${t.signal}</td><td>$${t.entryPrice}</td>
-        <td>${t.holdTime}h</td><td>${t.time}</td>
-        <td>${t.exitPrice ? '$' + t.exitPrice : 'â'}</td>
-        <td>${t.profitLoss != null ? (t.profitLoss >= 0 ? '+' : '') + t.profitLoss.toFixed(4) : 'â'}</td>`;
-      tbody.appendChild(row);
-    });
-  }
-
-  function updateProfitChart() {
-    const ctx = document.getElementById('profitChart')?.getContext('2d');
-    if (!ctx) return;
-    const profitSeries = paperTrades.filter(t => t.profitLoss != null)
-      .reduce((acc, t, i) => { acc.push((acc[i - 1] || 0) + t.profitLoss); return acc; }, []);
-    if (window.profitChartInstance) window.profitChartInstance.destroy();
-    window.profitChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: profitSeries.map((_, i) => i + 1),
-        datasets: [{ label: "Portfolio P/L", data: profitSeries, borderWidth: 2 }]
-      },
-      options: { responsive: true, scales: { y: { beginAtZero: true } } }
-    });
-  }
-
-  function exportCSV() {
-    const csv = ['Coin,Signal,Entry Price,Hold Time,Time,Exit Price,P/L'];
-    paperTrades.forEach(t => {
-      csv.push([t.coin, t.signal, t.entryPrice, t.holdTime, t.time, t.exitPrice || "", t.profitLoss || ""].join(","));
-    });
-    const blob = new Blob([csv.join("\n")], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "paper_trades.csv";
-    link.click();
-  }
-
-  setInterval(() => {
-    const now = new Date();
-    paperTrades.forEach(t => {
-      if (!t.exitPrice) {
-        const entryTime = new Date(t.time);
-        if (now - entryTime >= t.holdTime * 3600000) {
-          t.exitPrice = (t.entryPrice * (Math.random() * 0.1 + 0.95)).toFixed(6);
-          t.profitLoss = parseFloat((t.exitPrice - t.entryPrice).toFixed(6));
-        }
-      }
-    });
-    updateTradeLog();
-    updateProfitChart();
-  }, 60000);
-</script>
 
     <h2>Paper Trader Track Record</h2>
     <p>This section simulates trades based on our signals (simulation logic subject to enhancement):</p>
@@ -812,5 +740,113 @@
   <div id="legal">
     By using this tool, you agree that it is provided "as is" without any gaurantees. You must do your own research, these are reccomendations. The creator assumes no liability for any damages. Perform your own due diligence before trading.
   </div>
+
+<script>
+  let paperTrades = [];
+
+  function simulatePaperTrade(coin, signal, price, holdTime) {
+    const now = new Date();
+    const trade = {
+      coin: coin.name || coin.symbol || "N/A",
+      signal: signal,
+      entryPrice: price,
+      holdTime: holdTime,
+      time: now.toLocaleString(),
+      exitPrice: null,
+      profitLoss: null
+    };
+    paperTrades.push(trade);
+    updateTradeLog();
+    updateProfitChart();
+  }
+
+  function updateTradeLog() {
+    const table = document.getElementById("trade-log-body");
+    if (!table) return;
+    table.innerHTML = "";
+    paperTrades.forEach(trade => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${trade.coin}</td>
+        <td>${trade.signal}</td>
+        <td>$${trade.entryPrice}</td>
+        <td>${trade.holdTime}h</td>
+        <td>${trade.time}</td>
+        <td>${trade.exitPrice ? "$" + trade.exitPrice : "â"}</td>
+        <td>${trade.profitLoss !== null ? (trade.profitLoss >= 0 ? "+" : "") + trade.profitLoss.toFixed(4) : "â"}</td>
+      `;
+      table.appendChild(row);
+    });
+  }
+
+  function updateProfitChart() {
+    const ctx = document.getElementById('profitChart')?.getContext('2d');
+    if (!ctx) return;
+    const profits = paperTrades.filter(t => t.profitLoss !== null).map(t => t.profitLoss);
+    const cumulative = profits.reduce((acc, val, i) => {
+      acc.push((acc[i - 1] || 0) + val);
+      return acc;
+    }, []);
+    if (window.profitChartInstance) window.profitChartInstance.destroy();
+    window.profitChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: cumulative.map((_, i) => i + 1),
+        datasets: [{
+          label: 'Portfolio P/L',
+          data: cumulative,
+          borderWidth: 2,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function exportCSV() {
+    let csv = 'Coin,Signal,Entry Price,Hold Time,Time,Exit Price,P/L\n';
+    paperTrades.forEach(trade => {
+      csv += `${trade.coin},${trade.signal},${trade.entryPrice},${trade.holdTime},${trade.time},${trade.exitPrice || ""},${trade.profitLoss || ""}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'paper_trades.csv';
+    link.click();
+  }
+
+  setInterval(() => {
+    const now = new Date();
+    paperTrades.forEach(trade => {
+      if (trade.exitPrice === null) {
+        const enteredAt = new Date(trade.time);
+        const holdDurationMs = parseFloat(trade.holdTime) * 60 * 60 * 1000;
+        if (now - enteredAt >= holdDurationMs) {
+          const exitPrice = trade.entryPrice * (Math.random() * 0.1 + 0.95);
+          trade.exitPrice = parseFloat(exitPrice.toFixed(6));
+          trade.profitLoss = parseFloat((trade.exitPrice - trade.entryPrice).toFixed(6));
+        }
+      }
+    });
+    updateTradeLog();
+    updateProfitChart();
+  }, 60000);
+
+  function runAutoPaperTrader() {
+    if (!window.filteredData || filteredData.length === 0) return;
+    filteredData.forEach(coin => {
+      const validSignals = ["Buy", "Strong Buy", "Ultra Strong Buy", "Moderate Buy", "Weak Buy"];
+      if (validSignals.includes(coin.tradingSignal)) {
+        simulatePaperTrade(coin, coin.tradingSignal, coin.current_price, 2);
+      }
+    });
+  }
+</script>
+
 </body>
 </html>
