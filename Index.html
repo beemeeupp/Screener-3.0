@@ -44,7 +44,7 @@
     /* Centered Title */
     #main-title {
       text-align: center;
-      font-size: 2.2rem;
+      font-size: 2.2rem; text-shadow: 1px 1px 3px #000; color: #ffffff;
       font-weight: bold;
       margin: 20px 0 10px;
     }
@@ -126,7 +126,7 @@
     canvas {
       width: 100%;
       margin-top: 10px;
-      background-color: rgba(255, 255, 255, 0.95);
+      background-color: #0e0e0e;
       border-radius: 4px;
     }
     #price-chart {
@@ -212,6 +212,17 @@
       #indicator-chart-container { height: 150px; }
     }
   </style>
+
+<style>
+canvas {
+  background-color: #0f0f0f !important;
+  border-radius: 6px;
+}
+.chartjs-render-monitor {
+  color: #ffffff !important;
+}
+</style>
+
 </head>
 <body>
   <!-- Navigation Dropdown -->
@@ -852,7 +863,7 @@ function smoothLoadCheck() {
     setTimeout(smoothLoadCheck, 1000);
   } else {
     logDebug("filteredData loaded with " + filteredData.length + " coins.");
-    runAutoPaperTrader();
+    setTimeout(() => { runAutoPaperTrader(); }, 2000);
   }
 }
 window.onload = function() {
