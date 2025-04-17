@@ -1,3 +1,17 @@
+async function fetchWithRetry(url, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return await res.json();
+      console.warn("Retry", i + 1, "for", url);
+    } catch (e) {
+      console.warn("Fetch error:", e);
+    }
+    await new Promise(r => setTimeout(r, 800));
+  }
+  throw new Error("Failed to fetch after retries: " + url);
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -249,7 +263,12 @@ canvas {
           <option value="gbp">GBP</option>
         </select>
         <button onclick="fetchData()">Refresh Data</button>
-      </div>
+      
+<div id="fetch-status" style="text-align:center; font-size:0.9rem; color:#ccc; margin:5px;">
+  <em>Status: <span id="status-text">Initializing...</span></em>
+</div>
+
+</div>
       <!-- Dropdown tables will be inserted here -->
       <div id="dropdown-container"></div>
       <!-- Price Chart -->
@@ -368,7 +387,7 @@ canvas {
     
     async function fetchPaprikaData() {
       try {
-        const response = await fetch("https://api.coinpaprika.com/v1/tickers");
+        const response = await fetchWithRetry("https://api.coinpaprika.com/v1/tickers");
         return await response.json();
       } catch (error) {
         appendLog("Error fetching CoinPaprika data: " + error.message);
@@ -419,7 +438,7 @@ canvas {
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=3`,
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=4`
         ];
-        const geckoResponses = await Promise.all(geckoUrls.map(url => fetch(url).then(res => res.json())));
+        const geckoResponses = await Promise.all(geckoUrls.map(url => fetchWithRetry(url)));
         const geckoData = geckoResponses.flat();
         appendLog("CoinGecko data fetched. Data count: " + geckoData.length);
         appendLog("Fetching additional data from CoinPaprika...");
@@ -919,6 +938,49 @@ async function renderIndicatorChartFromTrade(coinId) {
     });
   } catch (error) {
     console.error("Chart rendering failed:", error);
+  }
+}
+</script>
+
+
+<script>
+function setStatus(text) {
+  const el = document.getElementById("status-text");
+  if (el) el.innerText = text;
+}
+setStatus("Loading live data...");
+
+async function fetchData() {
+  const currency = document.getElementById('currency-select').value;
+  setStatus("Fetching market data...");
+  try {
+    const geckoUrls = [
+      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=1`,
+      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=2`
+    ];
+    const geckoResponses = await Promise.all(geckoUrls.map(url => fetchWithRetry(url)));
+    const geckoData = geckoResponses.flat();
+    setStatus("Fetching additional CoinPaprika data...");
+
+    const response = await fetchWithRetry("https://api.coinpaprika.com/v1/tickers");
+    const paprikaData = await response.json();
+    setStatus("Merging datasets...");
+
+    cryptoData = mergeData(geckoData, paprikaData);
+    cryptoData = cryptoData.filter(coin => !isSuspiciousCoin(coin));
+    cryptoData.forEach(coin => {
+      coin.profitPotential = computeProfitability(coin, defaultHoldDays);
+      coin.tradingSignal = coin.derivativeSignal ? "Derivative Trade" : generateBuySignal(coin);
+    });
+
+    filteredData = cryptoData;
+    setStatus(`Loaded ${filteredData.length} coins successfully.`);
+    populateDropdownTables();
+    if (filteredData.length > 0) renderChart(filteredData[0]);
+    setTimeout(() => runAutoPaperTrader(), 1500);
+  } catch (error) {
+    console.error("Fetch Error:", error.message);
+    setStatus("Failed to fetch live data. Please try again.");
   }
 }
 </script>
