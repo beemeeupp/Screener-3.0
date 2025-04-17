@@ -279,7 +279,18 @@
         </tr>
       </thead>
       <tbody>
-        
+        <tr>
+          <td>2025-04-10</td>
+          <td>BTC</td>
+          <td>Buy</td>
+          <td>+5.20%</td>
+        </tr>
+        <tr>
+          <td>2025-04-15</td>
+          <td>ETH</td>
+          <td>Moderate Buy</td>
+          <td>+3.80%</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -926,11 +937,13 @@ function simulateScreenerTriggeredTrades() {
     const entry = coin.current_price;
     const target = entry * 1.05;
     const timeout = 6000;
+    const timestamp = new Date().toLocaleString();
 
     const trade = {
       name: coin.name,
       signal: coin.tradingSignal,
       entryPrice: entry.toFixed(4),
+      entryTime: timestamp,
       holdTime: '2d',
       exitPrice: null,
       pnl: null,
@@ -960,16 +973,21 @@ function updatePaperTraderTable() {
   if (!tbody) return;
   tbody.innerHTML = "";
   paperTrades.forEach(t => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${t.name}</td>
-        <td>${t.signal}</td>
-        <td>$${t.entryPrice}</td>
-        <td>${t.holdTime}</td>
-        <td>${t.exitPrice ? '$' + t.exitPrice : 'Pending'}</td>
-        <td>${t.pnl || 'Open'}</td>
-      </tr>
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${t.name}</td>
+      <td>${t.signal}</td>
+      <td>$${t.entryPrice}</td>
+      <td>${t.holdTime}</td>
+      <td>${t.exitPrice ? '$' + t.exitPrice : 'Pending'}</td>
+      <td>${t.pnl || 'Open'}</td>
     `;
+    row.addEventListener("click", () => {
+      alert(
+        `Coin: ${t.name}\nSignal: ${t.signal}\nEntry Time: ${t.entryTime}\nEntry Price: $${t.entryPrice}\nExit Price: ${t.exitPrice || 'Pending'}\nStatus: ${t.active ? 'Active' : 'Closed'}`
+      );
+    });
+    tbody.appendChild(row);
   });
 }
 
