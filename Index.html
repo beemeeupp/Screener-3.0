@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
 <style>
 html, body {
@@ -540,7 +541,7 @@ button {
     }
     
     
-window.onload = function() {
+document.addEventListener("DOMContentLoaded", function() {
   setTimeout(() => {
     document.getElementById("main-section").style.display = "block";
     fetchData();
@@ -692,7 +693,7 @@ function smoothLoadCheck() {
   }
 }
 
-window.onload = function() {
+document.addEventListener("DOMContentLoaded", function() {
   setTimeout(() => {
     document.getElementById("main-section").style.display = "block";
     fetchData();
