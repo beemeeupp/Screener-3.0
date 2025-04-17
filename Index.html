@@ -56,16 +56,10 @@ button {
   <div id="main-title" style="margin-top: 30px; padding-top: 5px;">Screener 5.2</div>
   
   <!-- Main Screener Section (Logs removed) -->
-  <div id="main-section" style="display:none;">
+  <div id="main-section" style="display:block;" style="display:none;">
     <div class="container">
       <div class="controls">
-        <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
-        <select id="currency-select" onchange="fetchData()">
-          <option value="usd" selected>USD</option>
-          <option value="eur">EUR</option>
-          <option value="gbp">GBP</option>
-        </select>
-        <button onclick="fetchData()">Refresh Data</button>
+        
       
 <div id="fetch-status" style="text-align:center; font-size:0.9rem; color:#ccc; margin:5px;">
   <em>Status: <span id="status-text">Initializing...</span></em>
@@ -77,45 +71,27 @@ button {
       <!-- Price Chart -->
       <canvas id="price-chart"></canvas>
       <!-- Legal Disclaimer -->
-      <details id="tos">
-        <summary style="font-size:1rem; font-weight:bold; color:#fff;">Terms of Service & Liability Disclaimer</summary>
-        <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
-          This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence. By using this tool, you agree to hold the creator harmless from any legal claims.
-        </p>
-      </details>
+      
     </div>
   </div>
   
   <!-- How To Use Section -->
   
 
-<div id="main-section" class="page-section" style="display: block;">
+<div id="main-section" style="display:block;" class="page-section" style="display: block;">
   <div class="controls">
-    <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
-    <select id="currency-select" onchange="fetchData()">
-      <option value="usd">USD</option>
-      <option value="eur">EUR</option>
-    </select>
-    <button onclick="fetchData()">Refresh Data</button>
+    
   </div>
   <div id="dropdown-container"></div>
   <canvas id="price-chart"></canvas>
-  <details id="tos">
-    <summary>Terms of Service & Liability Disclaimer</summary>
-    <p>This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability...</p>
-  </details>
-</div>
-
-<div id="trackrecord-section" class="page-section">
   
-<div id="main-section" class="page-section" style="display: block;">
+</div>
+
+<div id="trackrecord-section" style="display:none;" class="page-section">
+  
+<div id="main-section" style="display:block;" class="page-section" style="display: block;">
   <div class="controls">
-    <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
-    <select id="currency-select" onchange="fetchData()">
-      <option value="usd">USD</option>
-      <option value="eur">EUR</option>
-    </select>
-    <button onclick="fetchData()">Refresh Data</button>
+    
   </div>
   <div id="dropdown-container"></div>
   <canvas id="price-chart"></canvas>
@@ -125,7 +101,7 @@ button {
   </details>
 </div>
 
-<div id="trackrecord-section" class="page-section">
+<div id="trackrecord-section" style="display:none;" class="page-section">
 <h2>Paper Trader Track Record</h2>
   <table>
     <thead>
@@ -144,7 +120,7 @@ button {
 </div>
 </div>
 
-<div id="howto-section" class="page-section">
+<div id="howto-section" style="display:none;" class="page-section">
     <h2>How To Use</h2>
     <p>Welcome to Screener 5.2! Follow these steps to use the tool:</p>
     <ul>
@@ -159,14 +135,9 @@ button {
   
 
 
-<div id="main-section" class="page-section" style="display: block;">
+<div id="main-section" style="display:block;" class="page-section" style="display: block;">
   <div class="controls">
-    <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
-    <select id="currency-select" onchange="fetchData()">
-      <option value="usd">USD</option>
-      <option value="eur">EUR</option>
-    </select>
-    <button onclick="fetchData()">Refresh Data</button>
+    
   </div>
   <div id="dropdown-container"></div>
   <canvas id="price-chart"></canvas>
@@ -176,13 +147,13 @@ button {
   </details>
 </div>
 
-<div id="trackrecord-section" class="page-section">
+<div id="trackrecord-section" style="display:none;" class="page-section">
   
   </div>
   
   <!-- Paper Data Section (Password Protected, with Logs) -->
-  <div id="paperdata-section" class="page-section">
-    <div id="paperdata-section" class="page-section">
+  <div id="paperdata-section" style="display:none;" class="page-section">
+    <div id="paperdata-section" style="display:none;" class="page-section">
 <h2>Paper Data (Password Protected)</h2>
     <div id="paperdata-login">
       <p>Enter password:</p>
