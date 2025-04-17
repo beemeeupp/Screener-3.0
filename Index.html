@@ -237,6 +237,24 @@ canvas {
 }
 </style>
 
+
+<style>
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ccc;
+    border-top: 2px solid #33ffcc;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 6px;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
 </head>
 <body>
   <!-- Navigation Dropdown -->
@@ -253,7 +271,7 @@ canvas {
   <div id="main-title">Screener 4.1</div>
   
   <!-- Main Screener Section (Logs removed) -->
-  <div id="main-section">
+  <div id="main-section" style="display:none;">
     <div class="container">
       <div class="controls">
         <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
@@ -737,10 +755,14 @@ canvas {
       }
     }
     
-    window.onload = function() {
-      changePage(); // Default to Main Page
-      fetchData();
-    };
+    
+window.onload = function() {
+  setTimeout(() => {
+    document.getElementById("main-section").style.display = "block";
+    fetchData();
+  }, 2000);
+};
+
   </script>
   <!-- Legal Disclaimer at Bottom -->
   <div id="legal">
@@ -885,9 +907,14 @@ function smoothLoadCheck() {
     setTimeout(() => { runAutoPaperTrader(); }, 2000);
   }
 }
+
 window.onload = function() {
-  setTimeout(smoothLoadCheck, 1000);
+  setTimeout(() => {
+    document.getElementById("main-section").style.display = "block";
+    fetchData();
+  }, 2000);
 };
+
 </script>
 
 
@@ -944,7 +971,25 @@ async function renderIndicatorChartFromTrade(coinId) {
 
 
 <script>
+
 function setStatus(text) {
+  const el = document.getElementById("status-text");
+  if (el) {
+    el.innerText = text;
+    const existingSpinner = document.getElementById("status-spinner");
+    if (text.includes("Fetching") || text.includes("Loading")) {
+      if (!existingSpinner) {
+        const spinner = document.createElement("span");
+        spinner.className = "spinner";
+        spinner.id = "status-spinner";
+        el.parentElement.appendChild(spinner);
+      }
+    } else if (existingSpinner) {
+      existingSpinner.remove();
+    }
+  }
+}
+
   const el = document.getElementById("status-text");
   if (el) el.innerText = text;
 }
