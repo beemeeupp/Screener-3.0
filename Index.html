@@ -267,10 +267,9 @@
   
   <!-- Paper Trader Track Record Section -->
   
+
 <div id="trackrecord-section" class="page-section">
   <h2>Paper Trader Track Record</h2>
-  <button onclick="exportCSV()">Export to CSV</button>
-  <canvas id="profitChart" height="200"></canvas>
   <table>
     <thead>
       <tr>
@@ -286,6 +285,7 @@
     <tbody id="trade-log-body"></tbody>
   </table>
 </div>
+
 
     <h2>Paper Trader Track Record</h2>
     <p>This section simulates trades based on our signals (simulation logic subject to enhancement):</p>
@@ -809,7 +809,7 @@
     });
   }
 
-  function exportCSV() {
+  function  {
     let csv = 'Coin,Signal,Entry Price,Hold Time,Time,Exit Price,P/L\n';
     paperTrades.forEach(trade => {
       csv += `${trade.coin},${trade.signal},${trade.entryPrice},${trade.holdTime},${trade.time},${trade.exitPrice || ""},${trade.profitLoss || ""}\n`;
