@@ -301,17 +301,6 @@
     </div>
   </div>
   <script>
-
-function logDebug(msg) {
-  const logDiv = document.getElementById("debug-log");
-  if (logDiv) {
-    const time = new Date().toLocaleTimeString();
-    logDiv.innerHTML += `<div>[${time}] ${msg}</div>`;
-    logDiv.scrollTop = logDiv.scrollHeight;
-  }
-  console.log(msg);
-}
-
     let cryptoData = [];
     let filteredData = [];
     let priceChart, indicatorChart;
@@ -918,159 +907,102 @@ document.addEventListener("DOMContentLoaded", watchPaperTraderTab);
 
 
 <script>
+let filteredData = [];
 let paperTrades = [];
 let profitHistory = [];
 
-// Execute trades based on actual screener data
-function executeRealTradesFromScreener() {
-  if (!window.filteredData || !Array.isArray(filteredData)) return;
+function fetchData() {
+  const currency = document.getElementById("currency-select").value;
+  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_asc&per_page=250&page=1`;
 
-  filteredData.forEach(coin => {
-    const alreadyExists = paperTrades.find(t => t.name === coin.name && t.active);
-    if (!coin.tradingSignal || coin.tradingSignal === "Hold" || alreadyExists) return;
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      filteredData = data.filter(coin =>
+        coin.symbol !== "btc" &&
+        coin.symbol !== "eth" &&
+        coin.market_cap &&
+        coin.market_cap < 50000000 &&
+        coin.total_volume > 10000
+      ).map(coin => {
+        const change = coin.price_change_percentage_24h;
+        coin.tradingSignal = getSignal(change);
+        return coin;
+      });
 
-    const entryPrice = coin.current_price;
-    const timestamp = new Date().toLocaleString();
-
-    const trade = {
-      name: coin.name,
-      signal: coin.tradingSignal,
-      entryPrice: entryPrice.toFixed(4),
-      entryTime: timestamp,
-      holdTime: '2d',
-      exitPrice: null,
-      pnl: null,
-      active: true,
-      id: coin.id,
-      currency: document.getElementById("currency-select").value
-    };
-
-    paperTrades.push(trade);
-    updatePaperTraderTable();
-    updateSummary();
-
-    // Live price monitor for exact P/L exit tracking
-    const interval = setInterval(async () => {
-      if (!trade.active) {
-        clearInterval(interval);
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${trade.id}&vs_currencies=${trade.currency}`
-        );
-        const data = await response.json();
-        const livePrice = data[trade.id][trade.currency];
-        const pnl = ((livePrice - entryPrice) / entryPrice * 100).toFixed(2);
-        trade.exitPrice = livePrice.toFixed(4);
-        trade.pnl = pnl + "%";
-        trade.active = false;
-        profitHistory.push(parseFloat(pnl));
-        updatePaperTraderTable();
-        updateSummary();
-        clearInterval(interval);
-      } catch (err) {
-        console.warn("Live P/L fetch failed:", err);
-      }
-    }, 10000); // check after 10s to simulate 2d hold
-  });
+      populateDropdownTables(filteredData);
+      updateBTCChart();
+      executeRealTradesFromScreener(); // RUN TRADER HERE
+    })
+    .catch(err => {
+      logDebug("Fetch error: " + err);
+    });
 }
 
-// Start once when Paper Trader tab is active
-function activateRealTradeEngine() {
-  const checkTab = () => {
-    const tab = document.getElementById("page-selector").value;
-    if (tab === "trackrecord-section") executeRealTradesFromScreener();
-  };
-  document.getElementById("page-selector").addEventListener("change", checkTab);
-  checkTab();
+function getSignal(change) {
+  if (change > 18) return "Ultra Strong Buy";
+  if (change > 10) return "Strong Buy";
+  if (change > 6) return "Buy";
+  if (change > 3) return "Weak Buy";
+  return "Hold";
 }
 
-document.addEventListener("DOMContentLoaded", activateRealTradeEngine);
-</script>
-
-
-<script>
-let paperTrades = [];
-let profitHistory = [];
-
 function executeRealTradesFromScreener() {
-  logDebug("Executing real trades from screener...");
-  if (!window.filteredData || !Array.isArray(filteredData)) {
-    logDebug("filteredData not available or invalid.");
-    return;
-  }
-
+  logDebug("Checking filteredData...");
   filteredData.forEach(coin => {
+    if (!coin.tradingSignal || coin.tradingSignal === "Hold") return;
     const exists = paperTrades.find(t => t.name === coin.name && t.active);
-    if (!coin.tradingSignal || coin.tradingSignal === "Hold" || exists) return;
+    if (exists) return;
 
     const entryPrice = coin.current_price;
-    const timestamp = new Date().toLocaleString();
-
+    const currency = document.getElementById("currency-select").value;
     const trade = {
       name: coin.name,
       signal: coin.tradingSignal,
-      entryPrice: entryPrice.toFixed(4),
-      entryTime: timestamp,
-      holdTime: '2d',
-      exitPrice: null,
-      pnl: null,
-      active: true,
+      entryPrice: entryPrice,
+      currency: currency,
       id: coin.id,
-      currency: document.getElementById("currency-select").value
+      active: true
     };
 
-    logDebug("Submitting trade: " + trade.name + " | Signal: " + trade.signal);
     paperTrades.push(trade);
     updatePaperTraderTable();
     updateSummary();
+    logDebug("Trade executed: " + coin.name + " | " + coin.tradingSignal);
 
-    setTimeout(async () => {
-      if (!trade.active) return;
-      try {
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${trade.id}&vs_currencies=${trade.currency}`
-        );
-        const data = await response.json();
-        const livePrice = data[trade.id][trade.currency];
-        const pnl = ((livePrice - entryPrice) / entryPrice * 100).toFixed(2);
-        trade.exitPrice = livePrice.toFixed(4);
-        trade.pnl = pnl + "%";
-        trade.active = false;
-        profitHistory.push(parseFloat(pnl));
-        updatePaperTraderTable();
-        updateSummary();
-      } catch (err) {
-        logDebug("P/L fetch failed: " + err);
-      }
+    setTimeout(() => {
+      fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coin.id}&vs_currencies=${currency}`)
+        .then(res => res.json())
+        .then(data => {
+          const exit = data[coin.id][currency];
+          const pnl = ((exit - entryPrice) / entryPrice * 100).toFixed(2);
+          trade.exitPrice = exit;
+          trade.pnl = pnl + "%";
+          trade.active = false;
+          updatePaperTraderTable();
+          updateSummary();
+          logDebug("Trade closed: " + coin.name + " | P/L: " + pnl + "%");
+        });
     }, 10000);
   });
 }
 
-function activateRealTradeEngine() {
-  const pageSelector = document.getElementById("page-selector");
-  if (!pageSelector) return;
-
-  pageSelector.addEventListener("change", () => {
-    if (pageSelector.value === "trackrecord-section") {
-      logDebug("Paper Trader tab activated. Running real trade execution...");
-      executeRealTradesFromScreener();
-    }
-  });
-
-  if (pageSelector.value === "trackrecord-section") {
-    logDebug("Paper Trader tab already active. Running real trade execution...");
-    executeRealTradesFromScreener();
+function logDebug(msg) {
+  const logDiv = document.getElementById("debug-log");
+  if (logDiv) {
+    const time = new Date().toLocaleTimeString();
+    logDiv.innerHTML += `<div>[${time}] ${msg}</div>`;
+    logDiv.scrollTop = logDiv.scrollHeight;
   }
+  console.log(msg);
 }
 
-document.addEventListener("DOMContentLoaded", activateRealTradeEngine);
+window.onload = function () {
+  changePage();
+  fetchData();
+};
 </script>
-
-
-<div id="debug-log" style="position:fixed;bottom:0;left:0;width:100%;max-height:150px;overflow:auto;font-size:12px;background:#111;color:#0f0;padding:5px;border-top:1px solid #333;z-index:9999;"></div>
+<div id="debug-log" style="position:fixed;bottom:0;left:0;width:100%;max-height:150px;overflow:auto;font-size:12px;background:#000;color:#0f0;padding:5px;z-index:9999;"></div>
 
 </body>
 </html>
