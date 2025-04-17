@@ -97,7 +97,7 @@ button {
   <canvas id="price-chart"></canvas>
   <details id="tos">
     <summary>Terms of Service & Liability Disclaimer</summary>
-    <p>This tool is provided "as is" without warranty of any kind. The creator disclaims all liability...</p>
+    <p>This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability...</p>
   </details>
 </div>
 
@@ -143,7 +143,7 @@ button {
   <canvas id="price-chart"></canvas>
   <details id="tos">
     <summary>Terms of Service & Liability Disclaimer</summary>
-    <p>This tool is provided "as is" without warranty of any kind. The creator disclaims all liability...</p>
+    <p>This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability...</p>
   </details>
 </div>
 
@@ -1018,36 +1018,49 @@ function showSignalDetails(coin, holdDays) {
 </script>
 
 
-<style>
-#debug-log {
-  background: #111;
-  color: #0f0;
-  font-family: monospace;
-  font-size: 0.75rem;
-  max-height: 180px;
-  overflow-y: auto;
-  border: 1px solid #333;
-  padding: 6px;
-  margin-top: 10px;
-}
-</style>
-<div id="debug-log">Log initialized...</div>
 <script>
-function logDebug(msg) {
-  const logBox = document.getElementById("debug-log");
-  if (logBox) {
-    logBox.innerHTML += "<br>" + msg;
-    logBox.scrollTop = logBox.scrollHeight;
+async function fetchWithRetry(url, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return await res.json();
+    } catch (e) {
+      logDebug("Fetch retry failed: " + e.message);
+    }
+    await new Promise(r => setTimeout(r, 800));
+  }
+  throw new Error("Failed to fetch after retries: " + url);
+}
+
+async function fetchData() {
+  logDebug("Starting fetch from CoinGecko proxy...");
+  const status = document.getElementById("status");
+  if (status) status.innerText = "Fetching market data...";
+  try {
+    const url = "https://proxy.cors.sh/https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1";
+    const data = await fetchWithRetry(url);
+    logDebug("Fetched " + data.length + " coins.");
+    if (status) status.innerText = "Loaded " + data.length + " coins";
+    renderCoins(data);
+  } catch (error) {
+    logDebug("Fetch error: " + error.message);
+    if (status) status.innerText = "Failed to load coins.";
   }
 }
-document.addEventListener("DOMContentLoaded", function() {
-  try {
-    logDebug("DOM Loaded. Starting Screener...");
-    fetchData();
-  } catch (e) {
-    logDebug("Error during load: " + e.message);
-  }
-});
+
+function renderCoins(data) {
+  const container = document.getElementById("dropdown-container");
+  if (!container) return;
+  container.innerHTML = "<h3 style='color:white;'>Top Coins</h3>";
+  const list = document.createElement("ul");
+  list.style.color = "#eee";
+  data.slice(0, 10).forEach(coin => {
+    const li = document.createElement("li");
+    li.textContent = `${coin.name} (${coin.symbol.toUpperCase()}): $${coin.current_price.toFixed(2)}`;
+    list.appendChild(li);
+  });
+  container.appendChild(list);
+}
 </script>
 
 </body>
