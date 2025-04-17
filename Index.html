@@ -1,47 +1,219 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-
-<style>
-html, body {
-  background-color: #121212 !important;
-  color: #e6e6e6 !important;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
-table {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  border-collapse: collapse;
-}
-th, td {
-  padding: 6px;
-  border: 1px solid #333;
-  text-align: center;
-}
-input, select, button {
-  background: #1f1f1f;
-  color: #fff;
-  border: 1px solid #333;
-  padding: 6px;
-  margin: 4px;
-  border-radius: 4px;
-}
-button {
-  background-color: #28a745;
-}
-#main-title {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: bold;
-  margin: 20px 0 10px;
-}
-</style>
-
+  <meta charset="UTF-8" />
+  <!-- Mobile responsiveness -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Screener 4.1</title>
+  <!-- Load Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Global Styles */
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background: url('https://source.unsplash.com/1600x900/?american,flag') no-repeat center center fixed;
+      background-size: cover;
+      color: #e6e6e6;
+    }
+    /* Background dimming overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: -1;
+    }
+    /* Navigation Dropdown in Top Left */
+    #nav-dropdown {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+    }
+    #nav-dropdown select {
+      padding: 6px;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    /* Centered Title */
+    #main-title {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin: 20px 0 10px;
+    }
+    /* Main Container */
+    .container {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      background-color: rgba(26, 26, 26, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      border: 10px solid;
+      border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
+    }
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .controls input,
+    .controls select,
+    .controls button {
+      padding: 8px;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 4px;
+    }
+    .controls button {
+      background-color: #007700;
+      color: #fff;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background-color: #005500;
+    }
+    /* Dropdown Tables Styling */
+    details {
+      margin-bottom: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      padding: 4px;
+      background-color: rgba(26,26,26,0.9);
+      overflow-x: auto;
+      cursor: pointer;
+    }
+    summary {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #ffffff;
+      padding: 4px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 5px;
+      background-color: rgba(26,26,26,0.9);
+    }
+    th, td {
+      padding: 6px;
+      text-align: center;
+      border: 1px solid rgba(0,0,0,0.4);
+      font-size: 0.8rem;
+    }
+    th {
+      background-color: rgba(0,0,0,0.7);
+      color: #ffffff;
+    }
+    tr:nth-child(even) {
+      background-color: rgba(0,0,0,0.5);
+    }
+    tr:hover {
+      background-color: rgba(0,0,0,0.7);
+    }
+    /* Chart Styling */
+    canvas {
+      width: 100%;
+      margin-top: 10px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 4px;
+    }
+    #price-chart {
+      height: 300px;
+    }
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.85);
+    }
+    .modal-content {
+      position: relative;
+      background-color: #1a1a1a;
+      margin: 10% auto;
+      padding: 10px;
+      border: 1px solid #444;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 8px;
+      color: #e6e6e6;
+    }
+    .close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      color: #aaa;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #indicator-chart-container {
+      height: 200px;
+      margin-top: 10px;
+    }
+    /* Log Styling (for Paper Data Page) */
+    .log {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #ccc;
+      padding: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid rgba(255,255,255,0.2);
+      margin-top: 10px;
+    }
+    /* Legal Disclaimer */
+    #legal {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: rgba(26,26,26,0.9);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: #aaa;
+      text-align: center;
+    }
+    /* Additional Page Sections */
+    .page-section {
+      display: none;
+      margin: 10px auto;
+      background-color: rgba(26,26,26,0.9);
+      padding: 10px;
+      border-radius: 8px;
+      border: 10px solid;
+      border-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/32px-Flag_of_the_United_States.svg.png') 10 round;
+      color: #e6e6e6;
+    }
+    /* Responsive adjustments for smaller screens */
+    @media (max-width: 600px) {
+      #main-title { font-size: 1.8rem; margin: 15px 0; }
+      .controls input, .controls select, .controls button { padding: 6px; font-size: 0.8rem; }
+      summary { font-size: 0.9rem; }
+      th, td { padding: 4px; font-size: 0.7rem; }
+      #price-chart { height: 250px; }
+      #indicator-chart-container { height: 150px; }
+    }
+  </style>
+</head>
+<body>
   <!-- Navigation Dropdown -->
   <div id="nav-dropdown">
     <select id="page-selector" onchange="changePage()">
@@ -53,76 +225,84 @@ button {
   </div>
   
   <!-- Centered Title -->
-  <div id="main-title" style="margin-top: 30px; padding-top: 5px;">Screener 5.2</div>
+  <div id="main-title">Screener 4.1</div>
   
   <!-- Main Screener Section (Logs removed) -->
-  <div id="main-section" style="display:block;" style="display:none;">
+  <div id="main-section">
     <div class="container">
       <div class="controls">
-        
-      
-<div id="fetch-status" style="text-align:center; font-size:0.9rem; color:#ccc; margin:5px;">
-  <em>Status: <span id="status-text">Initializing...</span></em>
-</div>
-
-</div>
+        <input type="text" id="search-input" placeholder="Search by coin name or symbol" oninput="filterTable()">
+        <select id="currency-select" onchange="fetchData()">
+          <option value="usd" selected>USD</option>
+          <option value="eur">EUR</option>
+          <option value="gbp">GBP</option>
+        </select>
+        <button onclick="fetchData()">Refresh Data</button>
+      </div>
       <!-- Dropdown tables will be inserted here -->
-      <div id="dropdown-container"></div>
+      <div id="dropdown-container">
+<details>
+  <summary>Weak Buy Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody>
+      <tr><td>INJ</td><td>Weak Buy</td><td>$24.55</td><td>$120M</td></tr>
+    </tbody>
+  </table>
+</details>
+<details>
+  <summary>Moderate Buy Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody>
+      <tr><td>ETH</td><td>Moderate Buy</td><td>$3200</td><td>$9B</td></tr>
+    </tbody>
+  </table>
+</details>
+<details>
+  <summary>Buy Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody>
+      <tr><td>XRP</td><td>Buy</td><td>$0.47</td><td>$590M</td></tr>
+    </tbody>
+  </table>
+</details>
+<details>
+  <summary>Strong Buy Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody>
+      <tr><td>ARB</td><td>Strong Buy</td><td>$1.08</td><td>$380M</td></tr>
+    </tbody>
+  </table>
+</details>
+<details>
+  <summary>Derivative Trade Signals</summary>
+  <table>
+    <thead><tr><th>Coin</th><th>Signal</th><th>Price</th><th>Volume</th></tr></thead>
+    <tbody>
+      <tr><td>FET</td><td>Derivative Trade</td><td>$2.34</td><td>$220M</td></tr>
+    </tbody>
+  </table>
+</details>
+</div>
       <!-- Price Chart -->
       <canvas id="price-chart"></canvas>
       <!-- Legal Disclaimer -->
-      
+      <details id="tos">
+        <summary style="font-size:1rem; font-weight:bold; color:#fff;">Terms of Service & Liability Disclaimer</summary>
+        <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
+          This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence. By using this tool, you agree to hold the creator harmless from any legal claims.
+        </p>
+      </details>
     </div>
   </div>
   
   <!-- How To Use Section -->
-  
-
-<div id="main-section" style="display:block;" class="page-section" style="display: block;">
-  <div class="controls">
-    
-  </div>
-  <div id="dropdown-container"></div>
-  <canvas id="price-chart"></canvas>
-  
-</div>
-
-<div id="trackrecord-section" style="display:none;" class="page-section">
-  
-<div id="main-section" style="display:block;" class="page-section" style="display: block;">
-  <div class="controls">
-    
-  </div>
-  <div id="dropdown-container"></div>
-  <canvas id="price-chart"></canvas>
-  <details id="tos">
-    <summary>Terms of Service & Liability Disclaimer</summary>
-    <p>This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability...</p>
-  </details>
-</div>
-
-<div id="trackrecord-section" style="display:none;" class="page-section">
-<h2>Paper Trader Track Record</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Coin</th>
-        <th>Signal</th>
-        <th>Entry Price</th>
-        <th>Hold Time</th>
-        <th>Time</th>
-        <th>Exit Price</th>
-        <th>P/L</th>
-      </tr>
-    </thead>
-    <tbody id="trade-log-body"></tbody>
-  </table>
-</div>
-</div>
-
-<div id="howto-section" style="display:none;" class="page-section">
+  <div id="howto-section" class="page-section">
     <h2>How To Use</h2>
-    <p>Welcome to Screener 5.2! Follow these steps to use the tool:</p>
+    <p>Welcome to Screener 4.1! Follow these steps to use the tool:</p>
     <ul>
       <li>Enter a coin name or symbol in the search box to filter results.</li>
       <li>Select your preferred currency from the dropdown and click "Refresh Data" to update information.</li>
@@ -132,34 +312,42 @@ button {
   </div>
   
   <!-- Paper Trader Track Record Section -->
-  
-
-
-<div id="main-section" style="display:block;" class="page-section" style="display: block;">
-  <div class="controls">
-    
-  </div>
-  <div id="dropdown-container"></div>
-  <canvas id="price-chart"></canvas>
-  <details id="tos">
-    <summary>Terms of Service & Liability Disclaimer</summary>
-    <p>This tool is provided âas isâ without warranty of any kind. The creator disclaims all liability...</p>
-  </details>
-</div>
-
-<div id="trackrecord-section" style="display:none;" class="page-section">
-  
+  <div id="trackrecord-section" class="page-section">
+    <h2>Paper Trader Track Record</h2>
+    <p>This section simulates trades based on our signals (simulation logic subject to enhancement):</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Coin</th>
+          <th>Trade Signal</th>
+          <th>Profit/Loss (%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>2025-04-10</td>
+          <td>BTC</td>
+          <td>Buy</td>
+          <td>+5.20%</td>
+        </tr>
+        <tr>
+          <td>2025-04-15</td>
+          <td>ETH</td>
+          <td>Moderate Buy</td>
+          <td>+3.80%</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   
   <!-- Paper Data Section (Password Protected, with Logs) -->
-  <div id="paperdata-section" style="display:none;" class="page-section">
-    <div id="paperdata-section" style="display:none;" class="page-section">
-<h2>Paper Data (Password Protected)</h2>
+  <div id="paperdata-section" class="page-section">
+    <h2>Paper Data (Password Protected)</h2>
     <div id="paperdata-login">
       <p>Enter password:</p>
       <input type="password" id="paperdata-password">
       <button onclick="checkPaperDataPassword()">Submit</button>
-</div>
     </div>
     <div id="paperdata-content" style="display:none;">
       <h3>Paper Data Logs</h3>
@@ -219,7 +407,7 @@ button {
     
     async function fetchPaprikaData() {
       try {
-        const response = await fetchWithRetry("https://api.coinpaprika.com/v1/tickers");
+        const response = await fetch("https://api.coinpaprika.com/v1/tickers");
         return await response.json();
       } catch (error) {
         appendLog("Error fetching CoinPaprika data: " + error.message);
@@ -270,7 +458,7 @@ button {
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=3`,
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=4`
         ];
-        const geckoResponses = await Promise.all(geckoUrls.map(url => fetchWithRetry(url)));
+        const geckoResponses = await Promise.all(geckoUrls.map(url => fetch(url).then(res => res.json())));
         const geckoData = geckoResponses.flat();
         appendLog("CoinGecko data fetched. Data count: " + geckoData.length);
         appendLog("Fetching additional data from CoinPaprika...");
@@ -569,499 +757,14 @@ button {
       }
     }
     
-    
-document.addEventListener("DOMContentLoaded", function() {
-  setTimeout(() => {
-    document.getElementById("main-section").style.display = "block";
-    fetchData();
-  }, 2000);
-};
-
+    window.onload = function() {
+      changePage(); // Default to Main Page
+      fetchData();
+    };
   </script>
   <!-- Legal Disclaimer at Bottom -->
   <div id="legal">
     By using this tool, you agree that it is provided "as is" without any gaurantees. You must do your own research, these are reccomendations. The creator assumes no liability for any damages. Perform your own due diligence before trading.
   </div>
-
-
-<script>
-  let paperTrades = [];
-
-  function simulatePaperTrade(coin, signal, price, holdTime) {
-    const now = new Date();
-    const trade = {
-      coin: coin.name || coin.symbol || "N/A",
-      signal: signal,
-      entryPrice: price,
-      holdTime: holdTime,
-      time: now.toLocaleString(),
-      exitPrice: null,
-      profitLoss: null
-    };
-    paperTrades.push(trade);
-    updateTradeLog();
-    updateProfitChart();
-  }
-
-  function updateTradeLog() {
-    const table = document.getElementById("trade-log-body");
-    if (!table) return;
-    table.innerHTML = "";
-    paperTrades.forEach(trade => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${trade.coin}</td>
-        <td>${trade.signal}</td>
-        <td>$${trade.entryPrice}</td>
-        <td>${trade.holdTime}h</td>
-        <td>${trade.time}</td>
-        <td>${trade.exitPrice ? "$" + trade.exitPrice : "â"}</td>
-        <td>${trade.profitLoss !== null ? (trade.profitLoss >= 0 ? "+" : "") + trade.profitLoss.toFixed(4) : "â"}</td>
-      `;
-      table.appendChild(row);
-    });
-  }
-
-  function updateProfitChart() {
-    const ctx = document.getElementById('profitChart')?.getContext('2d');
-    if (!ctx) return;
-    const profits = paperTrades.filter(t => t.profitLoss !== null).map(t => t.profitLoss);
-    const cumulative = profits.reduce((acc, val, i) => {
-      acc.push((acc[i - 1] || 0) + val);
-      return acc;
-    }, []);
-    if (window.profitChartInstance) window.profitChartInstance.destroy();
-    window.profitChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: cumulative.map((_, i) => i + 1),
-        datasets: [{
-          label: 'Portfolio P/L',
-          data: cumulative,
-          borderWidth: 2,
-          fill: false
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true }
-        }
-      }
-    });
-  }
-
-  function  {
-    let csv = 'Coin,Signal,Entry Price,Hold Time,Time,Exit Price,P/L\n';
-    paperTrades.forEach(trade => {
-      csv += `${trade.coin},${trade.signal},${trade.entryPrice},${trade.holdTime},${trade.time},${trade.exitPrice || ""},${trade.profitLoss || ""}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'paper_trades.csv';
-    link.click();
-  }
-
-  setInterval(() => {
-    const now = new Date();
-    paperTrades.forEach(trade => {
-      if (trade.exitPrice === null) {
-        const enteredAt = new Date(trade.time);
-        const holdDurationMs = parseFloat(trade.holdTime) * 60 * 60 * 1000;
-        if (now - enteredAt >= holdDurationMs) {
-          const exitPrice = trade.entryPrice * (Math.random() * 0.1 + 0.95);
-          trade.exitPrice = parseFloat(exitPrice.toFixed(6));
-          trade.profitLoss = parseFloat((trade.exitPrice - trade.entryPrice).toFixed(6));
-        }
-      }
-    });
-    updateTradeLog();
-    updateProfitChart();
-  }, 60000);
-
-  function runAutoPaperTrader() {
-    if (!window.filteredData || filteredData.length === 0) return;
-    const validSignals = ["Buy", "Strong Buy", "Ultra Strong Buy", "Moderate Buy", "Weak Buy", "Derivative Trade"];
-    filteredData.forEach(coin => {
-      if (validSignals.includes(coin.tradingSignal)) {
-        simulatePaperTrade(coin, coin.tradingSignal, coin.current_price, 2);
-      }
-    });
-  }
-</script>
-
-
-<script>
-function logDebug(message) {
-  const out = document.getElementById('debug-output');
-  if (out) {
-    const time = new Date().toLocaleTimeString();
-    out.innerHTML += `[${time}] ${message}\n`;
-    out.scrollTop = out.scrollHeight;
-  }
-}
-logDebug("Debug log initialized...");
-if (!window.filteredData) {
-  logDebug("filteredData is not defined.");
-} else {
-  logDebug("filteredData exists. Length: " + filteredData.length);
-}
-</script>
-
-
-<script>
-function smoothLoadCheck() {
-  logDebug("Checking DOM readiness and filteredData...");
-  if (!window.filteredData || !Array.isArray(filteredData) || filteredData.length === 0) {
-    logDebug("filteredData is empty or not yet loaded. Retrying...");
-    setTimeout(smoothLoadCheck, 1000);
-  } else {
-    logDebug("filteredData loaded with " + filteredData.length + " coins.");
-    setTimeout(() => { runAutoPaperTrader(); }, 2000);
-  }
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-  setTimeout(() => {
-    document.getElementById("main-section").style.display = "block";
-    fetchData();
-  }, 2000);
-};
-
-</script>
-
-
-<script>
-async function renderIndicatorChartFromTrade(coinId) {
-  const currency = document.getElementById('currency-select')?.value || 'usd';
-  try {
-    const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=${currency}&days=30`;
-    const response = await fetch(url);
-    const data = await response.json();
-    const historicalData = data.prices.map(p => ({
-      date: new Date(p[0]).toLocaleDateString(),
-      price: p[1]
-    }));
-
-    const ctx = document.getElementById('indicator-chart')?.getContext('2d');
-    if (!ctx) return;
-    if (window.indicatorChart) window.indicatorChart.destroy();
-
-    window.indicatorChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: historicalData.map(d => d.date),
-        datasets: [{
-          label: `${coinId.toUpperCase()} Price`,
-          data: historicalData.map(d => d.price),
-          borderColor: 'rgba(54, 162, 235, 1)',
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          fill: true,
-          tension: 0.2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: false,
-            ticks: { color: '#fff' },
-            grid: { color: 'rgba(200,200,200,0.1)' }
-          },
-          x: {
-            ticks: { color: '#fff' },
-            grid: { color: 'rgba(200,200,200,0.1)' }
-          }
-        }
-      }
-    });
-  } catch (error) {
-    console.error("Chart rendering failed:", error);
-  }
-}
-</script>
-
-
-<script>
-
-function setStatus(text) {
-  const el = document.getElementById("status-text");
-  if (el) {
-    el.innerText = text;
-    const existingSpinner = document.getElementById("status-spinner");
-    if (text.includes("Fetching") || text.includes("Loading")) {
-      if (!existingSpinner) {
-        const spinner = document.createElement("span");
-        spinner.className = "spinner";
-        spinner.id = "status-spinner";
-        el.parentElement.appendChild(spinner);
-      }
-    } else if (existingSpinner) {
-      existingSpinner.remove();
-    }
-  }
-}
-
-  const el = document.getElementById("status-text");
-  if (el) el.innerText = text;
-}
-setStatus("Loading live data...");
-
-async function fetchData() {
-  const currency = document.getElementById('currency-select').value;
-  setStatus("Fetching market data...");
-  try {
-    const geckoUrls = [
-      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=1`,
-      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=2`
-    ];
-    const geckoResponses = await Promise.all(geckoUrls.map(url => fetchWithRetry(url)));
-    const geckoData = geckoResponses.flat();
-    setStatus("Fetching additional CoinPaprika data...");
-
-    const response = await fetchWithRetry("https://api.coinpaprika.com/v1/tickers");
-    const paprikaData = await response.json();
-    setStatus("Merging datasets...");
-
-    cryptoData = mergeData(geckoData, paprikaData);
-    cryptoData = cryptoData.filter(coin => !isSuspiciousCoin(coin));
-    cryptoData.forEach(coin => {
-      coin.profitPotential = computeProfitability(coin, defaultHoldDays);
-      coin.tradingSignal = coin.derivativeSignal ? "Derivative Trade" : generateBuySignal(coin);
-    });
-
-    filteredData = cryptoData;
-    setStatus(`Loaded ${filteredData.length} coins successfully.`);
-    populateDropdownTables();
-    if (filteredData.length > 0) renderChart(filteredData[0]);
-    setTimeout(() => runAutoPaperTrader(), 1500);
-  } catch (error) {
-    console.error("Fetch Error:", error.message);
-    setStatus("Failed to fetch live data. Please try again.");
-  }
-}
-</script>
-
-
-<script>
-// Profitability Optimizer v1.0 - Filters & Dynamic Trading Logic
-
-function meetsOptimizerCriteria(coin) {
-  if (!coin || !coin.current_price || !coin.market_cap || !coin.total_volume || !coin.price_change_percentage_24h) return false;
-
-  const rsi = coin.rsi || 45; // fallback value
-  const macd = coin.macd || 0; // placeholder if missing
-  const volumeSpike = (coin.total_volume / coin.market_cap) > 0.10;
-  const bullishRSI = rsi > 35 && rsi < 70;
-  const bullishMACD = macd > 0;
-
-  return bullishRSI && bullishMACD && volumeSpike;
-}
-
-function getConfidenceScore(coin) {
-  let score = 0;
-  if ((coin.total_volume / coin.market_cap) > 0.10) score += 1;
-  if (coin.macd > 0) score += 1;
-  if (coin.rsi >= 40 && coin.rsi <= 70) score += 1;
-  if (coin.profitPotential > 10) score += 1;
-  return score;
-}
-
-function runAutoPaperTrader() {
-  const table = document.getElementById("trade-log-body");
-  if (!table || !filteredData || !filteredData.length) return;
-
-  const now = new Date().toLocaleTimeString();
-  filteredData.forEach(coin => {
-    const signal = coin.tradingSignal;
-    const isValid = ["Buy", "Strong Buy", "Ultra Strong Buy", "Derivative Trade"].includes(signal);
-    const meetsCriteria = meetsOptimizerCriteria(coin);
-    if (!isValid || !meetsCriteria) return;
-
-    const confidence = getConfidenceScore(coin);
-    const entryPrice = coin.current_price;
-    const holdTime = confidence >= 3 ? 12 : confidence >= 2 ? 6 : 2;
-    const targetGain = confidence * 2;
-    const exitPrice = +(entryPrice * (1 + (targetGain / 100))).toFixed(4);
-
-    paperTrades.push({
-      coin: coin.symbol.toUpperCase(),
-      signal,
-      entryPrice,
-      holdTime,
-      time: now,
-      exitPrice: null,
-      profitLoss: null,
-      confidence
-    });
-  });
-
-  updateTradeLog();
-}
-</script>
-
-
-<style>
-#floating-summary {
-  position: fixed;
-  bottom: 15px;
-  right: 10px;
-  background: #111;
-  border: 1px solid #555;
-  border-radius: 8px;
-  padding: 10px;
-  color: #eee;
-  font-size: 0.8rem;
-  z-index: 1000;
-  box-shadow: 0 0 6px #000;
-}
-</style>
-<div id="floating-summary">
-  <div><strong>Active Trades:</strong> <span id="summary-count">0</span></div>
-  <div><strong>Win %:</strong> <span id="summary-win">0%</span></div>
-  <div><strong>Avg P/L:</strong> <span id="summary-avg">0%</span></div>
-</div>
-
-
-<script>
-function updateFloatingSummary() {
-  const wins = paperTrades.filter(t => t.profitLoss > 0).length;
-  const total = paperTrades.length;
-  const avg = paperTrades.filter(t => t.profitLoss !== null).reduce((acc, t) => acc + t.profitLoss, 0) / (total || 1);
-
-  document.getElementById("summary-count").innerText = total;
-  document.getElementById("summary-win").innerText = total ? ((wins / total) * 100).toFixed(1) + "%" : "0%";
-  document.getElementById("summary-avg").innerText = avg.toFixed(2) + "%";
-}
-
-// Hook into existing interval
-setInterval(updateFloatingSummary, 3000);
-</script>
-
-
-<script>
-document.getElementById("modal-close").onclick = () => {
-  document.getElementById("signal-modal").style.display = "none";
-};
-window.onclick = function(event) {
-  const modal = document.getElementById("signal-modal");
-  if (event.target === modal) modal.style.display = "none";
-};
-
-function handleCoinClick(coinId) {
-  const coin = (window.filteredData || []).find(c => c.id === coinId);
-  if (!coin) return;
-  showSignalDetails(coin, 1);
-  renderIndicatorChart(coin);
-  document.getElementById("signal-modal").style.display = "block";
-}
-
-async function renderIndicatorChart(coin) {
-  const currency = document.getElementById('currency-select')?.value || 'usd';
-  try {
-    const url = `https://api.coingecko.com/api/v3/coins/${coin.id}/market_chart?vs_currency=${currency}&days=30`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const points = data.prices.map(d => ({
-      date: new Date(d[0]).toLocaleDateString(),
-      price: d[1]
-    }));
-    const ctx = document.getElementById("indicator-chart").getContext("2d");
-    if (window.indicatorChart) window.indicatorChart.destroy();
-    window.indicatorChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: points.map(p => p.date),
-        datasets: [{
-          label: `${coin.name} Price`,
-          data: points.map(p => p.price),
-          borderColor: '#00ccff',
-          backgroundColor: 'rgba(0,204,255,0.2)',
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            ticks: { color: '#fff' },
-            grid: { color: 'rgba(200,200,200,0.1)' }
-          },
-          x: {
-            ticks: { color: '#fff' },
-            grid: { color: 'rgba(200,200,200,0.1)' }
-          }
-        }
-      }
-    });
-  } catch (e) {
-    console.error("Chart error", e);
-  }
-}
-
-function showSignalDetails(coin, holdDays) {
-  const el = document.getElementById("modal-body");
-  el.innerHTML = `
-    <h3>${coin.name} (${coin.symbol.toUpperCase()})</h3>
-    <p><b>Current Price:</b> $${coin.current_price.toFixed(4)}</p>
-    <p><b>Market Cap:</b> $${(coin.market_cap || 0).toLocaleString()}</p>
-    <p><b>24h Change:</b> ${coin.price_change_percentage_24h?.toFixed(2)}%</p>
-    <p><b>Trade Signal:</b> ${coin.tradingSignal}</p>
-    <p><b>Projected Gain:</b> ${coin.profitPotential.toFixed(2)}%</p>
-    <p><b>Confidence Score:</b> ${getConfidenceScore(coin)}</p>
-    <p><b>Strategy:</b> Buy and hold ${holdDays}h unless target hit earlier.</p>
-  `;
-}
-</script>
-
-
-<script>
-async function fetchWithRetry(url, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) return await res.json();
-    } catch (e) {
-      logDebug("Fetch retry failed: " + e.message);
-    }
-    await new Promise(r => setTimeout(r, 800));
-  }
-  throw new Error("Failed to fetch after retries: " + url);
-}
-
-async function fetchData() {
-  logDebug("Starting fetch from CoinGecko proxy...");
-  const status = document.getElementById("status");
-  if (status) status.innerText = "Fetching market data...";
-  try {
-    const url = "https://proxy.cors.sh/https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1";
-    const data = await fetchWithRetry(url);
-    logDebug("Fetched " + data.length + " coins.");
-    if (status) status.innerText = "Loaded " + data.length + " coins";
-    renderCoins(data);
-  } catch (error) {
-    logDebug("Fetch error: " + error.message);
-    if (status) status.innerText = "Failed to load coins.";
-  }
-}
-
-function renderCoins(data) {
-  const container = document.getElementById("dropdown-container");
-  if (!container) return;
-  container.innerHTML = "<h3 style='color:white;'>Top Coins</h3>";
-  const list = document.createElement("ul");
-  list.style.color = "#eee";
-  data.slice(0, 10).forEach(coin => {
-    const li = document.createElement("li");
-    li.textContent = `${coin.name} (${coin.symbol.toUpperCase()}): $${coin.current_price.toFixed(2)}`;
-    list.appendChild(li);
-  });
-  container.appendChild(list);
-}
-</script>
-
 </body>
 </html>
