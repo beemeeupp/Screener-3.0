@@ -741,6 +741,7 @@
     By using this tool, you agree that it is provided "as is" without any gaurantees. You must do your own research, these are reccomendations. The creator assumes no liability for any damages. Perform your own due diligence before trading.
   </div>
 
+
 <script>
   let paperTrades = [];
 
@@ -839,8 +840,8 @@
 
   function runAutoPaperTrader() {
     if (!window.filteredData || filteredData.length === 0) return;
+    const validSignals = ["Buy", "Strong Buy", "Ultra Strong Buy", "Moderate Buy", "Weak Buy", "Derivative Trade"];
     filteredData.forEach(coin => {
-      const validSignals = ["Buy", "Strong Buy", "Ultra Strong Buy", "Moderate Buy", "Weak Buy"];
       if (validSignals.includes(coin.tradingSignal)) {
         simulatePaperTrade(coin, coin.tradingSignal, coin.current_price, 2);
       }
