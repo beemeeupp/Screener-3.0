@@ -245,7 +245,7 @@
       <details id="tos">
         <summary style="font-size:1rem; font-weight:bold; color:#fff;">Terms of Service & Liability Disclaimer</summary>
         <p style="font-size:0.75rem; color:#aaa; margin-top:5px;">
-          This tool is provided ÃÂ¢ÃÂÃÂas isÃÂ¢ÃÂÃÂ without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence. By using this tool, you agree to hold the creator harmless from any legal claims.
+          This tool is provided ÃÂÃÂ¢ÃÂÃÂÃÂÃÂas isÃÂÃÂ¢ÃÂÃÂÃÂÃÂ without warranty of any kind. The creator disclaims all liability for any damages arising from its use. No financial advice is provided. Use at your own risk and perform your own due diligence. By using this tool, you agree to hold the creator harmless from any legal claims.
         </p>
       </details>
     </div>
@@ -264,39 +264,13 @@
   <!-- Paper Trader Track Record Section -->
   
 <div id="trackrecord-section" class="page-section">
-  <h2>Paper Trader Track Record</h2>
-  <table id="trade-log-table">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Coin</th>
-        <th>Trade Signal</th>
-        <th>Entry Price</th>
-        <th>Current Price</th>
-        <th>Profit/Loss (%)</th>
-      </tr>
-    </thead>
-    <tbody id="trade-log-body"></tbody>
-  </table>
+  
   <div class="summary-bar" id="trade-summary">
     Trades: 0 | Wins: 0 | Win %: 0% | Avg P/L: 0%
   </div>
 </div>
 
-    <h2>Paper Trader Track Record</h2>
-    <p>This section simulates trades based on our signals (simulation logic subject to enhancement):</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Coin</th>
-          <th>Trade Signal</th>
-          <th>Profit/Loss (%)</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
+    
   </div>
   <!-- Paper Data Section (Password Protected, with Logs) -->
   <div id="paperdata-section" class="page-section">
@@ -387,25 +361,29 @@
       return (-change) * holdDays * volFactor;
     }
     function generateBuySignal(coin) {
-      const pp = coin.profitPotential;
-      if (pp < 5) return "Hold";
-      if (pp < 8) return "Weak Buy";
-      else if (pp < 12) return "Moderate Buy";
-      else if (pp < 20) return "Buy";
-      else if (pp < 30) return "Strong Buy";
-      else return "Ultra Strong Buy";
-    }
+  const pp = coin.profitPotential;
+
+  if (pp < 2.5) return "Hold";
+  if (pp < 5) return "Watchlist";
+  if (pp < 8) return "Weak Buy";
+  if (pp < 12) return "Buy";
+  if (pp < 20) return "Strong Buy";
+  if (pp < 30) return "Ultra Strong Buy";
+  return "Explosive Buy";
+}
     async function fetchData() {
       const currency = document.getElementById('currency-select').value;
       appendLog("Fetching market data from CoinGecko...");
       try {
         const proxy = 'https://corsproxy.io/?';
       const geckoUrls = [
-          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=1`,
-          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=2`,
-          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=3`,
-          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=4`
-        ];
+  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=1`,
+  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=2`,
+  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=3`,
+  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=4`,
+  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=5`,
+  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=250&page=6`
+];
         const geckoResponses = await Promise.all(geckoUrls.map(url => fetch(proxy + url).then(res => res.json())));
         const geckoData = geckoResponses.flat();
         appendLog("CoinGecko data fetched. Data count: " + geckoData.length);
@@ -771,14 +749,7 @@ function toggleSummaryBar() {
   bar.style.display = bar.style.display === "none" ? "block" : "none";
 }
 </script>
-<div id="summary-bar" style="position:fixed;bottom:0;left:0;width:100%;background:#111;padding:10px;border-top:1px solid #444;color:#fff;z-index:999;">
-  <strong>Trades:</strong> <span id="summary-total">0</span> |
-  <strong>Wins:</strong> <span id="summary-wins">0</span> |
-  <strong>Win %:</strong> <span id="summary-winrate">0%</span> |
-  <strong>Avg P/L:</strong> <span id="summary-avgpl">0%</span>
-  <button onclick="toggleSummaryBar()">Minimize</button>
-  <button onclick="exportCSV()">Export CSV</button>
-</div>
+
 <script>
 // Removed refresh loop for continuous live updates
 </script>
@@ -874,17 +845,82 @@ window.handleCoinClick = function(coinId) {
   startLiveChart(coinId);
 };
 </script>
+
+
 <script>
 let paperTrades = [];
 let profitHistory = [];
-function simulateSignalTrades() {
+
+function simulateSignalTradesOnce() {
   if (!window.filteredData || !Array.isArray(filteredData)) return;
+
   filteredData.forEach(coin => {
     const exists = paperTrades.find(t => t.name === coin.name && t.active);
     if (!coin.tradingSignal || coin.tradingSignal === "Hold" || exists) return;
-    const entryPrice = coin.current_price;
-    const target = entryPrice * 1.05;
+
+    const entry = coin.current_price;
+    const target = entry * 1.05;
     const timestamp = new Date().toLocaleString();
+
+    const trade = {
+      name: coin.name,
+      signal: coin.tradingSignal,
+      entryPrice: entry.toFixed(4),
+      entryTime: timestamp,
+      holdTime: '2d',
+      exitPrice: null,
+      pnl: null,
+      active: true
+    };
+
+    paperTrades.push(trade);
+    updatePaperTraderTable();
+    updateSummary();
+
+    setTimeout(() => {
+      if (!trade.active) return;
+      trade.exitPrice = target.toFixed(4);
+      const pnl = ((target - entry) / entry * 100).toFixed(2);
+      trade.pnl = pnl + "%";
+      trade.active = false;
+      profitHistory.push(parseFloat(pnl));
+      updatePaperTraderTable();
+      updateSummary();
+    }, 10000);
+  });
+}
+
+function watchPaperTraderTab() {
+  const selector = document.getElementById("page-selector");
+  if (!selector) return;
+
+  const startIfNeeded = () => {
+    if (selector.value === "trackrecord-section") simulateSignalTradesOnce();
+  };
+
+  selector.addEventListener("change", startIfNeeded);
+  if (selector.value === "trackrecord-section") simulateSignalTradesOnce();
+}
+
+document.addEventListener("DOMContentLoaded", watchPaperTraderTab);
+</script>
+
+
+<script>
+let paperTrades = [];
+let profitHistory = [];
+
+// Execute trades based on actual screener data
+function executeRealTradesFromScreener() {
+  if (!window.filteredData || !Array.isArray(filteredData)) return;
+
+  filteredData.forEach(coin => {
+    const alreadyExists = paperTrades.find(t => t.name === coin.name && t.active);
+    if (!coin.tradingSignal || coin.tradingSignal === "Hold" || alreadyExists) return;
+
+    const entryPrice = coin.current_price;
+    const timestamp = new Date().toLocaleString();
+
     const trade = {
       name: coin.name,
       signal: coin.tradingSignal,
@@ -893,78 +929,55 @@ function simulateSignalTrades() {
       holdTime: '2d',
       exitPrice: null,
       pnl: null,
-      active: true
+      active: true,
+      id: coin.id,
+      currency: document.getElementById("currency-select").value
     };
+
     paperTrades.push(trade);
     updatePaperTraderTable();
     updateSummary();
-    setTimeout(() => {
-      if (!trade.active) return;
-      trade.exitPrice = target.toFixed(4);
-      const pnl = ((target - entryPrice) / entryPrice * 100).toFixed(2);
-      trade.pnl = pnl + "%";
-      trade.active = false;
-      profitHistory.push(parseFloat(pnl));
-      updatePerformanceChart();
-      updatePaperTraderTable();
-      updateSummary();
-    }, 10000);
-  });
-}
-function updatePaperTraderTable() {
-  const tbody = document.getElementById('trade-log-body');
-  if (!tbody) return;
-  tbody.innerHTML = "";
-  paperTrades.forEach(t => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${t.name}</td>
-      <td>${t.signal}</td>
-      <td>$${t.entryPrice}</td>
-      <td>${t.holdTime}</td>
-      <td>${t.exitPrice ? '$' + t.exitPrice : 'Pending'}</td>
-      <td>${t.pnl || 'Open'}</td>
-    `;
-    row.addEventListener("click", () => {
-      alert(
-        `Coin: ${t.name}\nSignal: ${t.signal}\nEntry Time: ${t.entryTime}\nEntry Price: $${t.entryPrice}\nExit Price: ${t.exitPrice || 'Pending'}\nStatus: ${t.active ? 'Active' : 'Closed'}`
-      );
-    });
-    tbody.appendChild(row);
-  });
-}
-function updatePerformanceChart() {
-  const ctx = document.getElementById('performance-chart').getContext('2d');
-  if (window.performanceChart) window.performanceChart.destroy();
-  const labels = profitHistory.map((_, i) => `Trade ${i + 1}`);
-  const data = profitHistory.reduce((acc, p, i) => {
-    acc.push((acc[i - 1] || 0) + p);
-    return acc;
-  }, []);
-  window.performanceChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Portfolio Growth',
-        data,
-        borderColor: 'lime',
-        backgroundColor: 'rgba(0,255,0,0.2)',
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true,
-      animation: false,
-      scales: {
-        y: { ticks: { color: '#000' }, grid: { color: 'rgba(0,0,0,0.1)' } },
-        x: { ticks: { color: '#000' }, grid: { color: 'rgba(0,0,0,0.1)' } }
+
+    // Live price monitor for exact P/L exit tracking
+    const interval = setInterval(async () => {
+      if (!trade.active) {
+        clearInterval(interval);
+        return;
       }
-    }
+
+      try {
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${trade.id}&vs_currencies=${trade.currency}`
+        );
+        const data = await response.json();
+        const livePrice = data[trade.id][trade.currency];
+        const pnl = ((livePrice - entryPrice) / entryPrice * 100).toFixed(2);
+        trade.exitPrice = livePrice.toFixed(4);
+        trade.pnl = pnl + "%";
+        trade.active = false;
+        profitHistory.push(parseFloat(pnl));
+        updatePaperTraderTable();
+        updateSummary();
+        clearInterval(interval);
+      } catch (err) {
+        console.warn("Live P/L fetch failed:", err);
+      }
+    }, 10000); // check after 10s to simulate 2d hold
   });
 }
-setInterval(simulateSignalTrades, 6000);
+
+// Start once when Paper Trader tab is active
+function activateRealTradeEngine() {
+  const checkTab = () => {
+    const tab = document.getElementById("page-selector").value;
+    if (tab === "trackrecord-section") executeRealTradesFromScreener();
+  };
+  document.getElementById("page-selector").addEventListener("change", checkTab);
+  checkTab();
+}
+
+document.addEventListener("DOMContentLoaded", activateRealTradeEngine);
 </script>
+
 </body>
 </html>
